@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "github.com/eroshiva/trade-show-poc/api/v1/monitoring;apiv1";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+service DeviceMonitoringService {
+  // UpdateDeviceList allows to update list of the devices that are currently monitored in a PATCH fashion.
+  // Response contains full list of monitored network devices reflecting recent changes.
+  rpc UpdateDeviceList(UpdateDeviceListRequest) returns (UpdateDeviceListResponse) {
+    option (google.api.http) = {
+      patch: "/v1/monitoring/devices"
+      body: "*"
+    };
+  }
+  // GetDeviceList allows to retrieve a list of all currently monitored network devices.
+  rpc GetDeviceList(google.protobuf.Empty) returns (GetDeviceListResponse) {
+    option (google.api.http) = {
+      get: "/v1/monitoring/devices"
+    };
+  }
+  // AddDevice allows to add a network device that would be monitored.
+  // Response will contain device ID assigned internally by the system.
+  rpc AddDevice(AddDeviceRequest) returns (AddDeviceResponse) {
+    option (google.api.http) = {
+      post: "/v1/monitoring/devices"
+      body: "*"
+    };
+  }
+  // DeleteDevice allows to remove network device from the monitoring service.
+  // In order to do so, you should remember ID assigned internally by the monitoring system.
+  rpc DeleteDevice(DeleteDeviceRequest) returns (DeleteDeviceResponse) {
+    option (google.api.http) = {
+      delete: "/v1/monitoring/devices/{id}"
+      body: "*"
+    };
+  }
+  // GetDeviceStatus allows to retrieve network device status in real time.
+  rpc GetDeviceStatus(GetDeviceStatusRequest) returns (GetDeviceStatusResponse) {
+    option (google.api.http) = {
+      get: "/v1/monitoring/devices/{id}/status"
+    };
+  }
+  // GetSummary allows to retrieve summary of network device monitoring.
+  rpc GetSummary(google.protobuf.Empty) returns (GetSummaryResponse) {
+    option (google.api.http) = {
+      get: "/v1/monitoring/summary"
+    };
+  }
+}
+
+// GetSummaryResponse provides a summary of the network device monitoring statistics,
+message GetSummaryResponse {
+  // Total number of the monitored network devices.
+  int32 devices_total = 1;
+  // Total number of devices in UP state.
+  int32 devices_up = 2;
+  // Total number of unhealthy devices.
+  int32 devices_unhealthy = 3;
+  // Total number of devices in DOWN state.
+  int32 down_devices = 4;
+}
+
+// AddDeviceRequest message carries network device that is necessary to add to the monitoring.
+message AddDeviceRequest {
+  NetworkDevice device = 1;
+}
+
+// AddDeviceResponse carries information about the device that has been added to the monitoring and status of the operation.
+message AddDeviceResponse {
+  // Network device (with assigned internal ID) that has been added to the system.
+  NetworkDevice device = 1;
+  // A bool variable to indicate success/failure of the ADD operation.
+  bool added = 2;
+  // In case of failure, carries additional information about the reason of failure. Otherwise, empty.
+  optional string details = 3;
+}
+
+// DeleteDeviceRequest carries information about the network device that should be removed from the monitoring.
+message DeleteDeviceRequest {
+  // Internal (for the system) ID of the device.
+  string id = 1;
+}
+
+// DeleteDeviceResponse carries information about network device that has been removed from the monitoring.
+message DeleteDeviceResponse {
+  // Internal (to the system) ID of the device.
+  string id = 1;
+  // A bool variable that indicates the success/failure of the operation.
+  bool deleted = 2;
+  // In case of failure, carries additional data, otherwise, empty.
+  optional string details = 3;
+}
+
+// GetDeviceStatusRequest checks the health status on the network device endpoint.
+message GetDeviceStatusRequest {
+  // Internal (to the system) ID of the device.
+  string id = 1;
+  // Network device endpoint
+  Endpoint endpoint = 2;
+}
+
+// GetDeviceStatusResponse carries the result of the health check for the network device.
+message GetDeviceStatusResponse {
+  // Internal (to the system) ID of the device.
+  string id = 1;
+  // Internal (to the system) ID of the device.
+  Endpoint endpoint = 2;
+  // Status of the device
+  DeviceStatus status = 3;
+}
+
+// UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated.
+message UpdateDeviceListRequest {
+  repeated NetworkDevice devices = 1;
+}
+
+// UpdateDeviceListResponse contains full list of the network devices within the system, once update has been performed.
+message UpdateDeviceListResponse {
+  repeated NetworkDevice devices = 1;
+}
+
+// GetDeviceListResponse contains full list of the network devices within the monitoring system.
+message GetDeviceListResponse {
+  repeated NetworkDevice devices = 1;
+}
+
+
+// Modelling Network Device below.
+
+// Vendor enum defines Network Device vendors, which are supported by the system.
+enum Vendor {
+  // This is to comply with Protobuf best practices.
+  VENDOR_UNSPECIFIED = 0;
+  // Ubiquiti,
+  VENDOR_UBIQUITI = 1;
+  // Cisco.
+  VENDOR_CISCO = 2;
+  // Juniper Networks.
+  VENDOR_JUNIPER = 3;
+}
+
+// DeviceStatus defines Finite State Machine (FSM) for network device monitoring.
+enum DeviceStatus {
+  // This is to comply with Protobuf best practices.
+  DEVICE_STATUS_UNSPECIFIED = 0;
+  // Corresponds to Network device is in down (or not reachable state).
+  DEVICE_STATUS_DEVICE_DOWN = 1;
+  // Corresponds to the Network device in unhealthy state (as defined internally by the device).
+  DEVICE_STATUS_DEVICE_UNHEALTHY = 2;
+  // Corresponds to the Network device in healthy state (i.e., up and running, operating as expected).
+  DEVICE_STATUS_DEVICE_UP = 3;
+}
+
+// Protocol enum defines the supported protocols by monitoring service
+enum Protocol {
+  // This is to comply with Protobuf best practices.
+  PROTOCOL_UNSPECIFIED = 0;
+  // Corresponds to the SNMP protocol.
+  PROTOCOL_SNMP = 1;
+  // Corresponds to the NETCONF protocol.
+  PROTOCOL_NETCONF = 2;
+  // Corresponds to the RESTCONF protocol.
+  PROTOCOL_RESTCONF = 3;
+  // Corresponds to the Open vSwitch protocol.
+  PROTOCOL_OPEN_V_SWITCH = 4;
+}
+
+// NetworkDevice message defines Network device data structure,
+message NetworkDevice {
+  // ID is a device ID assigned internally by the Monitoring service. it is internal to the system.
+  // Later, by this ID, it is possible to retrieve any information about the device.
+  string id = 1;
+  // Network device vendor.
+  Vendor vendor = 2;
+  // Network device model.
+  string model = 3;
+
+  // Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols).
+  repeated Endpoint endpoint = 10;
+
+  // HW version (i.e., HW revision, different from model version).
+  string hw_version = 20;
+  // SW version (i.e., SW revision).
+  Version sw_version = 21;
+  // FW version (i.e., FW revision).
+  Version fw_version = 22;
+
+  // Current status of the Network device.
+  DeviceStatus status = 30;
+  // A timestamp when the device was last seen in the UP state.
+  google.protobuf.Timestamp last_seen = 31;
+}
+
+// Endpoint defines an endpoint structure.
+message Endpoint {
+  // Host address in CIDR form of IP or FQDN, if applicable.
+  string host = 1;
+  // Port number, where device health point is reachable.
+  string port = 2;
+  // Supported by the network device protocol for communicating over this endpoint.
+  Protocol protocol = 10;
+}
+
+// Version message is a generic message for reporting a version.
+message Version {
+  // SW/FW Version number.
+  string version = 1;
+  // Checksum of the current revision.
+  string checksum = 2;
+}

@@ -1,0 +1,507 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/v1/monitoring.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "DeviceMonitoringService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/monitoring/devices": {
+      "get": {
+        "summary": "GetDeviceList allows to retrieve a list of all currently monitored network devices.",
+        "operationId": "DeviceMonitoringService_GetDeviceList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDeviceListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      },
+      "post": {
+        "summary": "AddDevice allows to add a network device that would be monitored.\nResponse will contain device ID assigned internally by the system.",
+        "operationId": "DeviceMonitoringService_AddDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1AddDeviceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "AddDeviceRequest message carries network device that is necessary to add to the monitoring.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1AddDeviceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      },
+      "patch": {
+        "summary": "UpdateDeviceList allows to update list of the devices that are currently monitored in a PATCH fashion.\nResponse contains full list of monitored network devices reflecting recent changes.",
+        "operationId": "DeviceMonitoringService_UpdateDeviceList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateDeviceListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateDeviceListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      }
+    },
+    "/v1/monitoring/devices/{id}": {
+      "delete": {
+        "summary": "DeleteDevice allows to remove network device from the monitoring service.\nIn order to do so, you should remember ID assigned internally by the monitoring system.",
+        "operationId": "DeviceMonitoringService_DeleteDevice",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DeleteDeviceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Internal (for the system) ID of the device.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DeviceMonitoringServiceDeleteDeviceBody"
+            }
+          }
+        ],
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      }
+    },
+    "/v1/monitoring/devices/{id}/status": {
+      "get": {
+        "summary": "GetDeviceStatus allows to retrieve network device status in real time.",
+        "operationId": "DeviceMonitoringService_GetDeviceStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDeviceStatusResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "Internal (to the system) ID of the device.",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.host",
+            "description": "Host address in CIDR form of IP or FQDN, if applicable.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.port",
+            "description": "Port number, where device health point is reachable.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.protocol",
+            "description": "Supported by the network device protocol for communicating over this endpoint.\n\n - PROTOCOL_UNSPECIFIED: This is to comply with Protobuf best practices.\n - PROTOCOL_SNMP: Corresponds to the SNMP protocol.\n - PROTOCOL_NETCONF: Corresponds to the NETCONF protocol.\n - PROTOCOL_RESTCONF: Corresponds to the RESTCONF protocol.\n - PROTOCOL_OPEN_V_SWITCH: Corresponds to the Open vSwitch protocol.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "PROTOCOL_UNSPECIFIED",
+              "PROTOCOL_SNMP",
+              "PROTOCOL_NETCONF",
+              "PROTOCOL_RESTCONF",
+              "PROTOCOL_OPEN_V_SWITCH"
+            ],
+            "default": "PROTOCOL_UNSPECIFIED"
+          }
+        ],
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      }
+    },
+    "/v1/monitoring/summary": {
+      "get": {
+        "summary": "GetSummary allows to retrieve summary of network device monitoring.",
+        "operationId": "DeviceMonitoringService_GetSummary",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetSummaryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "DeviceMonitoringServiceDeleteDeviceBody": {
+      "type": "object",
+      "description": "DeleteDeviceRequest carries information about the network device that should be removed from the monitoring."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1AddDeviceRequest": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "$ref": "#/definitions/v1NetworkDevice"
+        }
+      },
+      "description": "AddDeviceRequest message carries network device that is necessary to add to the monitoring."
+    },
+    "v1AddDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "$ref": "#/definitions/v1NetworkDevice",
+          "description": "Network device (with assigned internal ID) that has been added to the system."
+        },
+        "added": {
+          "type": "boolean",
+          "description": "A bool variable to indicate success/failure of the ADD operation."
+        },
+        "details": {
+          "type": "string",
+          "description": "In case of failure, carries additional information about the reason of failure. Otherwise, empty."
+        }
+      },
+      "description": "AddDeviceResponse carries information about the device that has been added to the monitoring and status of the operation."
+    },
+    "v1DeleteDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Internal (to the system) ID of the device."
+        },
+        "deleted": {
+          "type": "boolean",
+          "description": "A bool variable that indicates the success/failure of the operation."
+        },
+        "details": {
+          "type": "string",
+          "description": "In case of failure, carries additional data, otherwise, empty."
+        }
+      },
+      "description": "DeleteDeviceResponse carries information about network device that has been removed from the monitoring."
+    },
+    "v1DeviceStatus": {
+      "type": "string",
+      "enum": [
+        "DEVICE_STATUS_UNSPECIFIED",
+        "DEVICE_STATUS_DEVICE_DOWN",
+        "DEVICE_STATUS_DEVICE_UNHEALTHY",
+        "DEVICE_STATUS_DEVICE_UP"
+      ],
+      "default": "DEVICE_STATUS_UNSPECIFIED",
+      "description": "DeviceStatus defines Finite State Machine (FSM) for network device monitoring.\n\n - DEVICE_STATUS_UNSPECIFIED: This is to comply with Protobuf best practices.\n - DEVICE_STATUS_DEVICE_DOWN: Corresponds to Network device is in down (or not reachable state).\n - DEVICE_STATUS_DEVICE_UNHEALTHY: Corresponds to the Network device in unhealthy state (as defined internally by the device).\n - DEVICE_STATUS_DEVICE_UP: Corresponds to the Network device in healthy state (i.e., up and running, operating as expected)."
+    },
+    "v1Endpoint": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Host address in CIDR form of IP or FQDN, if applicable."
+        },
+        "port": {
+          "type": "string",
+          "description": "Port number, where device health point is reachable."
+        },
+        "protocol": {
+          "$ref": "#/definitions/v1Protocol",
+          "description": "Supported by the network device protocol for communicating over this endpoint."
+        }
+      },
+      "description": "Endpoint defines an endpoint structure."
+    },
+    "v1GetDeviceListResponse": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
+        }
+      },
+      "description": "GetDeviceListResponse contains full list of the network devices within the monitoring system."
+    },
+    "v1GetDeviceStatusResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Internal (to the system) ID of the device."
+        },
+        "endpoint": {
+          "$ref": "#/definitions/v1Endpoint",
+          "description": "Internal (to the system) ID of the device."
+        },
+        "status": {
+          "$ref": "#/definitions/v1DeviceStatus",
+          "title": "Status of the device"
+        }
+      },
+      "description": "GetDeviceStatusResponse carries the result of the health check for the network device."
+    },
+    "v1GetSummaryResponse": {
+      "type": "object",
+      "properties": {
+        "devicesTotal": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of the monitored network devices."
+        },
+        "devicesUp": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of devices in UP state."
+        },
+        "devicesUnhealthy": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of unhealthy devices."
+        },
+        "downDevices": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Total number of devices in DOWN state."
+        }
+      },
+      "title": "GetSummaryResponse provides a summary of the network device monitoring statistics,"
+    },
+    "v1NetworkDevice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID is a device ID assigned internally by the Monitoring service. it is internal to the system.\nLater, by this ID, it is possible to retrieve any information about the device."
+        },
+        "vendor": {
+          "$ref": "#/definitions/v1Vendor",
+          "description": "Network device vendor."
+        },
+        "model": {
+          "type": "string",
+          "description": "Network device model."
+        },
+        "endpoint": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Endpoint"
+          },
+          "description": "Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols)."
+        },
+        "hwVersion": {
+          "type": "string",
+          "description": "HW version (i.e., HW revision, different from model version)."
+        },
+        "swVersion": {
+          "$ref": "#/definitions/v1Version",
+          "description": "SW version (i.e., SW revision)."
+        },
+        "fwVersion": {
+          "$ref": "#/definitions/v1Version",
+          "description": "FW version (i.e., FW revision)."
+        },
+        "status": {
+          "$ref": "#/definitions/v1DeviceStatus",
+          "description": "Current status of the Network device."
+        },
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A timestamp when the device was last seen in the UP state."
+        }
+      },
+      "title": "NetworkDevice message defines Network device data structure,"
+    },
+    "v1Protocol": {
+      "type": "string",
+      "enum": [
+        "PROTOCOL_UNSPECIFIED",
+        "PROTOCOL_SNMP",
+        "PROTOCOL_NETCONF",
+        "PROTOCOL_RESTCONF",
+        "PROTOCOL_OPEN_V_SWITCH"
+      ],
+      "default": "PROTOCOL_UNSPECIFIED",
+      "description": "- PROTOCOL_UNSPECIFIED: This is to comply with Protobuf best practices.\n - PROTOCOL_SNMP: Corresponds to the SNMP protocol.\n - PROTOCOL_NETCONF: Corresponds to the NETCONF protocol.\n - PROTOCOL_RESTCONF: Corresponds to the RESTCONF protocol.\n - PROTOCOL_OPEN_V_SWITCH: Corresponds to the Open vSwitch protocol.",
+      "title": "Protocol enum defines the supported protocols by monitoring service"
+    },
+    "v1UpdateDeviceListRequest": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
+        }
+      },
+      "description": "UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated."
+    },
+    "v1UpdateDeviceListResponse": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
+        }
+      },
+      "description": "UpdateDeviceListResponse contains full list of the network devices within the system, once update has been performed."
+    },
+    "v1Vendor": {
+      "type": "string",
+      "enum": [
+        "VENDOR_UNSPECIFIED",
+        "VENDOR_UBIQUITI",
+        "VENDOR_CISCO",
+        "VENDOR_JUNIPER"
+      ],
+      "default": "VENDOR_UNSPECIFIED",
+      "description": "Vendor enum defines Network Device vendors, which are supported by the system.\n\n - VENDOR_UNSPECIFIED: This is to comply with Protobuf best practices.\n - VENDOR_UBIQUITI: Ubiquiti,\n - VENDOR_CISCO: Cisco.\n - VENDOR_JUNIPER: Juniper Networks."
+    },
+    "v1Version": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "SW/FW Version number."
+        },
+        "checksum": {
+          "type": "string",
+          "description": "Checksum of the current revision."
+        }
+      },
+      "description": "Version message is a generic message for reporting a version."
+    }
+  }
+}

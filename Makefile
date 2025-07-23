@@ -15,7 +15,7 @@ buf-install: ## Installs buf to convert protobuf into Golang code
 	go install github.com/bufbuild/buf/cmd/buf@${BUF_VERSION}
 
 buf-generate: buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
-	buf generate --path api/v1/api.proto
+	buf generate --path api/v1/monitoring.proto
 
 buf-update: ## Generates Golang-driven bindings out of Protobuf
 	buf dep update

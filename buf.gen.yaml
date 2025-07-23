@@ -11,8 +11,15 @@ plugins:
   - remote: buf.build/grpc/go:v1.3.0
     out: .
     opt: paths=source_relative
+  # This is to generate reverse HTTP proxy from Protobuf
   - remote:  buf.build/grpc-ecosystem/gateway:v2.27.1
     out: .
     opt:
       - paths=source_relative
       - generate_unbound_methods=true
+      - allow_delete_body=true
+  # This is to generate Swagger definition
+  - remote: buf.build/grpc-ecosystem/openapiv2:v2.27.1
+    out: .
+    opt:
+      - allow_delete_body=true
