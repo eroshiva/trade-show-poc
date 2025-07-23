@@ -13,7 +13,7 @@ Network monitoring service needs to support:
     - Software version
     - Firmware version
     - Device status (?)
-    - Checksum (of the HW and SW, I guess?)
+    - Checksum ((separately) for the HW, SW, and FW, I guess?)
 
 > I assume, that interface is required there to interact with different protocols.
 
@@ -49,3 +49,20 @@ external checksum generator binary executable` (What is it? Another microservice
 Full PoC must be paired with PoC life-cycle to get valid test results (whatever it means). Testing the whole thing
 must be easy.
 > To orchestrate testing, a Makefile has been put in place.
+
+## Goals
+Given the letter from `Boss`, following are defined goals of this task
+
+- Build a microservice that implements network device monitoring logic,
+  - It should be able to dynamically update a list of network devices that are monitored.
+  - User-friendly and/or developer-friendly (both, gRPC and REST) API is required (e.g., add a `/summary` call or other useful wrappers for statistics).
+  - Define and implement a generic interface that allows to communicate with network devices over different network protocols.
+  - Build core logic for network device monitoring that allows to avoid false alarms and provides real-time (or near real-time) monitoring.
+    - Consider the case when devices are located in a place with low bandwidth and bad network connectivity.
+  - Network device state should be stored in PostgreSQL.
+  - Code structure should be developer-friendly (i.e., no mess in code, clear structure and documentation).
+- Implement/Mock `checksum generator binary executable` with which microservice interacts.
+  - Also, implement mocked devices to showcase interaction over interface with various device protocols.
+- Ease of deployment.
+  - Containerise everything.
+  - Orchestrate deployment with Makefile or similar, as close to production environment as possible).
