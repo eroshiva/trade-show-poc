@@ -49,3 +49,19 @@ external checksum generator binary executable` (What is it? Another microservice
 Full PoC must be paired with PoC life-cycle to get valid test results (whatever it means). Testing the whole thing
 must be easy.
 > To orchestrate testing, a Makefile has been put in place.
+
+## Outcomes
+Given the letter from 'Boss', following are defined goals of this task
+
+- Build a microservice that implements network device monitoring logic,
+  - It should be able to dynamically update a list of network devices that are monitored.
+  - User-friendly and/or developer-friendly (both, gRPC and REST) API is required (e.g., add a `/summary` call or other useful wrappers for statistics).
+  - Define and implement a generic interface that allows to communicate with network devices over different network protocols.
+  - Build core logic for network device monitoring that allows to avoid false alarms and provides.
+  - Network device state should be stored in PostgreSQL.
+  - Code structure should be developer-friendly (i.e., no mess in code, clear structure and documentation).
+- Implement/Mock `checksum generator binary executable` with which microservice interacts.
+  - Also, implement mocked devices to showcase interaction over interface with various device protocols.
+- Ease of deployment.
+  - Containerise everything.
+  - Orchestrate deployment with Makefile or similar, as close to production environment as possible).

@@ -14,8 +14,11 @@ help: # Credits to https://gist.github.com/prwhite/8168133 for this handy onelin
 buf-install: ## Installs buf to convert protobuf into Golang code
 	go install github.com/bufbuild/buf/cmd/buf@${BUF_VERSION}
 
-buf-generate: buf-install ## Generates Golang-driven bindings out of Protobuf
+buf-generate: buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
 	buf generate --path api/v1/api.proto
+
+buf-update: ## Generates Golang-driven bindings out of Protobuf
+	buf dep update
 
 buf-lint: ## Runs linters against Protobuf
 	buf lint
@@ -29,6 +32,7 @@ build-api: ## Build the Go binary for gRPC API Gateway
 	go build -mod=vendor -o build/_output/api-gateway ./cmd/api-gateway.go
 
 deps: buf-install go-linters-install ## Installs developer prerequisites for this project
+	go get github.com/grpc-ecosystem/grpc-gateway/v2@v2.27.1
 
 go-linters-install: ## Install linters locally for verification
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin ${GOLANGCI_LINTERS_VERSION}

@@ -7,6 +7,7 @@
 package apiv1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -123,14 +124,14 @@ var File_api_v1_api_proto protoreflect.FileDescriptor
 
 const file_api_v1_api_proto_rawDesc = "" +
 	"\n" +
-	"\x10api/v1/api.proto\x12\x06api.v1\",\n" +
+	"\x10api/v1/api.proto\x12\x06api.v1\x1a\x15google/api/http.proto\x1a\x1cgoogle/api/annotations.proto\",\n" +
 	"\x0eIsAliveRequest\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\"H\n" +
 	"\x0fIsAliveResponse\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x19\n" +
-	"\bis_alive\x18\x02 \x01(\bR\aisAlive2X\n" +
-	"\x1aNumerologistGatewayService\x12:\n" +
-	"\aIsAlive\x12\x16.api.v1.IsAliveRequest\x1a\x17.api.v1.IsAliveResponseB5Z3github.com/eroshiva/trade-show-poc/api/v1/api;apiv1b\x06proto3"
+	"\bis_alive\x18\x02 \x01(\bR\aisAlive2|\n" +
+	"\x1aNumerologistGatewayService\x12^\n" +
+	"\aIsAlive\x12\x16.api.v1.IsAliveRequest\x1a\x17.api.v1.IsAliveResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*\"\x17/v1/monitoring/is_aliveB5Z3github.com/eroshiva/trade-show-poc/api/v1/api;apiv1b\x06proto3"
 
 var (
 	file_api_v1_api_proto_rawDescOnce sync.Once
