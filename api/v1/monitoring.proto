@@ -193,10 +193,12 @@ message NetworkDevice {
 
 // DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state.
 message DeviceStatus {
+  // Internal (to the system) ID of the device.
+  string id = 1;
   // Current status of the Network device.
-  Status status = 1;
+  Status status = 2;
   // A timestamp when the device was last seen in the UP or unhealthy state.
-  google.protobuf.Timestamp last_seen = 2;
+  google.protobuf.Timestamp last_seen = 3;
 }
 
 // Endpoint defines an endpoint structure.

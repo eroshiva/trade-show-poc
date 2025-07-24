@@ -849,10 +849,12 @@ func (x *NetworkDevice) GetFwVersion() *Version {
 // DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state.
 type DeviceStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
+	// Internal (to the system) ID of the device.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Current status of the Network device.
-	Status Status `protobuf:"varint,1,opt,name=status,proto3,enum=api.v1.Status" json:"status,omitempty"`
+	Status Status `protobuf:"varint,2,opt,name=status,proto3,enum=api.v1.Status" json:"status,omitempty"`
 	// A timestamp when the device was last seen in the UP or unhealthy state.
-	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
+	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -885,6 +887,13 @@ func (x *DeviceStatus) ProtoReflect() protoreflect.Message {
 // Deprecated: Use DeviceStatus.ProtoReflect.Descriptor instead.
 func (*DeviceStatus) Descriptor() ([]byte, []int) {
 	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DeviceStatus) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 func (x *DeviceStatus) GetStatus() Status {
@@ -1071,10 +1080,11 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\n" +
 	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionR\tswVersion\x12.\n" +
 	"\n" +
-	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionR\tfwVersion\"o\n" +
-	"\fDeviceStatus\x12&\n" +
-	"\x06status\x18\x01 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x127\n" +
-	"\tlast_seen\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\"`\n" +
+	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionR\tfwVersion\"\x7f\n" +
+	"\fDeviceStatus\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x127\n" +
+	"\tlast_seen\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\"`\n" +
 	"\bEndpoint\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\tR\x04port\x12,\n" +

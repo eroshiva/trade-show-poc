@@ -6,6 +6,7 @@ POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.2.2
 BUF_VERSION := v1.55.1
+GRPC_GATEWAY_VERSION := v2.27.1
 
 .PHONY: help build
 help: # Credits to https://gist.github.com/prwhite/8168133 for this handy oneliner
@@ -32,7 +33,7 @@ build-api: ## Build the Go binary for gRPC API Gateway
 	go build -mod=vendor -o build/_output/api-gateway ./cmd/api-gateway.go
 
 deps: buf-install go-linters-install ## Installs developer prerequisites for this project
-	go get github.com/grpc-ecosystem/grpc-gateway/v2@v2.27.1
+	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
 
 go-linters-install: ## Install linters locally for verification
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin ${GOLANGCI_LINTERS_VERSION}
@@ -75,4 +76,4 @@ go-tidy: ## Runs go mod related commands
 
 clean: ## Remove all the build artifacts
 	rm -rf ./build/_output ./vendor ./tmp
-	go clean -cache -testcache
+	go clean -testcache

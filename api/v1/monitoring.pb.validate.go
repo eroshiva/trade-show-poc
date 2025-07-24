@@ -1550,6 +1550,8 @@ func (m *DeviceStatus) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Id
+
 	// no validation rules for Status
 
 	if all {

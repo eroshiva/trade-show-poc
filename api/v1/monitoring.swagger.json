@@ -320,6 +320,10 @@
     "v1DeviceStatus": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "Internal (to the system) ID of the device."
+        },
         "status": {
           "$ref": "#/definitions/apiv1Status",
           "description": "Current status of the Network device."
