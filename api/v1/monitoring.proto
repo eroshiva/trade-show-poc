@@ -144,16 +144,16 @@ enum Vendor {
   VENDOR_JUNIPER = 3;
 }
 
-// DeviceStatus defines Finite State Machine (FSM) for network device monitoring.
-enum DeviceStatus {
+// Status defines Finite State Machine (FSM) for network device monitoring.
+enum Status {
   // This is to comply with Protobuf best practices.
-  DEVICE_STATUS_UNSPECIFIED = 0;
+  STATUS_UNSPECIFIED = 0;
   // Corresponds to Network device is in down (or not reachable state).
-  DEVICE_STATUS_DEVICE_DOWN = 1;
+  STATUS_DEVICE_DOWN = 1;
   // Corresponds to the Network device in unhealthy state (as defined internally by the device).
-  DEVICE_STATUS_DEVICE_UNHEALTHY = 2;
+  STATUS_DEVICE_UNHEALTHY = 2;
   // Corresponds to the Network device in healthy state (i.e., up and running, operating as expected).
-  DEVICE_STATUS_DEVICE_UP = 3;
+  STATUS_DEVICE_UP = 3;
 }
 
 // Protocol enum defines the supported protocols by monitoring service
@@ -189,11 +189,14 @@ message NetworkDevice {
   Version sw_version = 21;
   // FW version (i.e., FW revision).
   Version fw_version = 22;
+}
 
+// DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state.
+message DeviceStatus {
   // Current status of the Network device.
-  DeviceStatus status = 30;
-  // A timestamp when the device was last seen in the UP state.
-  google.protobuf.Timestamp last_seen = 31;
+  Status status = 1;
+  // A timestamp when the device was last seen in the UP or unhealthy state.
+  google.protobuf.Timestamp last_seen = 2;
 }
 
 // Endpoint defines an endpoint structure.

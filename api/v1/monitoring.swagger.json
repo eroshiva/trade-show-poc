@@ -30,7 +30,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -51,7 +51,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -83,7 +83,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -117,7 +117,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -157,7 +157,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -218,7 +218,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -233,16 +233,18 @@
       "type": "object",
       "description": "DeleteDeviceRequest carries information about the network device that should be removed from the monitoring."
     },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "@type": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": {}
+    "apiv1Status": {
+      "type": "string",
+      "enum": [
+        "STATUS_UNSPECIFIED",
+        "STATUS_DEVICE_DOWN",
+        "STATUS_DEVICE_UNHEALTHY",
+        "STATUS_DEVICE_UP"
+      ],
+      "default": "STATUS_UNSPECIFIED",
+      "description": "Status defines Finite State Machine (FSM) for network device monitoring.\n\n - STATUS_UNSPECIFIED: This is to comply with Protobuf best practices.\n - STATUS_DEVICE_DOWN: Corresponds to Network device is in down (or not reachable state).\n - STATUS_DEVICE_UNHEALTHY: Corresponds to the Network device in unhealthy state (as defined internally by the device).\n - STATUS_DEVICE_UP: Corresponds to the Network device in healthy state (i.e., up and running, operating as expected)."
     },
-    "rpcStatus": {
+    "googlerpcStatus": {
       "type": "object",
       "properties": {
         "code": {
@@ -260,6 +262,15 @@
           }
         }
       }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
     },
     "v1AddDeviceRequest": {
       "type": "object",
@@ -307,15 +318,19 @@
       "description": "DeleteDeviceResponse carries information about network device that has been removed from the monitoring."
     },
     "v1DeviceStatus": {
-      "type": "string",
-      "enum": [
-        "DEVICE_STATUS_UNSPECIFIED",
-        "DEVICE_STATUS_DEVICE_DOWN",
-        "DEVICE_STATUS_DEVICE_UNHEALTHY",
-        "DEVICE_STATUS_DEVICE_UP"
-      ],
-      "default": "DEVICE_STATUS_UNSPECIFIED",
-      "description": "DeviceStatus defines Finite State Machine (FSM) for network device monitoring.\n\n - DEVICE_STATUS_UNSPECIFIED: This is to comply with Protobuf best practices.\n - DEVICE_STATUS_DEVICE_DOWN: Corresponds to Network device is in down (or not reachable state).\n - DEVICE_STATUS_DEVICE_UNHEALTHY: Corresponds to the Network device in unhealthy state (as defined internally by the device).\n - DEVICE_STATUS_DEVICE_UP: Corresponds to the Network device in healthy state (i.e., up and running, operating as expected)."
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/apiv1Status",
+          "description": "Current status of the Network device."
+        },
+        "lastSeen": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A timestamp when the device was last seen in the UP or unhealthy state."
+        }
+      },
+      "description": "DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state."
     },
     "v1Endpoint": {
       "type": "object",
@@ -426,15 +441,6 @@
         "fwVersion": {
           "$ref": "#/definitions/v1Version",
           "description": "FW version (i.e., FW revision)."
-        },
-        "status": {
-          "$ref": "#/definitions/v1DeviceStatus",
-          "description": "Current status of the Network device."
-        },
-        "lastSeen": {
-          "type": "string",
-          "format": "date-time",
-          "description": "A timestamp when the device was last seen in the UP state."
         }
       },
       "title": "NetworkDevice message defines Network device data structure,"
