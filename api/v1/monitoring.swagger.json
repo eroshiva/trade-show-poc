@@ -30,7 +30,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -51,7 +51,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -83,7 +83,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -117,7 +117,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -157,7 +157,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -197,6 +197,69 @@
               "PROTOCOL_OPEN_V_SWITCH"
             ],
             "default": "PROTOCOL_UNSPECIFIED"
+          },
+          {
+            "name": "endpoint.networkDevice.id",
+            "description": "ID is a device ID assigned internally by the Monitoring service. it is internal to the system.\nLater, by this ID, it is possible to retrieve any information about the device.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.vendor",
+            "description": "Network device vendor.\n\n - VENDOR_UNSPECIFIED: This is to comply with Protobuf best practices.\n - VENDOR_UBIQUITI: Ubiquiti,\n - VENDOR_CISCO: Cisco.\n - VENDOR_JUNIPER: Juniper Networks.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "VENDOR_UNSPECIFIED",
+              "VENDOR_UBIQUITI",
+              "VENDOR_CISCO",
+              "VENDOR_JUNIPER"
+            ],
+            "default": "VENDOR_UNSPECIFIED"
+          },
+          {
+            "name": "endpoint.networkDevice.model",
+            "description": "Network device model.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.hwVersion",
+            "description": "HW version (i.e., HW revision, different from model version).",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.swVersion.version",
+            "description": "SW/FW Version number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.swVersion.checksum",
+            "description": "Checksum of the current revision.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.fwVersion.version",
+            "description": "SW/FW Version number.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.fwVersion.checksum",
+            "description": "Checksum of the current revision.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -218,7 +281,7 @@
           "default": {
             "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/googlerpcStatus"
             }
           }
         },
@@ -233,16 +296,18 @@
       "type": "object",
       "description": "DeleteDeviceRequest carries information about the network device that should be removed from the monitoring."
     },
-    "protobufAny": {
-      "type": "object",
-      "properties": {
-        "@type": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": {}
+    "apiv1Status": {
+      "type": "string",
+      "enum": [
+        "STATUS_UNSPECIFIED",
+        "STATUS_DEVICE_DOWN",
+        "STATUS_DEVICE_UNHEALTHY",
+        "STATUS_DEVICE_UP"
+      ],
+      "default": "STATUS_UNSPECIFIED",
+      "description": "Status defines Finite State Machine (FSM) for network device monitoring.\n\n - STATUS_UNSPECIFIED: This is to comply with Protobuf best practices.\n - STATUS_DEVICE_DOWN: Corresponds to Network device is in down (or not reachable state).\n - STATUS_DEVICE_UNHEALTHY: Corresponds to the Network device in unhealthy state (as defined internally by the device).\n - STATUS_DEVICE_UP: Corresponds to the Network device in healthy state (i.e., up and running, operating as expected)."
     },
-    "rpcStatus": {
+    "googlerpcStatus": {
       "type": "object",
       "properties": {
         "code": {
@@ -260,6 +325,15 @@
           }
         }
       }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
     },
     "v1AddDeviceRequest": {
       "type": "object",
@@ -307,15 +381,22 @@
       "description": "DeleteDeviceResponse carries information about network device that has been removed from the monitoring."
     },
     "v1DeviceStatus": {
-      "type": "string",
-      "enum": [
-        "DEVICE_STATUS_UNSPECIFIED",
-        "DEVICE_STATUS_DEVICE_DOWN",
-        "DEVICE_STATUS_DEVICE_UNHEALTHY",
-        "DEVICE_STATUS_DEVICE_UP"
-      ],
-      "default": "DEVICE_STATUS_UNSPECIFIED",
-      "description": "DeviceStatus defines Finite State Machine (FSM) for network device monitoring.\n\n - DEVICE_STATUS_UNSPECIFIED: This is to comply with Protobuf best practices.\n - DEVICE_STATUS_DEVICE_DOWN: Corresponds to Network device is in down (or not reachable state).\n - DEVICE_STATUS_DEVICE_UNHEALTHY: Corresponds to the Network device in unhealthy state (as defined internally by the device).\n - DEVICE_STATUS_DEVICE_UP: Corresponds to the Network device in healthy state (i.e., up and running, operating as expected)."
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Internal (to the system) ID of the device."
+        },
+        "status": {
+          "$ref": "#/definitions/apiv1Status",
+          "description": "Current status of the Network device."
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "A timestamp when the device was last seen in the UP or unhealthy state.\n\noriginally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that."
+        }
+      },
+      "description": "DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state."
     },
     "v1Endpoint": {
       "type": "object",
@@ -331,6 +412,9 @@
         "protocol": {
           "$ref": "#/definitions/v1Protocol",
           "description": "Supported by the network device protocol for communicating over this endpoint."
+        },
+        "networkDevice": {
+          "$ref": "#/definitions/v1NetworkDevice"
         }
       },
       "description": "Endpoint defines an endpoint structure."
@@ -426,15 +510,6 @@
         "fwVersion": {
           "$ref": "#/definitions/v1Version",
           "description": "FW version (i.e., FW revision)."
-        },
-        "status": {
-          "$ref": "#/definitions/v1DeviceStatus",
-          "description": "Current status of the Network device."
-        },
-        "lastSeen": {
-          "type": "string",
-          "format": "date-time",
-          "description": "A timestamp when the device was last seen in the UP state."
         }
       },
       "title": "NetworkDevice message defines Network device data structure,"

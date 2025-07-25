@@ -811,7 +811,34 @@ func (m *GetDeviceStatusResponse) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for Status
+	if all {
+		switch v := interface{}(m.GetStatus()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetDeviceStatusResponseValidationError{
+					field:  "Status",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetDeviceStatusResponseValidationError{
+					field:  "Status",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetStatus()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetDeviceStatusResponseValidationError{
+				field:  "Status",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return GetDeviceStatusResponseMultiError(errors)
@@ -1423,37 +1450,6 @@ func (m *NetworkDevice) validate(all bool) error {
 		}
 	}
 
-	// no validation rules for Status
-
-	if all {
-		switch v := interface{}(m.GetLastSeen()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, NetworkDeviceValidationError{
-					field:  "LastSeen",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, NetworkDeviceValidationError{
-					field:  "LastSeen",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetLastSeen()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return NetworkDeviceValidationError{
-				field:  "LastSeen",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	if len(errors) > 0 {
 		return NetworkDeviceMultiError(errors)
 	}
@@ -1532,6 +1528,111 @@ var _ interface {
 	ErrorName() string
 } = NetworkDeviceValidationError{}
 
+// Validate checks the field values on DeviceStatus with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *DeviceStatus) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeviceStatus with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in DeviceStatusMultiError, or
+// nil if none found.
+func (m *DeviceStatus) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeviceStatus) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Status
+
+	// no validation rules for LastSeen
+
+	if len(errors) > 0 {
+		return DeviceStatusMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeviceStatusMultiError is an error wrapping multiple validation errors
+// returned by DeviceStatus.ValidateAll() if the designated constraints aren't met.
+type DeviceStatusMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeviceStatusMultiError) Error() string {
+	msgs := make([]string, 0, len(m))
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeviceStatusMultiError) AllErrors() []error { return m }
+
+// DeviceStatusValidationError is the validation error returned by
+// DeviceStatus.Validate if the designated constraints aren't met.
+type DeviceStatusValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeviceStatusValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeviceStatusValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeviceStatusValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeviceStatusValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeviceStatusValidationError) ErrorName() string { return "DeviceStatusValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DeviceStatusValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeviceStatus.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeviceStatusValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeviceStatusValidationError{}
+
 // Validate checks the field values on Endpoint with the rules defined in the
 // proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -1559,6 +1660,35 @@ func (m *Endpoint) validate(all bool) error {
 	// no validation rules for Port
 
 	// no validation rules for Protocol
+
+	if all {
+		switch v := interface{}(m.GetNetworkDevice()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EndpointValidationError{
+					field:  "NetworkDevice",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EndpointValidationError{
+					field:  "NetworkDevice",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetNetworkDevice()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EndpointValidationError{
+				field:  "NetworkDevice",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return EndpointMultiError(errors)

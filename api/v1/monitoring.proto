@@ -4,8 +4,8 @@ package api.v1;
 
 option go_package = "github.com/eroshiva/trade-show-poc/api/v1/monitoring;apiv1";
 
+import "api/v1/ent/opts.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
 service DeviceMonitoringService {
@@ -144,16 +144,16 @@ enum Vendor {
   VENDOR_JUNIPER = 3;
 }
 
-// DeviceStatus defines Finite State Machine (FSM) for network device monitoring.
-enum DeviceStatus {
+// Status defines Finite State Machine (FSM) for network device monitoring.
+enum Status {
   // This is to comply with Protobuf best practices.
-  DEVICE_STATUS_UNSPECIFIED = 0;
+  STATUS_UNSPECIFIED = 0;
   // Corresponds to Network device is in down (or not reachable state).
-  DEVICE_STATUS_DEVICE_DOWN = 1;
+  STATUS_DEVICE_DOWN = 1;
   // Corresponds to the Network device in unhealthy state (as defined internally by the device).
-  DEVICE_STATUS_DEVICE_UNHEALTHY = 2;
+  STATUS_DEVICE_UNHEALTHY = 2;
   // Corresponds to the Network device in healthy state (i.e., up and running, operating as expected).
-  DEVICE_STATUS_DEVICE_UP = 3;
+  STATUS_DEVICE_UP = 3;
 }
 
 // Protocol enum defines the supported protocols by monitoring service
@@ -172,6 +172,7 @@ enum Protocol {
 
 // NetworkDevice message defines Network device data structure,
 message NetworkDevice {
+  option (ent.schema) = {gen: true};
   // ID is a device ID assigned internally by the Monitoring service. it is internal to the system.
   // Later, by this ID, it is possible to retrieve any information about the device.
   string id = 1;
@@ -181,33 +182,43 @@ message NetworkDevice {
   string model = 3;
 
   // Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols).
-  repeated Endpoint endpoint = 10;
+  repeated Endpoint endpoint = 10 [(ent.edge) = {}];
 
   // HW version (i.e., HW revision, different from model version).
   string hw_version = 20;
   // SW version (i.e., SW revision).
-  Version sw_version = 21;
+  Version sw_version = 21 [(ent.edge) = {}];
   // FW version (i.e., FW revision).
-  Version fw_version = 22;
+  Version fw_version = 22 [(ent.edge) = {}];
+}
 
+// DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state.
+message DeviceStatus {
+  option (ent.schema) = {gen: true};
+  // Internal (to the system) ID of the device.
+  string id = 1;
   // Current status of the Network device.
-  DeviceStatus status = 30;
-  // A timestamp when the device was last seen in the UP state.
-  google.protobuf.Timestamp last_seen = 31;
+  Status status = 2;
+  // A timestamp when the device was last seen in the UP or unhealthy state.
+  string last_seen = 3; // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
 }
 
 // Endpoint defines an endpoint structure.
 message Endpoint {
+  option (ent.schema) = {gen: true};
   // Host address in CIDR form of IP or FQDN, if applicable.
   string host = 1;
   // Port number, where device health point is reachable.
   string port = 2;
   // Supported by the network device protocol for communicating over this endpoint.
   Protocol protocol = 10;
+
+  NetworkDevice network_device = 50 [(ent.edge) = {ref: "endpoint"}];
 }
 
 // Version message is a generic message for reporting a version.
 message Version {
+  option (ent.schema) = {gen: true};
   // SW/FW Version number.
   string version = 1;
   // Checksum of the current revision.
