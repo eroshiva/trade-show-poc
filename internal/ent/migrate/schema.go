@@ -26,12 +26,21 @@ var (
 		{Name: "host", Type: field.TypeString},
 		{Name: "port", Type: field.TypeString},
 		{Name: "protocol", Type: field.TypeEnum, Enums: []string{"PROTOCOL_UNSPECIFIED", "PROTOCOL_SNMP", "PROTOCOL_NETCONF", "PROTOCOL_RESTCONF", "PROTOCOL_OPEN_V_SWITCH"}},
+		{Name: "network_device_endpoints", Type: field.TypeString, Nullable: true},
 	}
 	// EndpointsTable holds the schema information for the "endpoints" table.
 	EndpointsTable = &schema.Table{
 		Name:       "endpoints",
 		Columns:    EndpointsColumns,
 		PrimaryKey: []*schema.Column{EndpointsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "endpoints_network_devices_endpoints",
+				Columns:    []*schema.Column{EndpointsColumns[4]},
+				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// NetworkDevicesColumns holds the columns for the "network_devices" table.
 	NetworkDevicesColumns = []*schema.Column{
@@ -74,44 +83,17 @@ var (
 			},
 		},
 	}
-	// NetworkDeviceEndpointColumns holds the columns for the "network_device_endpoint" table.
-	NetworkDeviceEndpointColumns = []*schema.Column{
-		{Name: "network_device_id", Type: field.TypeString},
-		{Name: "endpoint_id", Type: field.TypeInt},
-	}
-	// NetworkDeviceEndpointTable holds the schema information for the "network_device_endpoint" table.
-	NetworkDeviceEndpointTable = &schema.Table{
-		Name:       "network_device_endpoint",
-		Columns:    NetworkDeviceEndpointColumns,
-		PrimaryKey: []*schema.Column{NetworkDeviceEndpointColumns[0], NetworkDeviceEndpointColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "network_device_endpoint_network_device_id",
-				Columns:    []*schema.Column{NetworkDeviceEndpointColumns[0]},
-				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "network_device_endpoint_endpoint_id",
-				Columns:    []*schema.Column{NetworkDeviceEndpointColumns[1]},
-				RefColumns: []*schema.Column{EndpointsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		DeviceStatusTable,
 		EndpointsTable,
 		NetworkDevicesTable,
 		VersionsTable,
-		NetworkDeviceEndpointTable,
 	}
 )
 
 func init() {
+	EndpointsTable.ForeignKeys[0].RefTable = NetworkDevicesTable
 	VersionsTable.ForeignKeys[0].RefTable = NetworkDevicesTable
 	VersionsTable.ForeignKeys[1].RefTable = NetworkDevicesTable
-	NetworkDeviceEndpointTable.ForeignKeys[0].RefTable = NetworkDevicesTable
-	NetworkDeviceEndpointTable.ForeignKeys[1].RefTable = EndpointsTable
 }

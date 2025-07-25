@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
+	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 )
 
 // Endpoint is the model entity for the Endpoint schema.
@@ -24,24 +25,27 @@ type Endpoint struct {
 	Protocol endpoint.Protocol `json:"protocol,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EndpointQuery when eager-loading is set.
-	Edges        EndpointEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                    EndpointEdges `json:"edges"`
+	network_device_endpoints *string
+	selectValues             sql.SelectValues
 }
 
 // EndpointEdges holds the relations/edges for other nodes in the graph.
 type EndpointEdges struct {
 	// NetworkDevice holds the value of the network_device edge.
-	NetworkDevice []*NetworkDevice `json:"network_device,omitempty"`
+	NetworkDevice *NetworkDevice `json:"network_device,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
 // NetworkDeviceOrErr returns the NetworkDevice value or an error if the edge
-// was not loaded in eager-loading.
-func (e EndpointEdges) NetworkDeviceOrErr() ([]*NetworkDevice, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e EndpointEdges) NetworkDeviceOrErr() (*NetworkDevice, error) {
+	if e.NetworkDevice != nil {
 		return e.NetworkDevice, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: networkdevice.Label}
 	}
 	return nil, &NotLoadedError{edge: "network_device"}
 }
@@ -54,6 +58,8 @@ func (*Endpoint) scanValues(columns []string) ([]any, error) {
 		case endpoint.FieldID:
 			values[i] = new(sql.NullInt64)
 		case endpoint.FieldHost, endpoint.FieldPort, endpoint.FieldProtocol:
+			values[i] = new(sql.NullString)
+		case endpoint.ForeignKeys[0]: // network_device_endpoints
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -93,6 +99,13 @@ func (e *Endpoint) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field protocol", values[i])
 			} else if value.Valid {
 				e.Protocol = endpoint.Protocol(value.String)
+			}
+		case endpoint.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field network_device_endpoints", values[i])
+			} else if value.Valid {
+				e.network_device_endpoints = new(string)
+				*e.network_device_endpoints = value.String
 			}
 		default:
 			e.selectValues.Set(columns[i], values[i])

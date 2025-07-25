@@ -491,7 +491,7 @@
           "type": "string",
           "description": "Network device model."
         },
-        "endpoint": {
+        "endpoints": {
           "type": "array",
           "items": {
             "type": "object",

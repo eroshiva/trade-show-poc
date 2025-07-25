@@ -45,14 +45,14 @@ func (ndc *NetworkDeviceCreate) SetID(s string) *NetworkDeviceCreate {
 	return ndc
 }
 
-// AddEndpointIDs adds the "endpoint" edge to the Endpoint entity by IDs.
+// AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by IDs.
 func (ndc *NetworkDeviceCreate) AddEndpointIDs(ids ...int) *NetworkDeviceCreate {
 	ndc.mutation.AddEndpointIDs(ids...)
 	return ndc
 }
 
-// AddEndpoint adds the "endpoint" edges to the Endpoint entity.
-func (ndc *NetworkDeviceCreate) AddEndpoint(e ...*Endpoint) *NetworkDeviceCreate {
+// AddEndpoints adds the "endpoints" edges to the Endpoint entity.
+func (ndc *NetworkDeviceCreate) AddEndpoints(e ...*Endpoint) *NetworkDeviceCreate {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
@@ -185,12 +185,12 @@ func (ndc *NetworkDeviceCreate) createSpec() (*NetworkDevice, *sqlgraph.CreateSp
 		_spec.SetField(networkdevice.FieldHwVersion, field.TypeString, value)
 		_node.HwVersion = value
 	}
-	if nodes := ndc.mutation.EndpointIDs(); len(nodes) > 0 {
+	if nodes := ndc.mutation.EndpointsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),

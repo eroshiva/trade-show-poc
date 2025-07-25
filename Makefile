@@ -65,9 +65,11 @@ migration-apply: ## Uploads migration to the running DB instance
 	atlas migrate apply --dir file://internal/ent/migrate/migrations \
       --url postgresql://${PGUSER}:${PGPASSWORD}@localhost:${PGPORT}/${PGDATABASE}?search_path=public
 
+migration-hash: ## Hashes the atlas checksum to correspond to the migration
+	atlas migrate hash --dir file://internal/ent/migrate/migrations
+
 migration-generate: ## Generate DB migration "make migration-generate MIGRATION=<migration-name>"
 	@if test -z $(MIGRATION); then echo "Please specify migration name" && exit 1; fi
-	$(MAKE) db-stop
 	$(MAKE) db-start
 	sleep 5;
 	atlas migrate diff $(MIGRATION) \
@@ -75,11 +77,9 @@ migration-generate: ## Generate DB migration "make migration-generate MIGRATION=
   		--to "ent://internal/ent/schema" \
   		--dev-url "docker://postgres/15/${PGDATABASE}?search_path=public"
 	$(MAKE) db-stop
-	#$(GOCMD) run internal/ent/migrate/gen_code_migrations.go
 
 db-start: ## Starts PostgreSQL Docker instance with uploaded migration
 	- $(MAKE) db-stop
-	#docker run --rm --name ${DOCKER_POSTGRESQL_NAME} --network host -d -p 3306:3306 -e MYSQL_DATABASE=ent -e MYSQL_ROOT_PASSWORD=pass mysql:8
 	docker run --name ${DOCKER_POSTGRESQL_NAME} --rm -p ${PGPORT}:${PGPORT} -e POSTGRES_PASSWORD=${PGPASSWORD} -e POSTGRES_DB=${PGDATABASE} -e POSTGRES_USER=${PGUSER} -d postgres:$(DOCKER_POSTGRESQL_VERSION)
 
 db-stop: ## Stops PostgreSQL Docker instance
@@ -106,7 +106,7 @@ go-test: ## Run unit tests present in the codebase
 
 test-ci: generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
 
-run: build-monitoring bring-up-db ## Runs compiled network device monitoring service
+run: go-tidy build-monitoring bring-up-db ## Runs compiled network device monitoring service
 	./build/_output/${POC_NAME}
 
 bring-up-db: migration-apply ## Start DB and upload migrations to it

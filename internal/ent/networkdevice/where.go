@@ -223,21 +223,21 @@ func HwVersionContainsFold(v string) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.FieldContainsFold(FieldHwVersion, v))
 }
 
-// HasEndpoint applies the HasEdge predicate on the "endpoint" edge.
-func HasEndpoint() predicate.NetworkDevice {
+// HasEndpoints applies the HasEdge predicate on the "endpoints" edge.
+func HasEndpoints() predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, EndpointTable, EndpointPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, EndpointsTable, EndpointsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasEndpointWith applies the HasEdge predicate on the "endpoint" edge with a given conditions (other predicates).
-func HasEndpointWith(preds ...predicate.Endpoint) predicate.NetworkDevice {
+// HasEndpointsWith applies the HasEdge predicate on the "endpoints" edge with a given conditions (other predicates).
+func HasEndpointsWith(preds ...predicate.Endpoint) predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
-		step := newEndpointStep()
+		step := newEndpointsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

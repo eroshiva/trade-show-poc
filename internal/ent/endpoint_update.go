@@ -70,19 +70,23 @@ func (eu *EndpointUpdate) SetNillableProtocol(e *endpoint.Protocol) *EndpointUpd
 	return eu
 }
 
-// AddNetworkDeviceIDs adds the "network_device" edge to the NetworkDevice entity by IDs.
-func (eu *EndpointUpdate) AddNetworkDeviceIDs(ids ...string) *EndpointUpdate {
-	eu.mutation.AddNetworkDeviceIDs(ids...)
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (eu *EndpointUpdate) SetNetworkDeviceID(id string) *EndpointUpdate {
+	eu.mutation.SetNetworkDeviceID(id)
 	return eu
 }
 
-// AddNetworkDevice adds the "network_device" edges to the NetworkDevice entity.
-func (eu *EndpointUpdate) AddNetworkDevice(n ...*NetworkDevice) *EndpointUpdate {
-	ids := make([]string, len(n))
-	for i := range n {
-		ids[i] = n[i].ID
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (eu *EndpointUpdate) SetNillableNetworkDeviceID(id *string) *EndpointUpdate {
+	if id != nil {
+		eu = eu.SetNetworkDeviceID(*id)
 	}
-	return eu.AddNetworkDeviceIDs(ids...)
+	return eu
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (eu *EndpointUpdate) SetNetworkDevice(n *NetworkDevice) *EndpointUpdate {
+	return eu.SetNetworkDeviceID(n.ID)
 }
 
 // Mutation returns the EndpointMutation object of the builder.
@@ -90,25 +94,10 @@ func (eu *EndpointUpdate) Mutation() *EndpointMutation {
 	return eu.mutation
 }
 
-// ClearNetworkDevice clears all "network_device" edges to the NetworkDevice entity.
+// ClearNetworkDevice clears the "network_device" edge to the NetworkDevice entity.
 func (eu *EndpointUpdate) ClearNetworkDevice() *EndpointUpdate {
 	eu.mutation.ClearNetworkDevice()
 	return eu
-}
-
-// RemoveNetworkDeviceIDs removes the "network_device" edge to NetworkDevice entities by IDs.
-func (eu *EndpointUpdate) RemoveNetworkDeviceIDs(ids ...string) *EndpointUpdate {
-	eu.mutation.RemoveNetworkDeviceIDs(ids...)
-	return eu
-}
-
-// RemoveNetworkDevice removes "network_device" edges to NetworkDevice entities.
-func (eu *EndpointUpdate) RemoveNetworkDevice(n ...*NetworkDevice) *EndpointUpdate {
-	ids := make([]string, len(n))
-	for i := range n {
-		ids[i] = n[i].ID
-	}
-	return eu.RemoveNetworkDeviceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -171,39 +160,23 @@ func (eu *EndpointUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if eu.mutation.NetworkDeviceCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
+			Columns: []string{endpoint.NetworkDeviceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := eu.mutation.RemovedNetworkDeviceIDs(); len(nodes) > 0 && !eu.mutation.NetworkDeviceCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := eu.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
+			Columns: []string{endpoint.NetworkDeviceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
@@ -276,19 +249,23 @@ func (euo *EndpointUpdateOne) SetNillableProtocol(e *endpoint.Protocol) *Endpoin
 	return euo
 }
 
-// AddNetworkDeviceIDs adds the "network_device" edge to the NetworkDevice entity by IDs.
-func (euo *EndpointUpdateOne) AddNetworkDeviceIDs(ids ...string) *EndpointUpdateOne {
-	euo.mutation.AddNetworkDeviceIDs(ids...)
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (euo *EndpointUpdateOne) SetNetworkDeviceID(id string) *EndpointUpdateOne {
+	euo.mutation.SetNetworkDeviceID(id)
 	return euo
 }
 
-// AddNetworkDevice adds the "network_device" edges to the NetworkDevice entity.
-func (euo *EndpointUpdateOne) AddNetworkDevice(n ...*NetworkDevice) *EndpointUpdateOne {
-	ids := make([]string, len(n))
-	for i := range n {
-		ids[i] = n[i].ID
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (euo *EndpointUpdateOne) SetNillableNetworkDeviceID(id *string) *EndpointUpdateOne {
+	if id != nil {
+		euo = euo.SetNetworkDeviceID(*id)
 	}
-	return euo.AddNetworkDeviceIDs(ids...)
+	return euo
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (euo *EndpointUpdateOne) SetNetworkDevice(n *NetworkDevice) *EndpointUpdateOne {
+	return euo.SetNetworkDeviceID(n.ID)
 }
 
 // Mutation returns the EndpointMutation object of the builder.
@@ -296,25 +273,10 @@ func (euo *EndpointUpdateOne) Mutation() *EndpointMutation {
 	return euo.mutation
 }
 
-// ClearNetworkDevice clears all "network_device" edges to the NetworkDevice entity.
+// ClearNetworkDevice clears the "network_device" edge to the NetworkDevice entity.
 func (euo *EndpointUpdateOne) ClearNetworkDevice() *EndpointUpdateOne {
 	euo.mutation.ClearNetworkDevice()
 	return euo
-}
-
-// RemoveNetworkDeviceIDs removes the "network_device" edge to NetworkDevice entities by IDs.
-func (euo *EndpointUpdateOne) RemoveNetworkDeviceIDs(ids ...string) *EndpointUpdateOne {
-	euo.mutation.RemoveNetworkDeviceIDs(ids...)
-	return euo
-}
-
-// RemoveNetworkDevice removes "network_device" edges to NetworkDevice entities.
-func (euo *EndpointUpdateOne) RemoveNetworkDevice(n ...*NetworkDevice) *EndpointUpdateOne {
-	ids := make([]string, len(n))
-	for i := range n {
-		ids[i] = n[i].ID
-	}
-	return euo.RemoveNetworkDeviceIDs(ids...)
 }
 
 // Where appends a list predicates to the EndpointUpdate builder.
@@ -407,39 +369,23 @@ func (euo *EndpointUpdateOne) sqlSave(ctx context.Context) (_node *Endpoint, err
 	}
 	if euo.mutation.NetworkDeviceCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
+			Columns: []string{endpoint.NetworkDeviceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := euo.mutation.RemovedNetworkDeviceIDs(); len(nodes) > 0 && !euo.mutation.NetworkDeviceCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := euo.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
+			Columns: []string{endpoint.NetworkDeviceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),

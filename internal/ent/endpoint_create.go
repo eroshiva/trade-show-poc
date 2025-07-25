@@ -38,19 +38,23 @@ func (ec *EndpointCreate) SetProtocol(e endpoint.Protocol) *EndpointCreate {
 	return ec
 }
 
-// AddNetworkDeviceIDs adds the "network_device" edge to the NetworkDevice entity by IDs.
-func (ec *EndpointCreate) AddNetworkDeviceIDs(ids ...string) *EndpointCreate {
-	ec.mutation.AddNetworkDeviceIDs(ids...)
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (ec *EndpointCreate) SetNetworkDeviceID(id string) *EndpointCreate {
+	ec.mutation.SetNetworkDeviceID(id)
 	return ec
 }
 
-// AddNetworkDevice adds the "network_device" edges to the NetworkDevice entity.
-func (ec *EndpointCreate) AddNetworkDevice(n ...*NetworkDevice) *EndpointCreate {
-	ids := make([]string, len(n))
-	for i := range n {
-		ids[i] = n[i].ID
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (ec *EndpointCreate) SetNillableNetworkDeviceID(id *string) *EndpointCreate {
+	if id != nil {
+		ec = ec.SetNetworkDeviceID(*id)
 	}
-	return ec.AddNetworkDeviceIDs(ids...)
+	return ec
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (ec *EndpointCreate) SetNetworkDevice(n *NetworkDevice) *EndpointCreate {
+	return ec.SetNetworkDeviceID(n.ID)
 }
 
 // Mutation returns the EndpointMutation object of the builder.
@@ -141,10 +145,10 @@ func (ec *EndpointCreate) createSpec() (*Endpoint, *sqlgraph.CreateSpec) {
 	}
 	if nodes := ec.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
+			Columns: []string{endpoint.NetworkDeviceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
@@ -153,6 +157,7 @@ func (ec *EndpointCreate) createSpec() (*Endpoint, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.network_device_endpoints = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -218,7 +218,7 @@ func HasNetworkDevice() predicate.Endpoint {
 	return predicate.Endpoint(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, NetworkDeviceTable, NetworkDevicePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, NetworkDeviceTable, NetworkDeviceColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

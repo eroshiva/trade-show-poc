@@ -182,7 +182,7 @@ message NetworkDevice {
   string model = 3;
 
   // Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols).
-  repeated Endpoint endpoint = 10 [(ent.edge) = {}];
+  repeated Endpoint endpoints = 10 [(ent.edge) = {}];
 
   // HW version (i.e., HW revision, different from model version).
   string hw_version = 20;
@@ -213,7 +213,7 @@ message Endpoint {
   // Supported by the network device protocol for communicating over this endpoint.
   Protocol protocol = 10;
 
-  NetworkDevice network_device = 50 [(ent.edge) = {ref: "endpoint"}];
+  NetworkDevice network_device = 50 [(ent.edge) = {ref: "endpoints", unique: true}];
 }
 
 // Version message is a generic message for reporting a version.

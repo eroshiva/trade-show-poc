@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -25,6 +24,7 @@ type EndpointQuery struct {
 	inters            []Interceptor
 	predicates        []predicate.Endpoint
 	withNetworkDevice *NetworkDeviceQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,7 +75,7 @@ func (eq *EndpointQuery) QueryNetworkDevice() *NetworkDeviceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(endpoint.Table, endpoint.FieldID, selector),
 			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, endpoint.NetworkDeviceTable, endpoint.NetworkDevicePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, endpoint.NetworkDeviceTable, endpoint.NetworkDeviceColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
 		return fromU, nil
@@ -370,11 +370,18 @@ func (eq *EndpointQuery) prepareQuery(ctx context.Context) error {
 func (eq *EndpointQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Endpoint, error) {
 	var (
 		nodes       = []*Endpoint{}
+		withFKs     = eq.withFKs
 		_spec       = eq.querySpec()
 		loadedTypes = [1]bool{
 			eq.withNetworkDevice != nil,
 		}
 	)
+	if eq.withNetworkDevice != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, endpoint.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Endpoint).scanValues(nil, columns)
 	}
@@ -394,9 +401,8 @@ func (eq *EndpointQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*End
 		return nodes, nil
 	}
 	if query := eq.withNetworkDevice; query != nil {
-		if err := eq.loadNetworkDevice(ctx, query, nodes,
-			func(n *Endpoint) { n.Edges.NetworkDevice = []*NetworkDevice{} },
-			func(n *Endpoint, e *NetworkDevice) { n.Edges.NetworkDevice = append(n.Edges.NetworkDevice, e) }); err != nil {
+		if err := eq.loadNetworkDevice(ctx, query, nodes, nil,
+			func(n *Endpoint, e *NetworkDevice) { n.Edges.NetworkDevice = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -404,62 +410,33 @@ func (eq *EndpointQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*End
 }
 
 func (eq *EndpointQuery) loadNetworkDevice(ctx context.Context, query *NetworkDeviceQuery, nodes []*Endpoint, init func(*Endpoint), assign func(*Endpoint, *NetworkDevice)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Endpoint)
-	nids := make(map[string]map[*Endpoint]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*Endpoint)
+	for i := range nodes {
+		if nodes[i].network_device_endpoints == nil {
+			continue
 		}
+		fk := *nodes[i].network_device_endpoints
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(endpoint.NetworkDeviceTable)
-		s.Join(joinT).On(s.C(networkdevice.FieldID), joinT.C(endpoint.NetworkDevicePrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(endpoint.NetworkDevicePrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(endpoint.NetworkDevicePrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := values[1].(*sql.NullString).String
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Endpoint]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*NetworkDevice](ctx, query, qr, query.inters)
+	query.Where(networkdevice.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "network_device" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "network_device_endpoints" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil

@@ -478,7 +478,7 @@ func (c *EndpointClient) QueryNetworkDevice(e *Endpoint) *NetworkDeviceQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(endpoint.Table, endpoint.FieldID, id),
 			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, endpoint.NetworkDeviceTable, endpoint.NetworkDevicePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, endpoint.NetworkDeviceTable, endpoint.NetworkDeviceColumn),
 		)
 		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
 		return fromV, nil
@@ -619,15 +619,15 @@ func (c *NetworkDeviceClient) GetX(ctx context.Context, id string) *NetworkDevic
 	return obj
 }
 
-// QueryEndpoint queries the endpoint edge of a NetworkDevice.
-func (c *NetworkDeviceClient) QueryEndpoint(nd *NetworkDevice) *EndpointQuery {
+// QueryEndpoints queries the endpoints edge of a NetworkDevice.
+func (c *NetworkDeviceClient) QueryEndpoints(nd *NetworkDevice) *EndpointQuery {
 	query := (&EndpointClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := nd.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, id),
 			sqlgraph.To(endpoint.Table, endpoint.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, networkdevice.EndpointTable, networkdevice.EndpointPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, networkdevice.EndpointsTable, networkdevice.EndpointsColumn),
 		)
 		fromV = sqlgraph.Neighbors(nd.driver.Dialect(), step)
 		return fromV, nil

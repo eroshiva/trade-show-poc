@@ -30,8 +30,8 @@ type NetworkDevice struct {
 
 // NetworkDeviceEdges holds the relations/edges for other nodes in the graph.
 type NetworkDeviceEdges struct {
-	// Endpoint holds the value of the endpoint edge.
-	Endpoint []*Endpoint `json:"endpoint,omitempty"`
+	// Endpoints holds the value of the endpoints edge.
+	Endpoints []*Endpoint `json:"endpoints,omitempty"`
 	// SwVersion holds the value of the sw_version edge.
 	SwVersion []*Version `json:"sw_version,omitempty"`
 	// FwVersion holds the value of the fw_version edge.
@@ -41,13 +41,13 @@ type NetworkDeviceEdges struct {
 	loadedTypes [3]bool
 }
 
-// EndpointOrErr returns the Endpoint value or an error if the edge
+// EndpointsOrErr returns the Endpoints value or an error if the edge
 // was not loaded in eager-loading.
-func (e NetworkDeviceEdges) EndpointOrErr() ([]*Endpoint, error) {
+func (e NetworkDeviceEdges) EndpointsOrErr() ([]*Endpoint, error) {
 	if e.loadedTypes[0] {
-		return e.Endpoint, nil
+		return e.Endpoints, nil
 	}
-	return nil, &NotLoadedError{edge: "endpoint"}
+	return nil, &NotLoadedError{edge: "endpoints"}
 }
 
 // SwVersionOrErr returns the SwVersion value or an error if the edge
@@ -127,9 +127,9 @@ func (nd *NetworkDevice) Value(name string) (ent.Value, error) {
 	return nd.selectValues.Get(name)
 }
 
-// QueryEndpoint queries the "endpoint" edge of the NetworkDevice entity.
-func (nd *NetworkDevice) QueryEndpoint() *EndpointQuery {
-	return NewNetworkDeviceClient(nd.config).QueryEndpoint(nd)
+// QueryEndpoints queries the "endpoints" edge of the NetworkDevice entity.
+func (nd *NetworkDevice) QueryEndpoints() *EndpointQuery {
+	return NewNetworkDeviceClient(nd.config).QueryEndpoints(nd)
 }
 
 // QuerySwVersion queries the "sw_version" edge of the NetworkDevice entity.

@@ -756,7 +756,7 @@ type NetworkDevice struct {
 	// Network device model.
 	Model string `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
 	// Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols).
-	Endpoint []*Endpoint `protobuf:"bytes,10,rep,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Endpoints []*Endpoint `protobuf:"bytes,10,rep,name=endpoints,proto3" json:"endpoints,omitempty"`
 	// HW version (i.e., HW revision, different from model version).
 	HwVersion string `protobuf:"bytes,20,opt,name=hw_version,json=hwVersion,proto3" json:"hw_version,omitempty"`
 	// SW version (i.e., SW revision).
@@ -818,9 +818,9 @@ func (x *NetworkDevice) GetModel() string {
 	return ""
 }
 
-func (x *NetworkDevice) GetEndpoint() []*Endpoint {
+func (x *NetworkDevice) GetEndpoints() []*Endpoint {
 	if x != nil {
-		return x.Endpoint
+		return x.Endpoints
 	}
 	return nil
 }
@@ -1076,13 +1076,13 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\x18UpdateDeviceListResponse\x12/\n" +
 	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"H\n" +
 	"\x15GetDeviceListResponse\x12/\n" +
-	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xa4\x02\n" +
+	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xa6\x02\n" +
 	"\rNetworkDevice\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06vendor\x18\x02 \x01(\x0e2\x0e.api.v1.VendorR\x06vendor\x12\x14\n" +
-	"\x05model\x18\x03 \x01(\tR\x05model\x122\n" +
-	"\bendpoint\x18\n" +
-	" \x03(\v2\x10.api.v1.EndpointB\x04¦I\x00R\bendpoint\x12\x1d\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x124\n" +
+	"\tendpoints\x18\n" +
+	" \x03(\v2\x10.api.v1.EndpointB\x04¦I\x00R\tendpoints\x12\x1d\n" +
 	"\n" +
 	"hw_version\x18\x14 \x01(\tR\thwVersion\x124\n" +
 	"\n" +
@@ -1092,14 +1092,13 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\fDeviceStatus\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12\x1b\n" +
-	"\tlast_seen\x18\x03 \x01(\tR\blastSeen:\x06\xba\xa6I\x02\b\x01\"\xb6\x01\n" +
+	"\tlast_seen\x18\x03 \x01(\tR\blastSeen:\x06\xba\xa6I\x02\b\x01\"\xb9\x01\n" +
 	"\bEndpoint\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\tR\x04port\x12,\n" +
 	"\bprotocol\x18\n" +
-	" \x01(\x0e2\x10.api.v1.ProtocolR\bprotocol\x12L\n" +
-	"\x0enetwork_device\x182 \x01(\v2\x15.api.v1.NetworkDeviceB\x0e¦I\n" +
-	"\x12\bendpointR\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"G\n" +
+	" \x01(\x0e2\x10.api.v1.ProtocolR\bprotocol\x12O\n" +
+	"\x0enetwork_device\x182 \x01(\v2\x15.api.v1.NetworkDeviceB\x11¦I\r\b\x01\x12\tendpointsR\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"G\n" +
 	"\aVersion\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12\x1a\n" +
 	"\bchecksum\x18\x02 \x01(\tR\bchecksum:\x06\xba\xa6I\x02\b\x01*[\n" +
@@ -1172,7 +1171,7 @@ var file_api_v1_monitoring_proto_depIdxs = []int32{
 	13, // 6: api.v1.UpdateDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
 	13, // 7: api.v1.GetDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
 	0,  // 8: api.v1.NetworkDevice.vendor:type_name -> api.v1.Vendor
-	15, // 9: api.v1.NetworkDevice.endpoint:type_name -> api.v1.Endpoint
+	15, // 9: api.v1.NetworkDevice.endpoints:type_name -> api.v1.Endpoint
 	16, // 10: api.v1.NetworkDevice.sw_version:type_name -> api.v1.Version
 	16, // 11: api.v1.NetworkDevice.fw_version:type_name -> api.v1.Version
 	1,  // 12: api.v1.DeviceStatus.status:type_name -> api.v1.Status

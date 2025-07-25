@@ -71,14 +71,14 @@ func (ndu *NetworkDeviceUpdate) SetNillableHwVersion(s *string) *NetworkDeviceUp
 	return ndu
 }
 
-// AddEndpointIDs adds the "endpoint" edge to the Endpoint entity by IDs.
+// AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by IDs.
 func (ndu *NetworkDeviceUpdate) AddEndpointIDs(ids ...int) *NetworkDeviceUpdate {
 	ndu.mutation.AddEndpointIDs(ids...)
 	return ndu
 }
 
-// AddEndpoint adds the "endpoint" edges to the Endpoint entity.
-func (ndu *NetworkDeviceUpdate) AddEndpoint(e ...*Endpoint) *NetworkDeviceUpdate {
+// AddEndpoints adds the "endpoints" edges to the Endpoint entity.
+func (ndu *NetworkDeviceUpdate) AddEndpoints(e ...*Endpoint) *NetworkDeviceUpdate {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
@@ -121,20 +121,20 @@ func (ndu *NetworkDeviceUpdate) Mutation() *NetworkDeviceMutation {
 	return ndu.mutation
 }
 
-// ClearEndpoint clears all "endpoint" edges to the Endpoint entity.
-func (ndu *NetworkDeviceUpdate) ClearEndpoint() *NetworkDeviceUpdate {
-	ndu.mutation.ClearEndpoint()
+// ClearEndpoints clears all "endpoints" edges to the Endpoint entity.
+func (ndu *NetworkDeviceUpdate) ClearEndpoints() *NetworkDeviceUpdate {
+	ndu.mutation.ClearEndpoints()
 	return ndu
 }
 
-// RemoveEndpointIDs removes the "endpoint" edge to Endpoint entities by IDs.
+// RemoveEndpointIDs removes the "endpoints" edge to Endpoint entities by IDs.
 func (ndu *NetworkDeviceUpdate) RemoveEndpointIDs(ids ...int) *NetworkDeviceUpdate {
 	ndu.mutation.RemoveEndpointIDs(ids...)
 	return ndu
 }
 
-// RemoveEndpoint removes "endpoint" edges to Endpoint entities.
-func (ndu *NetworkDeviceUpdate) RemoveEndpoint(e ...*Endpoint) *NetworkDeviceUpdate {
+// RemoveEndpoints removes "endpoints" edges to Endpoint entities.
+func (ndu *NetworkDeviceUpdate) RemoveEndpoints(e ...*Endpoint) *NetworkDeviceUpdate {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
@@ -242,12 +242,12 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if value, ok := ndu.mutation.HwVersion(); ok {
 		_spec.SetField(networkdevice.FieldHwVersion, field.TypeString, value)
 	}
-	if ndu.mutation.EndpointCleared() {
+	if ndu.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
@@ -255,12 +255,12 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ndu.mutation.RemovedEndpointIDs(); len(nodes) > 0 && !ndu.mutation.EndpointCleared() {
+	if nodes := ndu.mutation.RemovedEndpointsIDs(); len(nodes) > 0 && !ndu.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
@@ -271,12 +271,12 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ndu.mutation.EndpointIDs(); len(nodes) > 0 {
+	if nodes := ndu.mutation.EndpointsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
@@ -439,14 +439,14 @@ func (nduo *NetworkDeviceUpdateOne) SetNillableHwVersion(s *string) *NetworkDevi
 	return nduo
 }
 
-// AddEndpointIDs adds the "endpoint" edge to the Endpoint entity by IDs.
+// AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by IDs.
 func (nduo *NetworkDeviceUpdateOne) AddEndpointIDs(ids ...int) *NetworkDeviceUpdateOne {
 	nduo.mutation.AddEndpointIDs(ids...)
 	return nduo
 }
 
-// AddEndpoint adds the "endpoint" edges to the Endpoint entity.
-func (nduo *NetworkDeviceUpdateOne) AddEndpoint(e ...*Endpoint) *NetworkDeviceUpdateOne {
+// AddEndpoints adds the "endpoints" edges to the Endpoint entity.
+func (nduo *NetworkDeviceUpdateOne) AddEndpoints(e ...*Endpoint) *NetworkDeviceUpdateOne {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
@@ -489,20 +489,20 @@ func (nduo *NetworkDeviceUpdateOne) Mutation() *NetworkDeviceMutation {
 	return nduo.mutation
 }
 
-// ClearEndpoint clears all "endpoint" edges to the Endpoint entity.
-func (nduo *NetworkDeviceUpdateOne) ClearEndpoint() *NetworkDeviceUpdateOne {
-	nduo.mutation.ClearEndpoint()
+// ClearEndpoints clears all "endpoints" edges to the Endpoint entity.
+func (nduo *NetworkDeviceUpdateOne) ClearEndpoints() *NetworkDeviceUpdateOne {
+	nduo.mutation.ClearEndpoints()
 	return nduo
 }
 
-// RemoveEndpointIDs removes the "endpoint" edge to Endpoint entities by IDs.
+// RemoveEndpointIDs removes the "endpoints" edge to Endpoint entities by IDs.
 func (nduo *NetworkDeviceUpdateOne) RemoveEndpointIDs(ids ...int) *NetworkDeviceUpdateOne {
 	nduo.mutation.RemoveEndpointIDs(ids...)
 	return nduo
 }
 
-// RemoveEndpoint removes "endpoint" edges to Endpoint entities.
-func (nduo *NetworkDeviceUpdateOne) RemoveEndpoint(e ...*Endpoint) *NetworkDeviceUpdateOne {
+// RemoveEndpoints removes "endpoints" edges to Endpoint entities.
+func (nduo *NetworkDeviceUpdateOne) RemoveEndpoints(e ...*Endpoint) *NetworkDeviceUpdateOne {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
@@ -640,12 +640,12 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 	if value, ok := nduo.mutation.HwVersion(); ok {
 		_spec.SetField(networkdevice.FieldHwVersion, field.TypeString, value)
 	}
-	if nduo.mutation.EndpointCleared() {
+	if nduo.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
@@ -653,12 +653,12 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := nduo.mutation.RemovedEndpointIDs(); len(nodes) > 0 && !nduo.mutation.EndpointCleared() {
+	if nodes := nduo.mutation.RemovedEndpointsIDs(); len(nodes) > 0 && !nduo.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
@@ -669,12 +669,12 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := nduo.mutation.EndpointIDs(); len(nodes) > 0 {
+	if nodes := nduo.mutation.EndpointsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
