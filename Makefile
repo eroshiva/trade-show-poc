@@ -35,7 +35,7 @@ buf-generate: buf-install buf-update ## Generates Golang-driven bindings out of 
 	mkdir -p internal/ent/schema
 	buf generate --exclude-path api/v1/ent --path api/v1/monitoring.proto
 
-buf-update: ## Generates Golang-driven bindings out of Protobuf
+buf-update: ## Updates the buf dependencies
 	buf dep update
 
 buf-lint: ## Runs linters against Protobuf
