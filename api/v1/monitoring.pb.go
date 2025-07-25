@@ -7,11 +7,12 @@
 package apiv1
 
 import (
+	_ "entgo.io/contrib/entproto/cmd/protoc-gen-ent/options/ent"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -854,7 +855,7 @@ type DeviceStatus struct {
 	// Current status of the Network device.
 	Status Status `protobuf:"varint,2,opt,name=status,proto3,enum=api.v1.Status" json:"status,omitempty"`
 	// A timestamp when the device was last seen in the UP or unhealthy state.
-	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
+	LastSeen      string `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"` // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -903,11 +904,11 @@ func (x *DeviceStatus) GetStatus() Status {
 	return Status_STATUS_UNSPECIFIED
 }
 
-func (x *DeviceStatus) GetLastSeen() *timestamppb.Timestamp {
+func (x *DeviceStatus) GetLastSeen() string {
 	if x != nil {
 		return x.LastSeen
 	}
-	return nil
+	return ""
 }
 
 // Endpoint defines an endpoint structure.
@@ -918,7 +919,8 @@ type Endpoint struct {
 	// Port number, where device health point is reachable.
 	Port string `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
 	// Supported by the network device protocol for communicating over this endpoint.
-	Protocol      Protocol `protobuf:"varint,10,opt,name=protocol,proto3,enum=api.v1.Protocol" json:"protocol,omitempty"`
+	Protocol      Protocol       `protobuf:"varint,10,opt,name=protocol,proto3,enum=api.v1.Protocol" json:"protocol,omitempty"`
+	NetworkDevice *NetworkDevice `protobuf:"bytes,50,opt,name=network_device,json=networkDevice,proto3" json:"network_device,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -972,6 +974,13 @@ func (x *Endpoint) GetProtocol() Protocol {
 		return x.Protocol
 	}
 	return Protocol_PROTOCOL_UNSPECIFIED
+}
+
+func (x *Endpoint) GetNetworkDevice() *NetworkDevice {
+	if x != nil {
+		return x.NetworkDevice
+	}
+	return nil
 }
 
 // Version message is a generic message for reporting a version.
@@ -1033,7 +1042,7 @@ var File_api_v1_monitoring_proto protoreflect.FileDescriptor
 
 const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\n" +
-	"\x17api/v1/monitoring.proto\x12\x06api.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa8\x01\n" +
+	"\x17api/v1/monitoring.proto\x12\x06api.v1\x1a\x15api/v1/ent/opts.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa8\x01\n" +
 	"\x12GetSummaryResponse\x12#\n" +
 	"\rdevices_total\x18\x01 \x01(\x05R\fdevicesTotal\x12\x1d\n" +
 	"\n" +
@@ -1068,31 +1077,33 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\x18UpdateDeviceListResponse\x12/\n" +
 	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"H\n" +
 	"\x15GetDeviceListResponse\x12/\n" +
-	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\x8a\x02\n" +
+	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xa4\x02\n" +
 	"\rNetworkDevice\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06vendor\x18\x02 \x01(\x0e2\x0e.api.v1.VendorR\x06vendor\x12\x14\n" +
-	"\x05model\x18\x03 \x01(\tR\x05model\x12,\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x122\n" +
 	"\bendpoint\x18\n" +
-	" \x03(\v2\x10.api.v1.EndpointR\bendpoint\x12\x1d\n" +
+	" \x03(\v2\x10.api.v1.EndpointB\x04¦I\x00R\bendpoint\x12\x1d\n" +
 	"\n" +
-	"hw_version\x18\x14 \x01(\tR\thwVersion\x12.\n" +
+	"hw_version\x18\x14 \x01(\tR\thwVersion\x124\n" +
 	"\n" +
-	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionR\tswVersion\x12.\n" +
+	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionB\x04¦I\x00R\tswVersion\x124\n" +
 	"\n" +
-	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionR\tfwVersion\"\x7f\n" +
+	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x04¦I\x00R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"k\n" +
 	"\fDeviceStatus\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
-	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x127\n" +
-	"\tlast_seen\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\"`\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12\x1b\n" +
+	"\tlast_seen\x18\x03 \x01(\tR\blastSeen:\x06\xba\xa6I\x02\b\x01\"\xb6\x01\n" +
 	"\bEndpoint\x12\x12\n" +
 	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
 	"\x04port\x18\x02 \x01(\tR\x04port\x12,\n" +
 	"\bprotocol\x18\n" +
-	" \x01(\x0e2\x10.api.v1.ProtocolR\bprotocol\"?\n" +
+	" \x01(\x0e2\x10.api.v1.ProtocolR\bprotocol\x12L\n" +
+	"\x0enetwork_device\x182 \x01(\v2\x15.api.v1.NetworkDeviceB\x0e¦I\n" +
+	"\x12\bendpointR\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"G\n" +
 	"\aVersion\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12\x1a\n" +
-	"\bchecksum\x18\x02 \x01(\tR\bchecksum*[\n" +
+	"\bchecksum\x18\x02 \x01(\tR\bchecksum:\x06\xba\xa6I\x02\b\x01*[\n" +
 	"\x06Vendor\x12\x16\n" +
 	"\x12VENDOR_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fVENDOR_UBIQUITI\x10\x01\x12\x10\n" +
@@ -1150,8 +1161,7 @@ var file_api_v1_monitoring_proto_goTypes = []any{
 	(*DeviceStatus)(nil),             // 14: api.v1.DeviceStatus
 	(*Endpoint)(nil),                 // 15: api.v1.Endpoint
 	(*Version)(nil),                  // 16: api.v1.Version
-	(*timestamppb.Timestamp)(nil),    // 17: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),            // 18: google.protobuf.Empty
+	(*emptypb.Empty)(nil),            // 17: google.protobuf.Empty
 }
 var file_api_v1_monitoring_proto_depIdxs = []int32{
 	13, // 0: api.v1.AddDeviceRequest.device:type_name -> api.v1.NetworkDevice
@@ -1167,14 +1177,14 @@ var file_api_v1_monitoring_proto_depIdxs = []int32{
 	16, // 10: api.v1.NetworkDevice.sw_version:type_name -> api.v1.Version
 	16, // 11: api.v1.NetworkDevice.fw_version:type_name -> api.v1.Version
 	1,  // 12: api.v1.DeviceStatus.status:type_name -> api.v1.Status
-	17, // 13: api.v1.DeviceStatus.last_seen:type_name -> google.protobuf.Timestamp
-	2,  // 14: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
+	2,  // 13: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
+	13, // 14: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
 	10, // 15: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
-	18, // 16: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
+	17, // 16: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
 	4,  // 17: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
 	6,  // 18: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
 	8,  // 19: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
-	18, // 20: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
+	17, // 20: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
 	11, // 21: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
 	12, // 22: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
 	5,  // 23: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse

@@ -1554,34 +1554,7 @@ func (m *DeviceStatus) validate(all bool) error {
 
 	// no validation rules for Status
 
-	if all {
-		switch v := interface{}(m.GetLastSeen()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, DeviceStatusValidationError{
-					field:  "LastSeen",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, DeviceStatusValidationError{
-					field:  "LastSeen",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetLastSeen()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return DeviceStatusValidationError{
-				field:  "LastSeen",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
+	// no validation rules for LastSeen
 
 	if len(errors) > 0 {
 		return DeviceStatusMultiError(errors)
@@ -1687,6 +1660,35 @@ func (m *Endpoint) validate(all bool) error {
 	// no validation rules for Port
 
 	// no validation rules for Protocol
+
+	if all {
+		switch v := interface{}(m.GetNetworkDevice()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, EndpointValidationError{
+					field:  "NetworkDevice",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, EndpointValidationError{
+					field:  "NetworkDevice",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetNetworkDevice()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return EndpointValidationError{
+				field:  "NetworkDevice",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return EndpointMultiError(errors)

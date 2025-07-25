@@ -23,3 +23,8 @@ plugins:
     out: .
     opt:
       - allow_delete_body=true
+  # ent - https://github.com/ent/contrib/tree/master/entproto/cmd/protoc-gen-ent
+  - local: protoc-gen-ent
+    out: internal/ent
+    opt:
+      - schemadir=internal/ent/schema
