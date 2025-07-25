@@ -10,11 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends make build-esse
 # building a binary
 ENV GO111MODULE=on
 ENV GOPRIVATE=github.com/eroshiva
-ARG MAKE_TARGET=build-api
+ARG MAKE_TARGET=build-monitoring
 
-COPY . /api-gateway
+COPY . /monitoring
 
-WORKDIR /api-gateway
+WORKDIR /monitoring
 
 RUN make ${MAKE_TARGET}
 
@@ -22,7 +22,7 @@ RUN make ${MAKE_TARGET}
 FROM gcr.io/distroless/base-debian12:nonroot
 
 # Copy our static executable
-COPY --from=builder /api-gateway/build/_output/api-gateway /usr/local/bin/api-gateway
+COPY --from=builder /monitoring/build/_output/monitoring /usr/local/bin/monitoring
 
 # Set the entrypoint for the container
-ENTRYPOINT ["/usr/local/bin/api-gateway"]
+ENTRYPOINT ["/usr/local/bin/monitoring"]

@@ -2,7 +2,7 @@ export GO111MODULE=on
 export CGO_ENABLED=1
 export GOPRIVATE=github.com/eroshiva
 
-POC_NAME := network-device-monitoring
+POC_NAME := monitoring
 POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.3.0
@@ -47,10 +47,10 @@ buf-breaking: ## Checks Protobuf schema on breaking changes
 generate: buf-generate ## Generates all necessary code bindings
 	go generate ./internal/ent
 
-build: go-tidy build-api ## Builds all code
+build: go-tidy build-monitoring ## Builds all code
 
-build-api: ## Build the Go binary for gRPC API Gateway
-	go build -mod=vendor -o build/_output/api-gateway ./cmd/api-gateway.go
+build-monitoring: ## Build the Go binary for network device monitoring service
+	go build -mod=vendor -o build/_output/${POC_NAME} ./cmd/monitoring.go
 
 deps: buf-install go-linters-install atlas-install ## Installs developer prerequisites for this project
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
@@ -106,8 +106,8 @@ go-test: ## Run unit tests present in the codebase
 
 test-ci: generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
 
-run: build-api ## Runs compiled API Gateway instance
-	./build/_output/api-gateway
+run: build-monitoring bring-up-db ## Runs compiled network device monitoring service
+	./build/_output/${POC_NAME}
 
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
