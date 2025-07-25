@@ -39,7 +39,7 @@ buf-update: ## Generates Golang-driven bindings out of Protobuf
 	buf dep update
 
 buf-lint: ## Runs linters against Protobuf
-	buf lint
+	buf lint --path api/v1/monitoring.proto
 
 buf-breaking: ## Checks Protobuf schema on breaking changes
 	buf breaking --against '.git#branch=main'

@@ -12,7 +12,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -1042,7 +1041,7 @@ var File_api_v1_monitoring_proto protoreflect.FileDescriptor
 
 const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\n" +
-	"\x17api/v1/monitoring.proto\x12\x06api.v1\x1a\x15api/v1/ent/opts.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1cgoogle/api/annotations.proto\"\xa8\x01\n" +
+	"\x17api/v1/monitoring.proto\x12\x06api.v1\x1a\x15api/v1/ent/opts.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/api/annotations.proto\"\xa8\x01\n" +
 	"\x12GetSummaryResponse\x12#\n" +
 	"\rdevices_total\x18\x01 \x01(\x05R\fdevicesTotal\x12\x1d\n" +
 	"\n" +

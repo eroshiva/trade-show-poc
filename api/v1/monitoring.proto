@@ -6,7 +6,6 @@ option go_package = "github.com/eroshiva/trade-show-poc/api/v1/monitoring;apiv1"
 
 import "api/v1/ent/opts.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
 service DeviceMonitoringService {

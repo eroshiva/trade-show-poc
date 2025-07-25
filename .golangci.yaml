@@ -18,6 +18,7 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - internal/ent/*
 formatters:
   enable:
     - gofmt
