@@ -36,6 +36,9 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Setup dependencies
+        run: make deps
+
       - name: API build
         run: make buf-generate
 
