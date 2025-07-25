@@ -104,7 +104,7 @@ go-test: ## Run unit tests present in the codebase
 	mkdir -p tmp
 	go test -coverprofile=./tmp/test-cover.out -race ./...
 
-test-ci: generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
+test-ci: clean-vendor generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
 
 run: go-tidy build-monitoring bring-up-db ## Runs compiled network device monitoring service
 	./build/_output/${POC_NAME}
@@ -125,6 +125,9 @@ kind: image ## Builds Docker image for API Gateway and loads it to the currently
 go-tidy: ## Runs go mod related commands
 	go mod tidy
 	go mod vendor
+
+clean-vendor: ## Cleans only vendor folder
+	rm -rf ./vendor
 
 clean: ## Remove all the build artifacts
 	rm -rf ./build/_output ./vendor ./tmp

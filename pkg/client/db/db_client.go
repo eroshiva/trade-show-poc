@@ -4,12 +4,12 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/eroshiva/trade-show-poc/internal/ent"
+	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
 	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 	"github.com/rs/zerolog"
 )
@@ -27,6 +27,7 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 	},
 }).Level(zerolog.TraceLevel).With().Caller().Timestamp().Str(component, componentName).Logger()
 
+// CreateNetworkDevice creates a network device resource.
 func CreateNetworkDevice(ctx context.Context, client *ent.Client, id, model, hwVersion string, vendor networkdevice.Vendor, endpoints []*ent.Endpoint) (*ent.NetworkDevice, error) {
 	u, err := client.NetworkDevice.
 		Create().
@@ -44,6 +45,7 @@ func CreateNetworkDevice(ctx context.Context, client *ent.Client, id, model, hwV
 	return u, nil
 }
 
+// GetNetworkDeviceByID retrieves a Network Device resource by ID from the DB.
 func GetNetworkDeviceByID(ctx context.Context, client *ent.Client, id string) (*ent.NetworkDevice, error) {
 	nd, err := client.NetworkDevice.
 		Query().
@@ -59,6 +61,7 @@ func GetNetworkDeviceByID(ctx context.Context, client *ent.Client, id string) (*
 	return nd, nil
 }
 
+// GetNetworkDeviceByEndpoint retrieves a Network Device resource by the Endpoint resource from the DB.
 func GetNetworkDeviceByEndpoint(ctx context.Context, client *ent.Client, host, port string) (*ent.NetworkDevice, error) {
 	nd, err := client.NetworkDevice.
 		Query().
@@ -74,6 +77,7 @@ func GetNetworkDeviceByEndpoint(ctx context.Context, client *ent.Client, host, p
 	return nd, nil
 }
 
+// CreateEndpoint creates an Endpoint resource.
 func CreateEndpoint(ctx context.Context, client *ent.Client, host, port string, protocol endpoint.Protocol) (*ent.Endpoint, error) {
 	ep, err := client.Endpoint.
 		Create().

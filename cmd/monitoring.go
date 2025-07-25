@@ -4,10 +4,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
-	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
-	"github.com/eroshiva/trade-show-poc/pkg/client/db"
-	"github.com/google/uuid"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -16,7 +12,11 @@ import (
 
 	"entgo.io/ent/dialect"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
+	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
+	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 	"github.com/eroshiva/trade-show-poc/internal/server"
+	"github.com/eroshiva/trade-show-poc/pkg/client/db"
+	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 )
