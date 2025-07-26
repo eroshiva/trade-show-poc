@@ -213,6 +213,16 @@ func HwVersionHasSuffix(v string) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.FieldHasSuffix(FieldHwVersion, v))
 }
 
+// HwVersionIsNil applies the IsNil predicate on the "hw_version" field.
+func HwVersionIsNil() predicate.NetworkDevice {
+	return predicate.NetworkDevice(sql.FieldIsNull(FieldHwVersion))
+}
+
+// HwVersionNotNil applies the NotNil predicate on the "hw_version" field.
+func HwVersionNotNil() predicate.NetworkDevice {
+	return predicate.NetworkDevice(sql.FieldNotNull(FieldHwVersion))
+}
+
 // HwVersionEqualFold applies the EqualFold predicate on the "hw_version" field.
 func HwVersionEqualFold(v string) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.FieldEqualFold(FieldHwVersion, v))
@@ -251,7 +261,7 @@ func HasSwVersion() predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SwVersionTable, SwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, SwVersionTable, SwVersionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -274,7 +284,7 @@ func HasFwVersion() predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, FwVersionTable, FwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, FwVersionTable, FwVersionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

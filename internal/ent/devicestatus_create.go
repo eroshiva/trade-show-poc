@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
+	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 )
 
 // DeviceStatusCreate is the builder for creating a DeviceStatus entity.
@@ -35,6 +36,25 @@ func (dsc *DeviceStatusCreate) SetLastSeen(s string) *DeviceStatusCreate {
 func (dsc *DeviceStatusCreate) SetID(s string) *DeviceStatusCreate {
 	dsc.mutation.SetID(s)
 	return dsc
+}
+
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (dsc *DeviceStatusCreate) SetNetworkDeviceID(id string) *DeviceStatusCreate {
+	dsc.mutation.SetNetworkDeviceID(id)
+	return dsc
+}
+
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (dsc *DeviceStatusCreate) SetNillableNetworkDeviceID(id *string) *DeviceStatusCreate {
+	if id != nil {
+		dsc = dsc.SetNetworkDeviceID(*id)
+	}
+	return dsc
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (dsc *DeviceStatusCreate) SetNetworkDevice(n *NetworkDevice) *DeviceStatusCreate {
+	return dsc.SetNetworkDeviceID(n.ID)
 }
 
 // Mutation returns the DeviceStatusMutation object of the builder.
@@ -124,6 +144,23 @@ func (dsc *DeviceStatusCreate) createSpec() (*DeviceStatus, *sqlgraph.CreateSpec
 	if value, ok := dsc.mutation.LastSeen(); ok {
 		_spec.SetField(devicestatus.FieldLastSeen, field.TypeString, value)
 		_node.LastSeen = value
+	}
+	if nodes := dsc.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   devicestatus.NetworkDeviceTable,
+			Columns: []string{devicestatus.NetworkDeviceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.device_status_network_device = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

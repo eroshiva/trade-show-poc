@@ -13,16 +13,25 @@ var (
 		{Name: "id", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"STATUS_UNSPECIFIED", "STATUS_DEVICE_DOWN", "STATUS_DEVICE_UNHEALTHY", "STATUS_DEVICE_UP"}},
 		{Name: "last_seen", Type: field.TypeString},
+		{Name: "device_status_network_device", Type: field.TypeString, Nullable: true},
 	}
 	// DeviceStatusTable holds the schema information for the "device_status" table.
 	DeviceStatusTable = &schema.Table{
 		Name:       "device_status",
 		Columns:    DeviceStatusColumns,
 		PrimaryKey: []*schema.Column{DeviceStatusColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "device_status_network_devices_network_device",
+				Columns:    []*schema.Column{DeviceStatusColumns[3]},
+				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// EndpointsColumns holds the columns for the "endpoints" table.
 	EndpointsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString},
 		{Name: "host", Type: field.TypeString},
 		{Name: "port", Type: field.TypeString},
 		{Name: "protocol", Type: field.TypeEnum, Enums: []string{"PROTOCOL_UNSPECIFIED", "PROTOCOL_SNMP", "PROTOCOL_NETCONF", "PROTOCOL_RESTCONF", "PROTOCOL_OPEN_V_SWITCH"}},
@@ -47,41 +56,41 @@ var (
 		{Name: "id", Type: field.TypeString},
 		{Name: "vendor", Type: field.TypeEnum, Enums: []string{"VENDOR_UNSPECIFIED", "VENDOR_UBIQUITI", "VENDOR_CISCO", "VENDOR_JUNIPER"}},
 		{Name: "model", Type: field.TypeString},
-		{Name: "hw_version", Type: field.TypeString},
+		{Name: "hw_version", Type: field.TypeString, Nullable: true},
+		{Name: "network_device_sw_version", Type: field.TypeString, Nullable: true},
+		{Name: "network_device_fw_version", Type: field.TypeString, Nullable: true},
 	}
 	// NetworkDevicesTable holds the schema information for the "network_devices" table.
 	NetworkDevicesTable = &schema.Table{
 		Name:       "network_devices",
 		Columns:    NetworkDevicesColumns,
 		PrimaryKey: []*schema.Column{NetworkDevicesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "network_devices_versions_sw_version",
+				Columns:    []*schema.Column{NetworkDevicesColumns[4]},
+				RefColumns: []*schema.Column{VersionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "network_devices_versions_fw_version",
+				Columns:    []*schema.Column{NetworkDevicesColumns[5]},
+				RefColumns: []*schema.Column{VersionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// VersionsColumns holds the columns for the "versions" table.
 	VersionsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString},
 		{Name: "version", Type: field.TypeString},
 		{Name: "checksum", Type: field.TypeString},
-		{Name: "network_device_sw_version", Type: field.TypeString, Nullable: true},
-		{Name: "network_device_fw_version", Type: field.TypeString, Nullable: true},
 	}
 	// VersionsTable holds the schema information for the "versions" table.
 	VersionsTable = &schema.Table{
 		Name:       "versions",
 		Columns:    VersionsColumns,
 		PrimaryKey: []*schema.Column{VersionsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "versions_network_devices_sw_version",
-				Columns:    []*schema.Column{VersionsColumns[3]},
-				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "versions_network_devices_fw_version",
-				Columns:    []*schema.Column{VersionsColumns[4]},
-				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
@@ -93,7 +102,8 @@ var (
 )
 
 func init() {
+	DeviceStatusTable.ForeignKeys[0].RefTable = NetworkDevicesTable
 	EndpointsTable.ForeignKeys[0].RefTable = NetworkDevicesTable
-	VersionsTable.ForeignKeys[0].RefTable = NetworkDevicesTable
-	VersionsTable.ForeignKeys[1].RefTable = NetworkDevicesTable
+	NetworkDevicesTable.ForeignKeys[0].RefTable = VersionsTable
+	NetworkDevicesTable.ForeignKeys[1].RefTable = VersionsTable
 }

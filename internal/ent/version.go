@@ -15,14 +15,12 @@ import (
 type Version struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// Version holds the value of the "version" field.
 	Version string `json:"version,omitempty"`
 	// Checksum holds the value of the "checksum" field.
-	Checksum                  string `json:"checksum,omitempty"`
-	network_device_sw_version *string
-	network_device_fw_version *string
-	selectValues              sql.SelectValues
+	Checksum     string `json:"checksum,omitempty"`
+	selectValues sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -30,13 +28,7 @@ func (*Version) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case version.FieldID:
-			values[i] = new(sql.NullInt64)
-		case version.FieldVersion, version.FieldChecksum:
-			values[i] = new(sql.NullString)
-		case version.ForeignKeys[0]: // network_device_sw_version
-			values[i] = new(sql.NullString)
-		case version.ForeignKeys[1]: // network_device_fw_version
+		case version.FieldID, version.FieldVersion, version.FieldChecksum:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -54,11 +46,11 @@ func (v *Version) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case version.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				v.ID = value.String
 			}
-			v.ID = int(value.Int64)
 		case version.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
@@ -70,20 +62,6 @@ func (v *Version) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field checksum", values[i])
 			} else if value.Valid {
 				v.Checksum = value.String
-			}
-		case version.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field network_device_sw_version", values[i])
-			} else if value.Valid {
-				v.network_device_sw_version = new(string)
-				*v.network_device_sw_version = value.String
-			}
-		case version.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field network_device_fw_version", values[i])
-			} else if value.Valid {
-				v.network_device_fw_version = new(string)
-				*v.network_device_fw_version = value.String
 			}
 		default:
 			v.selectValues.Set(columns[i], values[i])

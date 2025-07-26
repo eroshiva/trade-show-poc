@@ -16,7 +16,7 @@ import (
 type Endpoint struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// Host holds the value of the "host" field.
 	Host string `json:"host,omitempty"`
 	// Port holds the value of the "port" field.
@@ -55,9 +55,7 @@ func (*Endpoint) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case endpoint.FieldID:
-			values[i] = new(sql.NullInt64)
-		case endpoint.FieldHost, endpoint.FieldPort, endpoint.FieldProtocol:
+		case endpoint.FieldID, endpoint.FieldHost, endpoint.FieldPort, endpoint.FieldProtocol:
 			values[i] = new(sql.NullString)
 		case endpoint.ForeignKeys[0]: // network_device_endpoints
 			values[i] = new(sql.NullString)
@@ -77,11 +75,11 @@ func (e *Endpoint) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case endpoint.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				e.ID = value.String
 			}
-			e.ID = int(value.Int64)
 		case endpoint.FieldHost:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field host", values[i])

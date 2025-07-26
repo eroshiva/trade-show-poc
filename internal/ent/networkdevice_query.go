@@ -28,6 +28,7 @@ type NetworkDeviceQuery struct {
 	withEndpoints *EndpointQuery
 	withSwVersion *VersionQuery
 	withFwVersion *VersionQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -100,7 +101,7 @@ func (ndq *NetworkDeviceQuery) QuerySwVersion() *VersionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, selector),
 			sqlgraph.To(version.Table, version.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, networkdevice.SwVersionTable, networkdevice.SwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, networkdevice.SwVersionTable, networkdevice.SwVersionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ndq.driver.Dialect(), step)
 		return fromU, nil
@@ -122,7 +123,7 @@ func (ndq *NetworkDeviceQuery) QueryFwVersion() *VersionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, selector),
 			sqlgraph.To(version.Table, version.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, networkdevice.FwVersionTable, networkdevice.FwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, networkdevice.FwVersionTable, networkdevice.FwVersionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ndq.driver.Dialect(), step)
 		return fromU, nil
@@ -441,6 +442,7 @@ func (ndq *NetworkDeviceQuery) prepareQuery(ctx context.Context) error {
 func (ndq *NetworkDeviceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*NetworkDevice, error) {
 	var (
 		nodes       = []*NetworkDevice{}
+		withFKs     = ndq.withFKs
 		_spec       = ndq.querySpec()
 		loadedTypes = [3]bool{
 			ndq.withEndpoints != nil,
@@ -448,6 +450,12 @@ func (ndq *NetworkDeviceQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 			ndq.withFwVersion != nil,
 		}
 	)
+	if ndq.withSwVersion != nil || ndq.withFwVersion != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, networkdevice.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*NetworkDevice).scanValues(nil, columns)
 	}
@@ -474,16 +482,14 @@ func (ndq *NetworkDeviceQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		}
 	}
 	if query := ndq.withSwVersion; query != nil {
-		if err := ndq.loadSwVersion(ctx, query, nodes,
-			func(n *NetworkDevice) { n.Edges.SwVersion = []*Version{} },
-			func(n *NetworkDevice, e *Version) { n.Edges.SwVersion = append(n.Edges.SwVersion, e) }); err != nil {
+		if err := ndq.loadSwVersion(ctx, query, nodes, nil,
+			func(n *NetworkDevice, e *Version) { n.Edges.SwVersion = e }); err != nil {
 			return nil, err
 		}
 	}
 	if query := ndq.withFwVersion; query != nil {
-		if err := ndq.loadFwVersion(ctx, query, nodes,
-			func(n *NetworkDevice) { n.Edges.FwVersion = []*Version{} },
-			func(n *NetworkDevice, e *Version) { n.Edges.FwVersion = append(n.Edges.FwVersion, e) }); err != nil {
+		if err := ndq.loadFwVersion(ctx, query, nodes, nil,
+			func(n *NetworkDevice, e *Version) { n.Edges.FwVersion = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -522,64 +528,66 @@ func (ndq *NetworkDeviceQuery) loadEndpoints(ctx context.Context, query *Endpoin
 	return nil
 }
 func (ndq *NetworkDeviceQuery) loadSwVersion(ctx context.Context, query *VersionQuery, nodes []*NetworkDevice, init func(*NetworkDevice), assign func(*NetworkDevice, *Version)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*NetworkDevice)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*NetworkDevice)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].network_device_sw_version == nil {
+			continue
 		}
+		fk := *nodes[i].network_device_sw_version
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.Version(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(networkdevice.SwVersionColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(version.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.network_device_sw_version
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "network_device_sw_version" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "network_device_sw_version" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "network_device_sw_version" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }
 func (ndq *NetworkDeviceQuery) loadFwVersion(ctx context.Context, query *VersionQuery, nodes []*NetworkDevice, init func(*NetworkDevice), assign func(*NetworkDevice, *Version)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*NetworkDevice)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*NetworkDevice)
 	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
+		if nodes[i].network_device_fw_version == nil {
+			continue
 		}
+		fk := *nodes[i].network_device_fw_version
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.withFKs = true
-	query.Where(predicate.Version(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(networkdevice.FwVersionColumn), fks...))
-	}))
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(version.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.network_device_fw_version
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "network_device_fw_version" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "network_device_fw_version" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "network_device_fw_version" returned %v`, n.ID)
 		}
-		assign(node, n)
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

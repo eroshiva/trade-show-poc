@@ -36,14 +36,14 @@ const (
 	// EndpointsColumn is the table column denoting the endpoints relation/edge.
 	EndpointsColumn = "network_device_endpoints"
 	// SwVersionTable is the table that holds the sw_version relation/edge.
-	SwVersionTable = "versions"
+	SwVersionTable = "network_devices"
 	// SwVersionInverseTable is the table name for the Version entity.
 	// It exists in this package in order to avoid circular dependency with the "version" package.
 	SwVersionInverseTable = "versions"
 	// SwVersionColumn is the table column denoting the sw_version relation/edge.
 	SwVersionColumn = "network_device_sw_version"
 	// FwVersionTable is the table that holds the fw_version relation/edge.
-	FwVersionTable = "versions"
+	FwVersionTable = "network_devices"
 	// FwVersionInverseTable is the table name for the Version entity.
 	// It exists in this package in order to avoid circular dependency with the "version" package.
 	FwVersionInverseTable = "versions"
@@ -59,10 +59,22 @@ var Columns = []string{
 	FieldHwVersion,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "network_devices"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"network_device_sw_version",
+	"network_device_fw_version",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -131,31 +143,17 @@ func ByEndpoints(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// BySwVersionCount orders the results by sw_version count.
-func BySwVersionCount(opts ...sql.OrderTermOption) OrderOption {
+// BySwVersionField orders the results by sw_version field.
+func BySwVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSwVersionStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newSwVersionStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// BySwVersion orders the results by sw_version terms.
-func BySwVersion(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByFwVersionField orders the results by fw_version field.
+func ByFwVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSwVersionStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByFwVersionCount orders the results by fw_version count.
-func ByFwVersionCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newFwVersionStep(), opts...)
-	}
-}
-
-// ByFwVersion orders the results by fw_version terms.
-func ByFwVersion(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newFwVersionStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newFwVersionStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newEndpointsStep() *sqlgraph.Step {
@@ -169,13 +167,13 @@ func newSwVersionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SwVersionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SwVersionTable, SwVersionColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, SwVersionTable, SwVersionColumn),
 	)
 }
 func newFwVersionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(FwVersionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, FwVersionTable, FwVersionColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, FwVersionTable, FwVersionColumn),
 	)
 }

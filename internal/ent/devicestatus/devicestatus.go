@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -17,8 +18,17 @@ const (
 	FieldStatus = "status"
 	// FieldLastSeen holds the string denoting the last_seen field in the database.
 	FieldLastSeen = "last_seen"
+	// EdgeNetworkDevice holds the string denoting the network_device edge name in mutations.
+	EdgeNetworkDevice = "network_device"
 	// Table holds the table name of the devicestatus in the database.
 	Table = "device_status"
+	// NetworkDeviceTable is the table that holds the network_device relation/edge.
+	NetworkDeviceTable = "device_status"
+	// NetworkDeviceInverseTable is the table name for the NetworkDevice entity.
+	// It exists in this package in order to avoid circular dependency with the "networkdevice" package.
+	NetworkDeviceInverseTable = "network_devices"
+	// NetworkDeviceColumn is the table column denoting the network_device relation/edge.
+	NetworkDeviceColumn = "device_status_network_device"
 )
 
 // Columns holds all SQL columns for devicestatus fields.
@@ -28,10 +38,21 @@ var Columns = []string{
 	FieldLastSeen,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "device_status"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"device_status_network_device",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -79,4 +100,18 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByLastSeen orders the results by the last_seen field.
 func ByLastSeen(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastSeen, opts...).ToFunc()
+}
+
+// ByNetworkDeviceField orders the results by network_device field.
+func ByNetworkDeviceField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newNetworkDeviceStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newNetworkDeviceStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(NetworkDeviceInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, NetworkDeviceTable, NetworkDeviceColumn),
+	)
 }

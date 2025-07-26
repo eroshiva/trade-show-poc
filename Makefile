@@ -31,7 +31,7 @@ atlas-install: ## Installs Atlas tool for generating migrations
 buf-install: ## Installs buf to convert protobuf into Golang code
 	go install github.com/bufbuild/buf/cmd/buf@${BUF_VERSION}
 
-buf-generate: buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
+buf-generate: clean-vendor buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
 	mkdir -p internal/ent/schema
 	buf generate --exclude-path api/v1/ent --path api/v1/monitoring.proto
 
@@ -104,7 +104,7 @@ go-test: ## Run unit tests present in the codebase
 	mkdir -p tmp
 	go test -coverprofile=./tmp/test-cover.out -race ./...
 
-test-ci: clean-vendor generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
+test-ci: generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
 
 run: go-tidy build-monitoring bring-up-db ## Runs compiled network device monitoring service
 	./build/_output/${POC_NAME}

@@ -16,8 +16,7 @@ import (
 	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
-	"github.com/google/uuid"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // SQL driver, necessary for DB interaction
 	"github.com/rs/zerolog"
 )
 
@@ -55,64 +54,12 @@ func main() {
 		}
 	}()
 
-	// creating three endpoints - two for first device, one for the second device
-	ep1, err := db.CreateEndpoint(context.Background(), client, "192.168.0.1", "532", endpoint.ProtocolPROTOCOL_SNMP)
+	// sample of creating and updating resources:
+	err := createResources(client)
 	if err != nil {
+		zlog.Error().Err(err).Msg("failed creating resources")
 		return
 	}
-	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep1)
-
-	ep2, err := db.CreateEndpoint(context.Background(), client, "192.168.0.2", "1084", endpoint.ProtocolPROTOCOL_NETCONF)
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep2)
-
-	ep3, err := db.CreateEndpoint(context.Background(), client, "192.168.0.3", "532", endpoint.ProtocolPROTOCOL_SNMP)
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep3)
-
-	// creating Network device
-	nd, err := db.CreateNetworkDevice(context.Background(), client, uuid.New().String(), "MODEL-XYZ", "HW-XYZ", networkdevice.VendorVENDOR_UBIQUITI, []*ent.Endpoint{ep1, ep2})
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Network device has been created in the DB: %v", nd)
-
-	// creating another Network device
-	nd2, err := db.CreateNetworkDevice(context.Background(), client, uuid.New().String(), "MODEL-YZX", "HW-YZX", networkdevice.VendorVENDOR_JUNIPER, []*ent.Endpoint{ep3})
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Another Network device has been created in the DB: %v", nd2)
-
-	// retrieving other network device
-	ndBack, err := db.GetNetworkDeviceByID(context.Background(), client, nd2.ID)
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Returned network device is: %v", ndBack)
-
-	ndBack1, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep2.Host, ep2.Port)
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Returned network device is: %v", ndBack1)
-
-	ndBack2, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep3.Host, ep3.Port)
-	if err != nil {
-		return
-	}
-	zlog.Info().Msgf("Returned network device is: %v", ndBack2)
-
-	// this must be an error
-	ndBackErr, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep1.Host, ep2.Port)
-	if err != nil {
-		zlog.Error().Err(err).Msg("Failed to return a network device")
-	}
-	zlog.Info().Msgf("%v", ndBackErr)
 
 	zlog.Info().Msgf("starting server")
 	server.StartServer(termChan, readyChan)
@@ -132,4 +79,67 @@ func runSchemaMigration() *ent.Client {
 	}
 
 	return client
+}
+
+func createResources(client *ent.Client) error {
+	// creating three endpoints - two for the first device, one for the second device
+	ep1, err := db.CreateEndpoint(context.Background(), client, "192.168.0.1", "532", endpoint.ProtocolPROTOCOL_SNMP)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep1)
+
+	ep2, err := db.CreateEndpoint(context.Background(), client, "192.168.0.2", "1084", endpoint.ProtocolPROTOCOL_NETCONF)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep2)
+
+	ep3, err := db.CreateEndpoint(context.Background(), client, "192.168.0.3", "532", endpoint.ProtocolPROTOCOL_SNMP)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep3)
+
+	// creating Network device
+	nd, err := db.CreateNetworkDevice(context.Background(), client, "MODEL-XYZ", networkdevice.VendorVENDOR_UBIQUITI, []*ent.Endpoint{ep1, ep2})
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Network device has been created in the DB: %v", nd)
+
+	// creating another Network device
+	nd2, err := db.CreateNetworkDevice(context.Background(), client, "MODEL-YZX", networkdevice.VendorVENDOR_JUNIPER, []*ent.Endpoint{ep3})
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Another Network device has been created in the DB: %v", nd2)
+
+	// retrieving other network device
+	ndBack, err := db.GetNetworkDeviceByID(context.Background(), client, nd2.ID)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Returned network device is: %v", ndBack)
+
+	ndBack1, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep2.Host, ep2.Port)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Returned network device is: %v", ndBack1)
+
+	ndBack2, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep3.Host, ep3.Port)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Returned network device is: %v", ndBack2)
+
+	// this must be an error
+	ndBackErr, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep1.Host, ep2.Port)
+	if err != nil {
+		zlog.Error().Err(err).Msg("Failed to return a network device")
+	}
+	zlog.Info().Msgf("%v", ndBackErr)
+
+	return nil
 }

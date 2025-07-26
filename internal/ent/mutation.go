@@ -35,15 +35,17 @@ const (
 // DeviceStatusMutation represents an operation that mutates the DeviceStatus nodes in the graph.
 type DeviceStatusMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *string
-	status        *devicestatus.Status
-	last_seen     *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*DeviceStatus, error)
-	predicates    []predicate.DeviceStatus
+	op                    Op
+	typ                   string
+	id                    *string
+	status                *devicestatus.Status
+	last_seen             *string
+	clearedFields         map[string]struct{}
+	network_device        *string
+	clearednetwork_device bool
+	done                  bool
+	oldValue              func(context.Context) (*DeviceStatus, error)
+	predicates            []predicate.DeviceStatus
 }
 
 var _ ent.Mutation = (*DeviceStatusMutation)(nil)
@@ -222,6 +224,45 @@ func (m *DeviceStatusMutation) ResetLastSeen() {
 	m.last_seen = nil
 }
 
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by id.
+func (m *DeviceStatusMutation) SetNetworkDeviceID(id string) {
+	m.network_device = &id
+}
+
+// ClearNetworkDevice clears the "network_device" edge to the NetworkDevice entity.
+func (m *DeviceStatusMutation) ClearNetworkDevice() {
+	m.clearednetwork_device = true
+}
+
+// NetworkDeviceCleared reports if the "network_device" edge to the NetworkDevice entity was cleared.
+func (m *DeviceStatusMutation) NetworkDeviceCleared() bool {
+	return m.clearednetwork_device
+}
+
+// NetworkDeviceID returns the "network_device" edge ID in the mutation.
+func (m *DeviceStatusMutation) NetworkDeviceID() (id string, exists bool) {
+	if m.network_device != nil {
+		return *m.network_device, true
+	}
+	return
+}
+
+// NetworkDeviceIDs returns the "network_device" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// NetworkDeviceID instead. It exists only for internal usage by the builders.
+func (m *DeviceStatusMutation) NetworkDeviceIDs() (ids []string) {
+	if id := m.network_device; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetNetworkDevice resets all changes to the "network_device" edge.
+func (m *DeviceStatusMutation) ResetNetworkDevice() {
+	m.network_device = nil
+	m.clearednetwork_device = false
+}
+
 // Where appends a list predicates to the DeviceStatusMutation builder.
 func (m *DeviceStatusMutation) Where(ps ...predicate.DeviceStatus) {
 	m.predicates = append(m.predicates, ps...)
@@ -372,19 +413,28 @@ func (m *DeviceStatusMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *DeviceStatusMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.network_device != nil {
+		edges = append(edges, devicestatus.EdgeNetworkDevice)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *DeviceStatusMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case devicestatus.EdgeNetworkDevice:
+		if id := m.network_device; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *DeviceStatusMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -396,25 +446,42 @@ func (m *DeviceStatusMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *DeviceStatusMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearednetwork_device {
+		edges = append(edges, devicestatus.EdgeNetworkDevice)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *DeviceStatusMutation) EdgeCleared(name string) bool {
+	switch name {
+	case devicestatus.EdgeNetworkDevice:
+		return m.clearednetwork_device
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *DeviceStatusMutation) ClearEdge(name string) error {
+	switch name {
+	case devicestatus.EdgeNetworkDevice:
+		m.ClearNetworkDevice()
+		return nil
+	}
 	return fmt.Errorf("unknown DeviceStatus unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *DeviceStatusMutation) ResetEdge(name string) error {
+	switch name {
+	case devicestatus.EdgeNetworkDevice:
+		m.ResetNetworkDevice()
+		return nil
+	}
 	return fmt.Errorf("unknown DeviceStatus edge %s", name)
 }
 
@@ -423,7 +490,7 @@ type EndpointMutation struct {
 	config
 	op                    Op
 	typ                   string
-	id                    *int
+	id                    *string
 	host                  *string
 	port                  *string
 	protocol              *endpoint.Protocol
@@ -455,7 +522,7 @@ func newEndpointMutation(c config, op Op, opts ...endpointOption) *EndpointMutat
 }
 
 // withEndpointID sets the ID field of the mutation.
-func withEndpointID(id int) endpointOption {
+func withEndpointID(id string) endpointOption {
 	return func(m *EndpointMutation) {
 		var (
 			err   error
@@ -505,9 +572,15 @@ func (m EndpointMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Endpoint entities.
+func (m *EndpointMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *EndpointMutation) ID() (id int, exists bool) {
+func (m *EndpointMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -518,12 +591,12 @@ func (m *EndpointMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *EndpointMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *EndpointMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -929,14 +1002,12 @@ type NetworkDeviceMutation struct {
 	model             *string
 	hw_version        *string
 	clearedFields     map[string]struct{}
-	endpoints         map[int]struct{}
-	removedendpoints  map[int]struct{}
+	endpoints         map[string]struct{}
+	removedendpoints  map[string]struct{}
 	clearedendpoints  bool
-	sw_version        map[int]struct{}
-	removedsw_version map[int]struct{}
+	sw_version        *string
 	clearedsw_version bool
-	fw_version        map[int]struct{}
-	removedfw_version map[int]struct{}
+	fw_version        *string
 	clearedfw_version bool
 	done              bool
 	oldValue          func(context.Context) (*NetworkDevice, error)
@@ -1150,15 +1221,28 @@ func (m *NetworkDeviceMutation) OldHwVersion(ctx context.Context) (v string, err
 	return oldValue.HwVersion, nil
 }
 
+// ClearHwVersion clears the value of the "hw_version" field.
+func (m *NetworkDeviceMutation) ClearHwVersion() {
+	m.hw_version = nil
+	m.clearedFields[networkdevice.FieldHwVersion] = struct{}{}
+}
+
+// HwVersionCleared returns if the "hw_version" field was cleared in this mutation.
+func (m *NetworkDeviceMutation) HwVersionCleared() bool {
+	_, ok := m.clearedFields[networkdevice.FieldHwVersion]
+	return ok
+}
+
 // ResetHwVersion resets all changes to the "hw_version" field.
 func (m *NetworkDeviceMutation) ResetHwVersion() {
 	m.hw_version = nil
+	delete(m.clearedFields, networkdevice.FieldHwVersion)
 }
 
 // AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by ids.
-func (m *NetworkDeviceMutation) AddEndpointIDs(ids ...int) {
+func (m *NetworkDeviceMutation) AddEndpointIDs(ids ...string) {
 	if m.endpoints == nil {
-		m.endpoints = make(map[int]struct{})
+		m.endpoints = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.endpoints[ids[i]] = struct{}{}
@@ -1176,9 +1260,9 @@ func (m *NetworkDeviceMutation) EndpointsCleared() bool {
 }
 
 // RemoveEndpointIDs removes the "endpoints" edge to the Endpoint entity by IDs.
-func (m *NetworkDeviceMutation) RemoveEndpointIDs(ids ...int) {
+func (m *NetworkDeviceMutation) RemoveEndpointIDs(ids ...string) {
 	if m.removedendpoints == nil {
-		m.removedendpoints = make(map[int]struct{})
+		m.removedendpoints = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.endpoints, ids[i])
@@ -1187,7 +1271,7 @@ func (m *NetworkDeviceMutation) RemoveEndpointIDs(ids ...int) {
 }
 
 // RemovedEndpoints returns the removed IDs of the "endpoints" edge to the Endpoint entity.
-func (m *NetworkDeviceMutation) RemovedEndpointsIDs() (ids []int) {
+func (m *NetworkDeviceMutation) RemovedEndpointsIDs() (ids []string) {
 	for id := range m.removedendpoints {
 		ids = append(ids, id)
 	}
@@ -1195,7 +1279,7 @@ func (m *NetworkDeviceMutation) RemovedEndpointsIDs() (ids []int) {
 }
 
 // EndpointsIDs returns the "endpoints" edge IDs in the mutation.
-func (m *NetworkDeviceMutation) EndpointsIDs() (ids []int) {
+func (m *NetworkDeviceMutation) EndpointsIDs() (ids []string) {
 	for id := range m.endpoints {
 		ids = append(ids, id)
 	}
@@ -1209,14 +1293,9 @@ func (m *NetworkDeviceMutation) ResetEndpoints() {
 	m.removedendpoints = nil
 }
 
-// AddSwVersionIDs adds the "sw_version" edge to the Version entity by ids.
-func (m *NetworkDeviceMutation) AddSwVersionIDs(ids ...int) {
-	if m.sw_version == nil {
-		m.sw_version = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.sw_version[ids[i]] = struct{}{}
-	}
+// SetSwVersionID sets the "sw_version" edge to the Version entity by id.
+func (m *NetworkDeviceMutation) SetSwVersionID(id string) {
+	m.sw_version = &id
 }
 
 // ClearSwVersion clears the "sw_version" edge to the Version entity.
@@ -1229,29 +1308,20 @@ func (m *NetworkDeviceMutation) SwVersionCleared() bool {
 	return m.clearedsw_version
 }
 
-// RemoveSwVersionIDs removes the "sw_version" edge to the Version entity by IDs.
-func (m *NetworkDeviceMutation) RemoveSwVersionIDs(ids ...int) {
-	if m.removedsw_version == nil {
-		m.removedsw_version = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.sw_version, ids[i])
-		m.removedsw_version[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedSwVersion returns the removed IDs of the "sw_version" edge to the Version entity.
-func (m *NetworkDeviceMutation) RemovedSwVersionIDs() (ids []int) {
-	for id := range m.removedsw_version {
-		ids = append(ids, id)
+// SwVersionID returns the "sw_version" edge ID in the mutation.
+func (m *NetworkDeviceMutation) SwVersionID() (id string, exists bool) {
+	if m.sw_version != nil {
+		return *m.sw_version, true
 	}
 	return
 }
 
 // SwVersionIDs returns the "sw_version" edge IDs in the mutation.
-func (m *NetworkDeviceMutation) SwVersionIDs() (ids []int) {
-	for id := range m.sw_version {
-		ids = append(ids, id)
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SwVersionID instead. It exists only for internal usage by the builders.
+func (m *NetworkDeviceMutation) SwVersionIDs() (ids []string) {
+	if id := m.sw_version; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -1260,17 +1330,11 @@ func (m *NetworkDeviceMutation) SwVersionIDs() (ids []int) {
 func (m *NetworkDeviceMutation) ResetSwVersion() {
 	m.sw_version = nil
 	m.clearedsw_version = false
-	m.removedsw_version = nil
 }
 
-// AddFwVersionIDs adds the "fw_version" edge to the Version entity by ids.
-func (m *NetworkDeviceMutation) AddFwVersionIDs(ids ...int) {
-	if m.fw_version == nil {
-		m.fw_version = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.fw_version[ids[i]] = struct{}{}
-	}
+// SetFwVersionID sets the "fw_version" edge to the Version entity by id.
+func (m *NetworkDeviceMutation) SetFwVersionID(id string) {
+	m.fw_version = &id
 }
 
 // ClearFwVersion clears the "fw_version" edge to the Version entity.
@@ -1283,29 +1347,20 @@ func (m *NetworkDeviceMutation) FwVersionCleared() bool {
 	return m.clearedfw_version
 }
 
-// RemoveFwVersionIDs removes the "fw_version" edge to the Version entity by IDs.
-func (m *NetworkDeviceMutation) RemoveFwVersionIDs(ids ...int) {
-	if m.removedfw_version == nil {
-		m.removedfw_version = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.fw_version, ids[i])
-		m.removedfw_version[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedFwVersion returns the removed IDs of the "fw_version" edge to the Version entity.
-func (m *NetworkDeviceMutation) RemovedFwVersionIDs() (ids []int) {
-	for id := range m.removedfw_version {
-		ids = append(ids, id)
+// FwVersionID returns the "fw_version" edge ID in the mutation.
+func (m *NetworkDeviceMutation) FwVersionID() (id string, exists bool) {
+	if m.fw_version != nil {
+		return *m.fw_version, true
 	}
 	return
 }
 
 // FwVersionIDs returns the "fw_version" edge IDs in the mutation.
-func (m *NetworkDeviceMutation) FwVersionIDs() (ids []int) {
-	for id := range m.fw_version {
-		ids = append(ids, id)
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// FwVersionID instead. It exists only for internal usage by the builders.
+func (m *NetworkDeviceMutation) FwVersionIDs() (ids []string) {
+	if id := m.fw_version; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -1314,7 +1369,6 @@ func (m *NetworkDeviceMutation) FwVersionIDs() (ids []int) {
 func (m *NetworkDeviceMutation) ResetFwVersion() {
 	m.fw_version = nil
 	m.clearedfw_version = false
-	m.removedfw_version = nil
 }
 
 // Where appends a list predicates to the NetworkDeviceMutation builder.
@@ -1449,7 +1503,11 @@ func (m *NetworkDeviceMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *NetworkDeviceMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(networkdevice.FieldHwVersion) {
+		fields = append(fields, networkdevice.FieldHwVersion)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1462,6 +1520,11 @@ func (m *NetworkDeviceMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *NetworkDeviceMutation) ClearField(name string) error {
+	switch name {
+	case networkdevice.FieldHwVersion:
+		m.ClearHwVersion()
+		return nil
+	}
 	return fmt.Errorf("unknown NetworkDevice nullable field %s", name)
 }
 
@@ -1508,17 +1571,13 @@ func (m *NetworkDeviceMutation) AddedIDs(name string) []ent.Value {
 		}
 		return ids
 	case networkdevice.EdgeSwVersion:
-		ids := make([]ent.Value, 0, len(m.sw_version))
-		for id := range m.sw_version {
-			ids = append(ids, id)
+		if id := m.sw_version; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	case networkdevice.EdgeFwVersion:
-		ids := make([]ent.Value, 0, len(m.fw_version))
-		for id := range m.fw_version {
-			ids = append(ids, id)
+		if id := m.fw_version; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -1528,12 +1587,6 @@ func (m *NetworkDeviceMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
 	if m.removedendpoints != nil {
 		edges = append(edges, networkdevice.EdgeEndpoints)
-	}
-	if m.removedsw_version != nil {
-		edges = append(edges, networkdevice.EdgeSwVersion)
-	}
-	if m.removedfw_version != nil {
-		edges = append(edges, networkdevice.EdgeFwVersion)
 	}
 	return edges
 }
@@ -1545,18 +1598,6 @@ func (m *NetworkDeviceMutation) RemovedIDs(name string) []ent.Value {
 	case networkdevice.EdgeEndpoints:
 		ids := make([]ent.Value, 0, len(m.removedendpoints))
 		for id := range m.removedendpoints {
-			ids = append(ids, id)
-		}
-		return ids
-	case networkdevice.EdgeSwVersion:
-		ids := make([]ent.Value, 0, len(m.removedsw_version))
-		for id := range m.removedsw_version {
-			ids = append(ids, id)
-		}
-		return ids
-	case networkdevice.EdgeFwVersion:
-		ids := make([]ent.Value, 0, len(m.removedfw_version))
-		for id := range m.removedfw_version {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1597,6 +1638,12 @@ func (m *NetworkDeviceMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *NetworkDeviceMutation) ClearEdge(name string) error {
 	switch name {
+	case networkdevice.EdgeSwVersion:
+		m.ClearSwVersion()
+		return nil
+	case networkdevice.EdgeFwVersion:
+		m.ClearFwVersion()
+		return nil
 	}
 	return fmt.Errorf("unknown NetworkDevice unique edge %s", name)
 }
@@ -1623,7 +1670,7 @@ type VersionMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *int
+	id            *string
 	version       *string
 	checksum      *string
 	clearedFields map[string]struct{}
@@ -1652,7 +1699,7 @@ func newVersionMutation(c config, op Op, opts ...versionOption) *VersionMutation
 }
 
 // withVersionID sets the ID field of the mutation.
-func withVersionID(id int) versionOption {
+func withVersionID(id string) versionOption {
 	return func(m *VersionMutation) {
 		var (
 			err   error
@@ -1702,9 +1749,15 @@ func (m VersionMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Version entities.
+func (m *VersionMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *VersionMutation) ID() (id int, exists bool) {
+func (m *VersionMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1715,12 +1768,12 @@ func (m *VersionMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *VersionMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *VersionMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):

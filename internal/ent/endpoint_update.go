@@ -141,7 +141,7 @@ func (eu *EndpointUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := eu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(endpoint.Table, endpoint.Columns, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(endpoint.Table, endpoint.Columns, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString))
 	if ps := eu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -333,7 +333,7 @@ func (euo *EndpointUpdateOne) sqlSave(ctx context.Context) (_node *Endpoint, err
 	if err := euo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(endpoint.Table, endpoint.Columns, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(endpoint.Table, endpoint.Columns, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString))
 	id, ok := euo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Endpoint.id" for update`)}

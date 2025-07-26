@@ -107,8 +107,8 @@ func (eq *EndpointQuery) FirstX(ctx context.Context) *Endpoint {
 
 // FirstID returns the first Endpoint ID from the query.
 // Returns a *NotFoundError when no Endpoint ID was found.
-func (eq *EndpointQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (eq *EndpointQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = eq.Limit(1).IDs(setContextOp(ctx, eq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (eq *EndpointQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (eq *EndpointQuery) FirstIDX(ctx context.Context) int {
+func (eq *EndpointQuery) FirstIDX(ctx context.Context) string {
 	id, err := eq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +158,8 @@ func (eq *EndpointQuery) OnlyX(ctx context.Context) *Endpoint {
 // OnlyID is like Only, but returns the only Endpoint ID in the query.
 // Returns a *NotSingularError when more than one Endpoint ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (eq *EndpointQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (eq *EndpointQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = eq.Limit(2).IDs(setContextOp(ctx, eq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (eq *EndpointQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (eq *EndpointQuery) OnlyIDX(ctx context.Context) int {
+func (eq *EndpointQuery) OnlyIDX(ctx context.Context) string {
 	id, err := eq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (eq *EndpointQuery) AllX(ctx context.Context) []*Endpoint {
 }
 
 // IDs executes the query and returns a list of Endpoint IDs.
-func (eq *EndpointQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (eq *EndpointQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if eq.ctx.Unique == nil && eq.path != nil {
 		eq.Unique(true)
 	}
@@ -215,7 +215,7 @@ func (eq *EndpointQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (eq *EndpointQuery) IDsX(ctx context.Context) []int {
+func (eq *EndpointQuery) IDsX(ctx context.Context) []string {
 	ids, err := eq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -452,7 +452,7 @@ func (eq *EndpointQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (eq *EndpointQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(endpoint.Table, endpoint.Columns, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(endpoint.Table, endpoint.Columns, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString))
 	_spec.From = eq.sql
 	if unique := eq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

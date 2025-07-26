@@ -14,7 +14,7 @@ type Endpoint struct {
 }
 
 func (Endpoint) Fields() []ent.Field {
-	return []ent.Field{field.String("host"), field.String("port"), field.Enum("protocol").Values("PROTOCOL_UNSPECIFIED", "PROTOCOL_SNMP", "PROTOCOL_NETCONF", "PROTOCOL_RESTCONF", "PROTOCOL_OPEN_V_SWITCH")}
+	return []ent.Field{field.String("id"), field.String("host"), field.String("port"), field.Enum("protocol").Values("PROTOCOL_UNSPECIFIED", "PROTOCOL_SNMP", "PROTOCOL_NETCONF", "PROTOCOL_RESTCONF", "PROTOCOL_OPEN_V_SWITCH")}
 }
 func (Endpoint) Edges() []ent.Edge {
 	return []ent.Edge{edge.From("network_device", NetworkDevice.Type).Ref("endpoints").Unique()}

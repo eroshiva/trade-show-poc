@@ -9,48 +9,58 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.Endpoint {
+func ID(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.Endpoint {
+func IDEQ(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.Endpoint {
+func IDNEQ(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.Endpoint {
+func IDIn(ids ...string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.Endpoint {
+func IDNotIn(ids ...string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.Endpoint {
+func IDGT(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.Endpoint {
+func IDGTE(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.Endpoint {
+func IDLT(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.Endpoint {
+func IDLTE(id string) predicate.Endpoint {
 	return predicate.Endpoint(sql.FieldLTE(FieldID, id))
+}
+
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.Endpoint {
+	return predicate.Endpoint(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.Endpoint {
+	return predicate.Endpoint(sql.FieldContainsFold(FieldID, id))
 }
 
 // Host applies equality check predicate on the "host" field. It's identical to HostEQ.

@@ -337,6 +337,22 @@ func (c *DeviceStatusClient) GetX(ctx context.Context, id string) *DeviceStatus 
 	return obj
 }
 
+// QueryNetworkDevice queries the network_device edge of a DeviceStatus.
+func (c *DeviceStatusClient) QueryNetworkDevice(ds *DeviceStatus) *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ds.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(devicestatus.Table, devicestatus.FieldID, id),
+			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, devicestatus.NetworkDeviceTable, devicestatus.NetworkDeviceColumn),
+		)
+		fromV = sqlgraph.Neighbors(ds.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *DeviceStatusClient) Hooks() []Hook {
 	return c.hooks.DeviceStatus
@@ -423,7 +439,7 @@ func (c *EndpointClient) UpdateOne(e *Endpoint) *EndpointUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *EndpointClient) UpdateOneID(id int) *EndpointUpdateOne {
+func (c *EndpointClient) UpdateOneID(id string) *EndpointUpdateOne {
 	mutation := newEndpointMutation(c.config, OpUpdateOne, withEndpointID(id))
 	return &EndpointUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -440,7 +456,7 @@ func (c *EndpointClient) DeleteOne(e *Endpoint) *EndpointDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *EndpointClient) DeleteOneID(id int) *EndpointDeleteOne {
+func (c *EndpointClient) DeleteOneID(id string) *EndpointDeleteOne {
 	builder := c.Delete().Where(endpoint.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -457,12 +473,12 @@ func (c *EndpointClient) Query() *EndpointQuery {
 }
 
 // Get returns a Endpoint entity by its id.
-func (c *EndpointClient) Get(ctx context.Context, id int) (*Endpoint, error) {
+func (c *EndpointClient) Get(ctx context.Context, id string) (*Endpoint, error) {
 	return c.Query().Where(endpoint.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *EndpointClient) GetX(ctx context.Context, id int) *Endpoint {
+func (c *EndpointClient) GetX(ctx context.Context, id string) *Endpoint {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -643,7 +659,7 @@ func (c *NetworkDeviceClient) QuerySwVersion(nd *NetworkDevice) *VersionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, id),
 			sqlgraph.To(version.Table, version.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, networkdevice.SwVersionTable, networkdevice.SwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, networkdevice.SwVersionTable, networkdevice.SwVersionColumn),
 		)
 		fromV = sqlgraph.Neighbors(nd.driver.Dialect(), step)
 		return fromV, nil
@@ -659,7 +675,7 @@ func (c *NetworkDeviceClient) QueryFwVersion(nd *NetworkDevice) *VersionQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, id),
 			sqlgraph.To(version.Table, version.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, networkdevice.FwVersionTable, networkdevice.FwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, networkdevice.FwVersionTable, networkdevice.FwVersionColumn),
 		)
 		fromV = sqlgraph.Neighbors(nd.driver.Dialect(), step)
 		return fromV, nil
@@ -753,7 +769,7 @@ func (c *VersionClient) UpdateOne(v *Version) *VersionUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *VersionClient) UpdateOneID(id int) *VersionUpdateOne {
+func (c *VersionClient) UpdateOneID(id string) *VersionUpdateOne {
 	mutation := newVersionMutation(c.config, OpUpdateOne, withVersionID(id))
 	return &VersionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -770,7 +786,7 @@ func (c *VersionClient) DeleteOne(v *Version) *VersionDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *VersionClient) DeleteOneID(id int) *VersionDeleteOne {
+func (c *VersionClient) DeleteOneID(id string) *VersionDeleteOne {
 	builder := c.Delete().Where(version.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -787,12 +803,12 @@ func (c *VersionClient) Query() *VersionQuery {
 }
 
 // Get returns a Version entity by its id.
-func (c *VersionClient) Get(ctx context.Context, id int) (*Version, error) {
+func (c *VersionClient) Get(ctx context.Context, id string) (*Version, error) {
 	return c.Query().Where(version.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *VersionClient) GetX(ctx context.Context, id int) *Version {
+func (c *VersionClient) GetX(ctx context.Context, id string) *Version {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

@@ -38,6 +38,12 @@ func (ec *EndpointCreate) SetProtocol(e endpoint.Protocol) *EndpointCreate {
 	return ec
 }
 
+// SetID sets the "id" field.
+func (ec *EndpointCreate) SetID(s string) *EndpointCreate {
+	ec.mutation.SetID(s)
+	return ec
+}
+
 // SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
 func (ec *EndpointCreate) SetNetworkDeviceID(id string) *EndpointCreate {
 	ec.mutation.SetNetworkDeviceID(id)
@@ -119,8 +125,13 @@ func (ec *EndpointCreate) sqlSave(ctx context.Context) (*Endpoint, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Endpoint.ID type: %T", _spec.ID.Value)
+		}
+	}
 	ec.mutation.id = &_node.ID
 	ec.mutation.done = true
 	return _node, nil
@@ -129,8 +140,12 @@ func (ec *EndpointCreate) sqlSave(ctx context.Context) (*Endpoint, error) {
 func (ec *EndpointCreate) createSpec() (*Endpoint, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Endpoint{config: ec.config}
-		_spec = sqlgraph.NewCreateSpec(endpoint.Table, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(endpoint.Table, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString))
 	)
+	if id, ok := ec.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := ec.mutation.Host(); ok {
 		_spec.SetField(endpoint.FieldHost, field.TypeString, value)
 		_node.Host = value
@@ -207,10 +222,6 @@ func (ecb *EndpointCreateBulk) Save(ctx context.Context) ([]*Endpoint, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})
