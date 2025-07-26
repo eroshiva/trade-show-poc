@@ -5,16 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
-	"github.com/eroshiva/trade-show-poc/internal/ent/version"
-	"github.com/google/uuid"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/eroshiva/trade-show-poc/internal/ent"
+	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
 	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
 	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
+	"github.com/eroshiva/trade-show-poc/internal/ent/version"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
@@ -32,7 +32,7 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 	Out:        os.Stderr,
 	TimeFormat: time.RFC3339,
 	FormatCaller: func(i interface{}) string {
-		return filepath.Dir(fmt.Sprintf("%s", i)) + filepath.Base(fmt.Sprintf("%s", i))
+		return filepath.Dir(fmt.Sprintf("%s/", i))
 	},
 }).Level(zerolog.TraceLevel).With().Caller().Timestamp().Str(component, componentName).Logger()
 
@@ -75,14 +75,25 @@ func UpdateNetworkDeviceByUser(ctx context.Context, client *ent.Client, id, mode
 		nd.Edges.Endpoints = endpoints
 	}
 
-	updNd, err := client.NetworkDevice.UpdateOne(nd).
+	numAfNdNodes, err := client.NetworkDevice.Update().
+		Where(networkdevice.ID(id)).
+		SetModel(nd.Model).
+		SetVendor(nd.Vendor).
+		AddEndpoints(endpoints...).
 		Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update network device (%s)", id)
 		return nil, err
 	}
 
-	return updNd, nil
+	if numAfNdNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of network device didn't return error, number of affected nodes is %d", numAfNdNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
+
+	return nd, nil
 }
 
 // UpdateNetworkDeviceEndpoints is used to update Network Device endpoints (by user).
@@ -99,17 +110,44 @@ func UpdateNetworkDeviceEndpoints(ctx context.Context, client *ent.Client, id st
 		return nil, err
 	}
 
-	// overwriting endpoints
-	nd.Edges.Endpoints = endpoints
-
-	updNd, err := client.NetworkDevice.UpdateOne(nd).
+	// cleaning all endpoints out
+	numAfNdNodes, err := client.NetworkDevice.Update().
+		Where(networkdevice.ID(id)).
+		ClearEndpoints().
 		Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update network device (%s)", id)
 		return nil, err
 	}
 
-	return updNd, nil
+	if numAfNdNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of network device didn't return error, number of affected nodes is %d", numAfNdNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
+
+	// overwriting endpoints
+	nd.Edges.Endpoints = endpoints
+	// adding new endpoints
+	numAfNdNodes, err = client.NetworkDevice.Update().
+		Where(networkdevice.ID(id)).
+		ClearEndpoints(). // ToDo - figure out if it works in one shot..
+		AddEndpoints(endpoints...).
+		Save(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to update network device (%s)", id)
+		return nil, err
+	}
+
+	if numAfNdNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of network device didn't return error, number of affected nodes is %d", numAfNdNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
+
+	return nd, nil
 }
 
 // UpdateNetworkDeviceAddEndpoints is used to add endpoints to the Network Device (by user).
@@ -126,16 +164,25 @@ func UpdateNetworkDeviceAddEndpoints(ctx context.Context, client *ent.Client, id
 		return nil, err
 	}
 
-	// overwriting endpoints
+	// adding endpoints
 	nd.Edges.Endpoints = append(nd.Edges.Endpoints, endpoints...)
-	updNd, err := client.NetworkDevice.UpdateOne(nd).
+	numAfNdNodes, err := client.NetworkDevice.Update().
+		Where(networkdevice.ID(id)).
+		AddEndpoints(endpoints...).
 		Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update network device (%s)", id)
 		return nil, err
 	}
 
-	return updNd, nil
+	if numAfNdNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of network device didn't return error, number of affected nodes is %d", numAfNdNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
+
+	return nd, nil
 }
 
 // UpdateNetworkDeviceVersions is used to update Network Device HW, SW, and FW versions.
@@ -156,14 +203,25 @@ func UpdateNetworkDeviceVersions(ctx context.Context, client *ent.Client, id, hw
 		nd.Edges.FwVersion = fw
 	}
 
-	updNd, err := client.NetworkDevice.UpdateOne(nd).
+	numAfNdNodes, err := client.NetworkDevice.Update().
+		Where(networkdevice.ID(id)).
+		SetHwVersion(nd.HwVersion).
+		SetSwVersion(nd.Edges.SwVersion).
+		SetFwVersion(nd.Edges.FwVersion).
 		Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update network device (%s)", id)
 		return nil, err
 	}
 
-	return updNd, nil
+	if numAfNdNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of network device didn't return error, number of affected nodes is %d", numAfNdNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
+
+	return nd, nil
 }
 
 // GetNetworkDeviceByID retrieves a Network Device resource by ID from the DB.
@@ -247,7 +305,7 @@ func UpdateEndpoint(ctx context.Context, client *ent.Client, id string, host, po
 		return nil, err
 	}
 
-	// setting fileds
+	// setting fields
 	if host != "" {
 		ep.Host = host
 	}
@@ -259,13 +317,24 @@ func UpdateEndpoint(ctx context.Context, client *ent.Client, id string, host, po
 	}
 
 	// updating endpoint
-	updEp, err := client.Endpoint.UpdateOne(ep).Save(ctx)
+	numAfEpNodes, err := client.Endpoint.Update().
+		Where(endpoint.ID(id)).
+		SetHost(ep.Host).
+		SetPort(ep.Port).
+		SetProtocol(ep.Protocol).Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update endpoint (%s)", id)
 		return nil, err
 	}
 
-	return updEp, nil
+	if numAfEpNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of endpoint didn't return error, number of affected nodes is %d", numAfEpNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
+
+	return ep, nil
 }
 
 // GetEndpointByID retrieves endpoint by ID.
@@ -314,13 +383,66 @@ func CreateDeviceStatus(ctx context.Context, client *ent.Client, status devicest
 	return ds, nil
 }
 
-// UpdateDeviceStatusByNetworkDeviceID updates device status for the network device with provided ID. If device status for this
-// network device does not exist, it creates one.
-func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client, networkDeviceID string, status devicestatus.Status, lastSeen string) (*ent.DeviceStatus, error) {
-	zlog.Debug().Msgf("Retrieving device status resource for network device (%s)", networkDeviceID)
+// GetDeviceStatusByID retrieves device status resource by provided ID.
+func GetDeviceStatusByID(ctx context.Context, client *ent.Client, id string) (*ent.DeviceStatus, error) {
+	zlog.Debug().Msgf("Retrieving device status (%s)", id)
+
+	ds, err := client.DeviceStatus.Query().Where(devicestatus.ID(id)).Only(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to get device status (%s)", id)
+		return nil, err
+	}
+
+	return ds, nil
+}
+
+// GetDeviceStatusByNetworkDeviceID retrieves device status resource by provided network device ID.
+func GetDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client, networkDeviceID string) (*ent.DeviceStatus, error) {
+	zlog.Debug().Msgf("Retrieving device status by network device (%s)", networkDeviceID)
+
 	ds, err := client.DeviceStatus.Query().
 		Where(devicestatus.HasNetworkDeviceWith(networkdevice.ID(networkDeviceID))).
 		Only(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to get device status by network device (%s)", networkDeviceID)
+		return nil, err
+	}
+
+	return ds, nil
+}
+
+// GetDeviceStatusByEndpointID retrieves device status resource by provided endpoint ID.
+func GetDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, endpointID string) (*ent.DeviceStatus, error) {
+	zlog.Debug().Msgf("Retrieving device status by endpoint (%s)", endpointID)
+
+	ds, err := client.DeviceStatus.Query().
+		Where(devicestatus.HasNetworkDeviceWith(networkdevice.HasEndpointsWith(endpoint.ID(endpointID)))).
+		Only(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to get device status by endpoint (%s)", endpointID)
+		return nil, err
+	}
+
+	return ds, nil
+}
+
+// ListDeviceStatusResources lists all device status resources available in the DB.
+func ListDeviceStatusResources(ctx context.Context, client *ent.Client) ([]*ent.DeviceStatus, error) {
+	zlog.Debug().Msgf("Retrieving all device status resources from the DB")
+	dss, err := client.DeviceStatus.Query().All(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msg("Failed to retrieve all device status resources")
+		return nil, err
+	}
+
+	return dss, nil
+}
+
+// UpdateDeviceStatusByNetworkDeviceID updates device status for the network device with provided ID. If device status for this
+// network device does not exist, it creates one.
+func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client, networkDeviceID string, status devicestatus.Status, lastSeen string) (*ent.DeviceStatus, error) {
+	zlog.Debug().Msgf("Updating device status resource by network device (%s)", networkDeviceID)
+	ds, err := GetDeviceStatusByNetworkDeviceID(ctx, client, networkDeviceID)
 	if err != nil {
 		// no device status for a given network device has been found, creating one
 		zlog.Error().Err(err).Msgf("Failed to get device status for network device (%s)", networkDeviceID)
@@ -338,6 +460,7 @@ func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client
 		}
 		return ds, nil
 	}
+
 	// device status was found, updating it
 	if status != "" {
 		ds.Status = status
@@ -346,22 +469,26 @@ func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client
 		ds.LastSeen = lastSeen
 	}
 	// updating device status in the DB.
-	updDs, err := client.DeviceStatus.UpdateOne(ds).Save(ctx)
+	numAfDsNodes, err := client.DeviceStatus.Update().Where(devicestatus.ID(ds.ID)).SetStatus(ds.Status).SetLastSeen(ds.LastSeen).Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update device status for network device (%s)", networkDeviceID)
 		return nil, err
 	}
+	if numAfDsNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of device status didn't return error, number of affected nodes is %d", numAfDsNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
 
-	return updDs, nil
+	return ds, nil
 }
 
 // UpdateDeviceStatusByEndpointID updates device status for the network device with existing endpoint with provided ID. If device status for this
 // endpoint and network device does not exist, it creates one.
 func UpdateDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, endpointID string, status devicestatus.Status, lastSeen string) (*ent.DeviceStatus, error) {
-	zlog.Debug().Msgf("Retrieving device status resource for endpoint (%s)", endpointID)
-	ds, err := client.DeviceStatus.Query().
-		Where(devicestatus.HasNetworkDeviceWith(networkdevice.HasEndpointsWith(endpoint.ID(endpointID)))).
-		Only(ctx)
+	zlog.Debug().Msgf("Updating device status resource by endpoint (%s)", endpointID)
+	ds, err := GetDeviceStatusByEndpointID(ctx, client, endpointID)
 	if err != nil {
 		// no device status was found for this endpoint, creating one
 		zlog.Error().Err(err).Msgf("Failed to get device status for endpoint (%s)", endpointID)
@@ -391,13 +518,20 @@ func UpdateDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, end
 	if lastSeen != "" {
 		ds.LastSeen = lastSeen
 	}
-	updDs, err := client.DeviceStatus.UpdateOne(ds).Save(ctx)
+
+	numAfDsNodes, err := client.DeviceStatus.Update().Where(devicestatus.ID(ds.ID)).SetStatus(ds.Status).SetLastSeen(ds.LastSeen).Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update device status for endpoint (%s)", endpointID)
 		return nil, err
 	}
+	if numAfDsNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of device status didn't return error, number of affected nodes is %d", numAfDsNodes))
+		zlog.Error().Err(newErr).Send()
+		return nil, err
+	}
 
-	return updDs, nil
+	return ds, nil
 }
 
 // DeleteDeviceStatusByID deletes device status resource by provided ID.
@@ -426,6 +560,18 @@ func CreateVersion(ctx context.Context, client *ent.Client, version, checksum st
 	return v, nil
 }
 
+// ListVersions lists all version resources available in the DB.
+func ListVersions(ctx context.Context, client *ent.Client) ([]*ent.Version, error) {
+	zlog.Debug().Msgf("Retrieving all version resources from the DB")
+	v, err := client.Version.Query().All(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msg("Failed to retrieve all version resources")
+		return nil, err
+	}
+
+	return v, nil
+}
+
 // GetVersionByID retrieves version resource by provided resource ID.
 func GetVersionByID(ctx context.Context, client *ent.Client, id string) (*ent.Version, error) {
 	zlog.Debug().Msgf("Retrieving version resource (%s)", id)
@@ -439,22 +585,28 @@ func GetVersionByID(ctx context.Context, client *ent.Client, id string) (*ent.Ve
 }
 
 // UpdateVersion updates version resource fields by provided resource ID.
-func UpdateVersion(ctx context.Context, client *ent.Client, id, version, checksum string) (*ent.Version, error) {
+func UpdateVersion(ctx context.Context, client *ent.Client, id, vers, checksum string) (*ent.Version, error) {
 	zlog.Debug().Msgf("Updating version resource (%s)", id)
 	v, err := GetVersionByID(ctx, client, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if version != "" {
-		v.Version = version
+	if vers != "" {
+		v.Version = vers
 	}
 	if checksum != "" {
 		v.Checksum = checksum
 	}
-	_, err = client.Version.UpdateOne(v).Save(ctx)
+	numAfVNodes, err := client.Version.Update().Where(version.ID(id)).SetVersion(v.Version).SetChecksum(v.Checksum).Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update version resource (%s)", id)
+		return nil, err
+	}
+	if numAfVNodes != 1 {
+		// something bad has happened, returning error
+		newErr := errors.New(fmt.Sprintf("Update of version didn't return error, number of affected nodes is %d", numAfVNodes))
+		zlog.Error().Err(newErr).Send()
 		return nil, err
 	}
 

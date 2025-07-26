@@ -100,13 +100,16 @@ govulncheck: govulncheck-install ## Runs govulncheck on the current codebase
 go-vet: ## Searching for suspicious constructs in Go code
 	go vet ./...
 
-go-test: ## Run unit tests present in the codebase
+go-test: db-start ## Run unit tests present in the codebase
 	mkdir -p tmp
+	sleep 5;
 	go test -coverprofile=./tmp/test-cover.out -race ./...
+	$(MAKE) db-stop
 
 test-ci: generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
 
-run: go-tidy build-monitoring bring-up-db ## Runs compiled network device monitoring service
+run: go-tidy build-monitoring db-start ## Runs compiled network device monitoring service
+	sleep 5;
 	./build/_output/${POC_NAME}
 
 bring-up-db: migration-apply ## Start DB and upload migrations to it

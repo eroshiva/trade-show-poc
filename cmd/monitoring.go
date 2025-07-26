@@ -29,7 +29,7 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 	Out:        os.Stderr,
 	TimeFormat: time.RFC3339,
 	FormatCaller: func(i interface{}) string {
-		return filepath.Dir(fmt.Sprintf("%s", i)) + filepath.Base(fmt.Sprintf("%s", i))
+		return filepath.Dir(fmt.Sprintf("%s/", i))
 	},
 }).Level(zerolog.TraceLevel).With().Caller().Timestamp().Str(component, componentName).Logger()
 
