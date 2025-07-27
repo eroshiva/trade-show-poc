@@ -6,15 +6,21 @@ import (
 	"testing"
 	"time"
 
+	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // DefaultTestTimeout defines default test timeout for a testing package
-const DefaultTestTimeout = time.Second * 1
+const (
+	DefaultTestTimeout   = time.Second * 1
+	defaultServerAddress = "localhost:50051"
+)
 
 // Setup function sets up testing environment. Currently, only uploading schema to the DB.
 func Setup() (*ent.Client, error) {
@@ -22,10 +28,10 @@ func Setup() (*ent.Client, error) {
 }
 
 // SetupFull function sets up testing environment.It uploads schema to the DB and starts gRPC and HTTP reverse proxy servers.
-func SetupFull() (*ent.Client, *sync.WaitGroup, chan bool, chan bool, error) {
+func SetupFull() (*ent.Client, apiv1.DeviceMonitoringServiceClient, *sync.WaitGroup, chan bool, chan bool, error) {
 	client, err := db.RunSchemaMigration()
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
 	wg := &sync.WaitGroup{}
@@ -43,7 +49,15 @@ func SetupFull() (*ent.Client, *sync.WaitGroup, chan bool, chan bool, error) {
 	<-readyChan
 	<-reverseProxyReadyChan
 
-	return client, wg, termChan, reverseProxyTermChan, nil
+	// creating gRPC testing client
+	conn, err := grpc.NewClient(defaultServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	grpcClient := apiv1.NewDeviceMonitoringServiceClient(conn)
+
+	return client, grpcClient, wg, termChan, reverseProxyTermChan, nil
 }
 
 // TeardownFull function tears down testing suite including DB connection, gRPC and HTTP reverse proxy servers.

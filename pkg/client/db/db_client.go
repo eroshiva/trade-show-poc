@@ -45,12 +45,12 @@ func CreateNetworkDevice(ctx context.Context, client *ent.Client, model string, 
 		return nil, err
 
 	}
-	zlog.Debug().Msgf("Creating network device %s by %s with following endpoints: %v", vendor, model, endpoints)
+	zlog.Debug().Msgf("Creating network device %s by %s with following endpoints: %v", model, vendor, endpoints)
 
 	// generating random ID for the network device
 	id := networkDevicePrefix + uuid.NewString()
 
-	u, err := client.NetworkDevice.
+	nd, err := client.NetworkDevice.
 		Create().
 		SetID(id).
 		SetVendor(vendor).
@@ -62,7 +62,7 @@ func CreateNetworkDevice(ctx context.Context, client *ent.Client, model string, 
 		return nil, err
 	}
 
-	return u, nil
+	return nd, nil
 }
 
 // UpdateNetworkDeviceByUser is used to update Network Device resource by user. Endpoints are overwritten.

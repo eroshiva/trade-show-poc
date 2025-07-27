@@ -240,9 +240,11 @@ func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (
 	if err != nil {
 		return nil, err
 	}
+	// DB client doesn't return resource with eager-loaded edges, adding them additionally here
+	nd.Edges.Endpoints = endpoints
 
 	// converting to Proto bindings
-	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(nd)
+	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide(nd)
 	return &apiv1.AddDeviceResponse{
 		Device: protoND,
 		Added:  true,

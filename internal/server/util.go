@@ -24,6 +24,21 @@ func ConvertNetworkDeviceResourceToNetworkDeviceProto(nd *ent.NetworkDevice) *ap
 	}
 }
 
+// ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide converts limited amount of parameters explicitly set by user
+// from ENT Network Device to Proto Network Device.
+func ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide(nd *ent.NetworkDevice) *apiv1.NetworkDevice {
+	protoND := &apiv1.NetworkDevice{
+		Id:        nd.ID,
+		Vendor:    ConvertEntVendorToProtoVendor(nd.Vendor),
+		Model:     nd.Model,
+		Endpoints: make([]*apiv1.Endpoint, 0),
+	}
+	endpoints := ConvertEndpointsToEndpointsProto(nd.Edges.Endpoints)
+	protoND.Endpoints = append(protoND.Endpoints, endpoints...)
+
+	return protoND
+}
+
 // ConvertEntVendorToProtoVendor converts ENT Vendor to Proto Vendor.
 func ConvertEntVendorToProtoVendor(vendor networkdevice.Vendor) apiv1.Vendor {
 	switch vendor {

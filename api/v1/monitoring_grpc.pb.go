@@ -112,7 +112,7 @@ func (c *deviceMonitoringServiceClient) GetSummary(ctx context.Context, in *empt
 }
 
 // DeviceMonitoringServiceServer is the server API for DeviceMonitoringService service.
-// All implementations must embed UnimplementedDeviceMonitoringServiceServer
+// All implementations should embed UnimplementedDeviceMonitoringServiceServer
 // for forward compatibility
 type DeviceMonitoringServiceServer interface {
 	// UpdateDeviceList allows to update list of the devices that are currently monitored in a PATCH fashion.
@@ -130,10 +130,9 @@ type DeviceMonitoringServiceServer interface {
 	GetDeviceStatus(context.Context, *GetDeviceStatusRequest) (*GetDeviceStatusResponse, error)
 	// GetSummary allows to retrieve summary of network device monitoring.
 	GetSummary(context.Context, *emptypb.Empty) (*GetSummaryResponse, error)
-	mustEmbedUnimplementedDeviceMonitoringServiceServer()
 }
 
-// UnimplementedDeviceMonitoringServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedDeviceMonitoringServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedDeviceMonitoringServiceServer struct {
 }
 
@@ -154,8 +153,6 @@ func (UnimplementedDeviceMonitoringServiceServer) GetDeviceStatus(context.Contex
 }
 func (UnimplementedDeviceMonitoringServiceServer) GetSummary(context.Context, *emptypb.Empty) (*GetSummaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSummary not implemented")
-}
-func (UnimplementedDeviceMonitoringServiceServer) mustEmbedUnimplementedDeviceMonitoringServiceServer() {
 }
 
 // UnsafeDeviceMonitoringServiceServer may be embedded to opt out of forward compatibility for this service.
