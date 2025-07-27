@@ -62,6 +62,10 @@ func CreateNetworkDevice(ctx context.Context, client *ent.Client, model string, 
 		return nil, err
 	}
 
+	// on create edges are not eager-loaded
+	if len(endpoints) > 0 {
+		nd.Edges.Endpoints = endpoints
+	}
 	return nd, nil
 }
 

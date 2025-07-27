@@ -5,9 +5,11 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
+	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
 	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	monitoring_testing "github.com/eroshiva/trade-show-poc/pkg/testing"
@@ -183,4 +185,52 @@ func TestUpdateNetworkDevice(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, nd2)
 	assert.NotNil(t, nd2.Edges.Endpoints)
+}
+
+func TestGetDeviceStatus(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
+	t.Cleanup(cancel)
+
+	// creating endpoints
+	ep1, err := db.CreateEndpoint(ctx, client, host1, port1, protocol1)
+	require.NoError(t, err)
+	require.NotNil(t, ep1)
+	t.Cleanup(func() {
+		err = db.DeleteEndpointByID(ctx, client, ep1.ID)
+		assert.NoError(t, err)
+	})
+	// converting endpoint resource to Proto notation
+	ep1Proto := server.ConvertEndpointToEndpointProto(ep1)
+
+	// creating network device resource with no endpoints
+	nd, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{ep1})
+	require.NoError(t, err)
+	require.NotNil(t, nd)
+	assert.NotNil(t, nd.Edges.Endpoints) // make sure there is one endpoint
+	assert.Len(t, nd.Edges.Endpoints, 1)
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating device status
+	timestamp := time.Now().String()
+	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, timestamp, nd)
+	require.NoError(t, err)
+	require.NotNil(t, ds)
+	t.Cleanup(func() {
+		err = db.DeleteDeviceStatusByID(ctx, client, ds.ID)
+		assert.NoError(t, err)
+	})
+
+	// retrieving device status from the NB API
+	req := server.CreateGetDeviceStatusRequest(nd.ID, ep1Proto)
+	retDS, err := grpcClient.GetDeviceStatus(ctx, req)
+	require.NoError(t, err)
+	require.NotNil(t, retDS)
+
+	// running few assertions
+	assert.Equal(t, retDS.GetStatus().GetId(), ds.ID)
+	assert.Equal(t, retDS.GetStatus().GetStatus(), server.ConvertEntStatusToProtoStatus(ds.Status))
+	assert.Equal(t, retDS.GetStatus().GetLastSeen(), timestamp)
 }

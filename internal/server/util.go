@@ -4,6 +4,7 @@ package server
 import (
 	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
+	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
 	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
 	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 )
@@ -154,5 +155,78 @@ func ConvertEntVersionToProtoVersion(version *ent.Version) *apiv1.Version {
 		Id:       version.ID,
 		Version:  version.Version,
 		Checksum: version.Checksum,
+	}
+}
+
+// CompareNetworkDeviceResources runs assertions on all fields of provided Network Device resources. Match is reported
+// when Network Device resources are identical.
+func CompareNetworkDeviceResources(nd1, nd2 *ent.NetworkDevice) bool {
+	// running long ifs
+	if nd1.ID != nd2.ID {
+		return false
+	}
+	if nd1.Vendor != nd2.Vendor {
+		return false
+	}
+	if nd1.Model != nd2.Model {
+		return false
+	}
+	if nd1.HwVersion != nd2.HwVersion {
+		return false
+	}
+	if nd1.Edges.SwVersion != nil && nd2.Edges.SwVersion != nil {
+		if nd1.Edges.SwVersion.Version != nd2.Edges.SwVersion.Version {
+			return false
+		}
+		if nd1.Edges.SwVersion.Checksum != nd2.Edges.SwVersion.Checksum {
+			return false
+		}
+	}
+	if nd1.Edges.FwVersion != nil && nd2.Edges.FwVersion != nil {
+		if nd1.Edges.FwVersion.Version != nd2.Edges.FwVersion.Version {
+			return false
+		}
+		if nd1.Edges.FwVersion.Checksum != nd2.Edges.FwVersion.Checksum {
+			return false
+		}
+	}
+	for _, nd1Endpoint := range nd1.Edges.Endpoints {
+		found := false
+		for _, nd2Endpoint := range nd2.Edges.Endpoints {
+			if nd1Endpoint.ID == nd2Endpoint.ID {
+				if nd1Endpoint.Protocol == nd2Endpoint.Protocol &&
+					nd1Endpoint.Host == nd2Endpoint.Host &&
+					nd1Endpoint.Port == nd2Endpoint.Port {
+					found = true
+				}
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+// ConvertEntDeviceStatusToProtoDeviceStatus converts ENT Device Status to Proto Device Status notation.
+func ConvertEntDeviceStatusToProtoDeviceStatus(ds *ent.DeviceStatus) *apiv1.DeviceStatus {
+	return &apiv1.DeviceStatus{
+		Id:       ds.ID,
+		Status:   ConvertEntStatusToProtoStatus(ds.Status),
+		LastSeen: ds.LastSeen,
+	}
+}
+
+// ConvertEntStatusToProtoStatus converts ENT status to Proto status notation.
+func ConvertEntStatusToProtoStatus(status devicestatus.Status) apiv1.Status {
+	switch status {
+	case devicestatus.StatusSTATUS_DEVICE_UP:
+		return apiv1.Status_STATUS_DEVICE_UP
+	case devicestatus.StatusSTATUS_DEVICE_UNHEALTHY:
+		return apiv1.Status_STATUS_DEVICE_UNHEALTHY
+	case devicestatus.StatusSTATUS_DEVICE_DOWN:
+		return apiv1.Status_STATUS_DEVICE_DOWN
+	default:
+		return apiv1.Status_STATUS_UNSPECIFIED
 	}
 }

@@ -1,7 +1,9 @@
 // Package server implements initial means for client-server communication
 package server
 
-import apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
+import (
+	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
+)
 
 // CreateAddDeviceRequest is a helper wrapper function that creates an AddDeviceRequest message.
 func CreateAddDeviceRequest(vendor apiv1.Vendor, model string, endpoints []*apiv1.Endpoint) *apiv1.AddDeviceRequest {
@@ -35,7 +37,7 @@ func DeviceStatus(status apiv1.Status, lastSeen string) *apiv1.DeviceStatus {
 	}
 }
 
-// CreateDeleteDeviceRequest is a helper wrapper function that creates DeleteDeviceRequest.
+// CreateDeleteDeviceRequest is a helper wrapper function that creates DeleteDeviceRequest message.
 func CreateDeleteDeviceRequest(id string) *apiv1.DeleteDeviceRequest {
 	return &apiv1.DeleteDeviceRequest{
 		Id: id,
@@ -51,9 +53,17 @@ func CreateNetworkDevice(vendor apiv1.Vendor, model string, endpoints []*apiv1.E
 	}
 }
 
-// CreateUpdateDeviceListRequest is a helper wrapper function that creates UpdateDeviceListRequest.
+// CreateUpdateDeviceListRequest is a helper wrapper function that creates UpdateDeviceListRequest message.
 func CreateUpdateDeviceListRequest(nds []*apiv1.NetworkDevice) *apiv1.UpdateDeviceListRequest {
 	return &apiv1.UpdateDeviceListRequest{
 		Devices: nds,
+	}
+}
+
+// CreateGetDeviceStatusRequest is a helper wrapper that creates a GetDeviceStatusRequest message.
+func CreateGetDeviceStatusRequest(id string, ep *apiv1.Endpoint) *apiv1.GetDeviceStatusRequest {
+	return &apiv1.GetDeviceStatusRequest{
+		Id:       id,
+		Endpoint: ep,
 	}
 }

@@ -322,3 +322,41 @@ func (srv *server) UpdateNetworkDevice(ctx context.Context, nd *apiv1.NetworkDev
 	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(updND)
 	return protoND, nil
 }
+
+func (srv *server) GetDeviceStatus(ctx context.Context, req *apiv1.GetDeviceStatusRequest) (*apiv1.GetDeviceStatusResponse, error) {
+	zlog.Info().Msgf("Retrieving network device status (%s)", req.GetId())
+
+	// first, retrieving network device resource by ID
+	nd, err := db.GetNetworkDeviceByID(ctx, srv.dbClient, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	// then, retrieving network device resource by its endpoint
+	altNd, err := db.GetNetworkDeviceByEndpoint(ctx, srv.dbClient, req.GetEndpoint().GetHost(), req.GetEndpoint().GetPort())
+	if err != nil {
+		return nil, err
+	}
+
+	// now, comparing if it is the same device
+	if !CompareNetworkDeviceResources(nd, altNd) {
+		// resource violation is happening - network device resources are not identical
+		newErr := fmt.Errorf("resource violation in the DB")
+		zlog.Error().Err(newErr).Msgf("Network device resource violation in the DB: %v and %v", nd, altNd)
+		return nil, newErr
+	}
+
+	// resources are identical, proceeding
+	// retrieving device status
+	s, err := db.GetDeviceStatusByNetworkDeviceID(ctx, srv.dbClient, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	protoStatus := ConvertEntDeviceStatusToProtoDeviceStatus(s)
+	return &apiv1.GetDeviceStatusResponse{
+		Id:       req.GetId(),
+		Endpoint: req.GetEndpoint(),
+		Status:   protoStatus,
+	}, nil
+}
