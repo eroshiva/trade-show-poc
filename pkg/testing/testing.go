@@ -2,69 +2,73 @@
 package testing
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
-	"entgo.io/ent/dialect"
+	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
-	_ "github.com/lib/pq" // SQL driver, necessary for DB interaction
-	"github.com/rs/zerolog"
+	"github.com/eroshiva/trade-show-poc/internal/server"
+	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
+// DefaultTestTimeout defines default test timeout for a testing package
 const (
-	component     = "component"
-	componentName = "testing"
-	// DefaultTestTimeout defines default test timeout for a testing package
-	DefaultTestTimeout = time.Second * 1
+	DefaultTestTimeout   = time.Second * 1
+	defaultServerAddress = "localhost:50051"
 )
 
-var zlog = zerolog.New(zerolog.ConsoleWriter{
-	Out:        os.Stderr,
-	TimeFormat: time.RFC3339,
-	FormatCaller: func(i interface{}) string {
-		return filepath.Dir(fmt.Sprintf("%s/", i))
-	},
-}).Level(zerolog.TraceLevel).With().Caller().Timestamp().Str(component, componentName).Logger()
-
-// Setup function sets up testing environment by uploading schema to the DB.
+// Setup function sets up testing environment. Currently, only uploading schema to the DB.
 func Setup() (*ent.Client, error) {
-	zlog.Info().Msgf("Opening connection to PostreSQL...")
-	client, err := ent.Open(dialect.Postgres, "host=localhost port=5432 user=admin dbname=postgres password=pass sslmode=disable")
-	if err != nil {
-		zlog.Error().Err(err).Msgf("failed opening connection to postgres")
-		return nil, err
-	}
-
-	zlog.Info().Msgf("Migrating database schema...")
-	// Run the auto migration tool.
-	if err = client.Schema.Create(context.Background()); err != nil {
-		zlog.Error().Err(err).Msgf("failed creating schema resources")
-		// gracefully closing client
-		newErr := client.Close()
-		if newErr != nil {
-			zlog.Error().Err(newErr).Msgf("failed closing connection to postgres")
-			return nil, newErr
-		}
-		return nil, err
-	}
-
-	return client, nil
+	return db.RunSchemaMigration()
 }
 
-// GracefullyCloseEntClient gracefully closes connection with the DB.
-func GracefullyCloseEntClient(client *ent.Client) error {
-	err := client.Close()
+// SetupFull function sets up testing environment.It uploads schema to the DB and starts gRPC and HTTP reverse proxy servers.
+func SetupFull() (*ent.Client, apiv1.DeviceMonitoringServiceClient, *sync.WaitGroup, chan bool, chan bool, error) {
+	client, err := db.RunSchemaMigration()
 	if err != nil {
-		zlog.Error().Err(err).Msgf("failed closing connection to postgres")
-		return err
+		return nil, nil, nil, nil, nil, err
 	}
-	return nil
+
+	wg := &sync.WaitGroup{}
+	termChan := make(chan bool, 1)
+	readyChan := make(chan bool, 1)
+	reverseProxyReadyChan := make(chan bool, 1)
+	reverseProxyTermChan := make(chan bool, 1)
+	wg.Add(1)
+	go func() {
+		wg.Add(1) //nolint:staticcheck
+		server.StartServer(client, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		wg.Done()
+	}()
+	// Waiting until both servers are up and running
+	<-readyChan
+	<-reverseProxyReadyChan
+
+	// creating gRPC testing client
+	conn, err := grpc.NewClient(defaultServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	grpcClient := apiv1.NewDeviceMonitoringServiceClient(conn)
+
+	return client, grpcClient, wg, termChan, reverseProxyTermChan, nil
+}
+
+// TeardownFull function tears down testing suite including DB connection, gRPC and HTTP reverse proxy servers.
+func TeardownFull(client *ent.Client, wg *sync.WaitGroup, termChan, reverseProxyTermChan chan bool) {
+	close(termChan)
+	close(reverseProxyTermChan)
+	err := db.GracefullyCloseDBClient(client)
+	if err != nil {
+		panic(err)
+	}
+	wg.Wait()
 }
 
 // AssertEqualVersion runs assertions on the fields of Version resources.

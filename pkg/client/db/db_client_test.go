@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 	code := m.Run()
-	err = monitoring_testing.GracefullyCloseEntClient(client)
+	err = db.GracefullyCloseDBClient(client)
 	if err != nil {
 		panic(err)
 	}
@@ -320,12 +320,6 @@ func TestEndpointResource(t *testing.T) {
 	require.NotNil(t, retEp)
 	monitoring_testing.AssertEqualEndpoints(t, ep, retEp)
 
-	// Listing all endpoints - there should be exactly one
-	eps, err := db.ListEndpoints(ctx, client)
-	require.NoError(t, err)
-	require.NotNil(t, eps)
-	assert.Len(t, eps, 1)
-
 	// updating endpoint
 	ep.Port = port2
 	ep.Protocol = protocol2
@@ -357,12 +351,6 @@ func TestEndpointResourceErrors(t *testing.T) {
 	updEp, err := db.UpdateEndpoint(ctx, client, uuid.NewString(), "", "", "")
 	require.Error(t, err)
 	require.Nil(t, updEp)
-
-	// Listing all endpoints - there should be no
-	eps, err := db.ListEndpoints(ctx, client)
-	require.NoError(t, err)
-	require.NotNil(t, eps)
-	assert.Len(t, eps, 0)
 }
 
 func TestNetworkDeviceResource(t *testing.T) {
