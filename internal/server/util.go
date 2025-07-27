@@ -94,6 +94,28 @@ func ConvertEndpointToEndpointProto(endpoint *ent.Endpoint) *apiv1.Endpoint {
 	}
 }
 
+// ConvertProtoEndpointsToEndpoints converts list of Proto endpoint to list of ENT endpoint.
+func ConvertProtoEndpointsToEndpoints(endpoints []*apiv1.Endpoint) []*ent.Endpoint {
+	retList := make([]*ent.Endpoint, 0)
+	if len(endpoints) > 0 {
+		for _, ep := range endpoints {
+			protoEndpoint := ConvertProtoEndpointToEndpoint(ep)
+			retList = append(retList, protoEndpoint)
+		}
+	}
+	return retList
+}
+
+// ConvertProtoEndpointToEndpoint converts Proto endpoint to ENT endpoint.
+func ConvertProtoEndpointToEndpoint(endpoint *apiv1.Endpoint) *ent.Endpoint {
+	return &ent.Endpoint{
+		ID:       endpoint.GetId(),
+		Host:     endpoint.GetHost(),
+		Port:     endpoint.GetPort(),
+		Protocol: ConvertProtoProtocolToEntProtocol(endpoint.GetProtocol()),
+	}
+}
+
 // ConvertEntProtocolToProtoProtocol converts ENT Protocol to Proto Protocol.
 func ConvertEntProtocolToProtoProtocol(protocol endpoint.Protocol) apiv1.Protocol {
 	switch protocol {

@@ -3,11 +3,11 @@ package server_test
 
 import (
 	"context"
-	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"os"
 	"testing"
 
 	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
+	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	monitoring_testing "github.com/eroshiva/trade-show-poc/pkg/testing"
@@ -81,9 +81,7 @@ func TestDeleteDevice(t *testing.T) {
 	require.NotNil(t, nd)
 
 	// removing network device via API
-	resp, err := grpcClient.DeleteDevice(ctx, &apiv1.DeleteDeviceRequest{
-		Id: nd.ID,
-	})
+	resp, err := grpcClient.DeleteDevice(ctx, server.CreateDeleteDeviceRequest(nd.ID))
 	assert.NoError(t, err)
 	assert.Equal(t, resp.GetId(), nd.ID)
 	assert.True(t, resp.GetDeleted())
@@ -115,4 +113,74 @@ func TestGetDeviceList(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, ndList)
 	assert.Len(t, ndList.GetDevices(), 2)
+}
+
+func TestUpdateNetworkDevice(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
+	t.Cleanup(cancel)
+
+	// creating endpoints
+	ep1, err := db.CreateEndpoint(ctx, client, host1, port1, protocol1)
+	require.NoError(t, err)
+	require.NotNil(t, ep1)
+	t.Cleanup(func() {
+		err = db.DeleteEndpointByID(ctx, client, ep1.ID)
+		assert.NoError(t, err)
+	})
+	// converting endpoint resource to Proto notation
+	ep1Proto := server.ConvertEndpointToEndpointProto(ep1)
+
+	ep2, err := db.CreateEndpoint(ctx, client, host2, port2, protocol2)
+	require.NoError(t, err)
+	require.NotNil(t, ep2)
+	t.Cleanup(func() {
+		err = db.DeleteEndpointByID(ctx, client, ep2.ID)
+		assert.NoError(t, err)
+	})
+	// converting endpoint resource to proto notation
+	ep2Proto := server.ConvertEndpointToEndpointProto(ep2)
+
+	// creating network device resource with no endpoints
+	nd1, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{})
+	require.NoError(t, err)
+	require.NotNil(t, nd1)
+	assert.Nil(t, nd1.Edges.Endpoints) // make sure there is no endpoint
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd1.ID)
+		assert.NoError(t, err)
+	})
+
+	nd2, err := db.CreateNetworkDevice(ctx, client, deviceModel+"-new", deviceVendor, []*ent.Endpoint{})
+	require.NoError(t, err)
+	require.NotNil(t, nd2)
+	assert.Nil(t, nd2.Edges.Endpoints) // make sure there is no endpoint
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd2.ID)
+		assert.NoError(t, err)
+	})
+
+	// converting network device resources to Proto notation
+	nd1Proto := server.ConvertNetworkDeviceResourceToNetworkDeviceProto(nd1)
+	nd2Proto := server.ConvertNetworkDeviceResourceToNetworkDeviceProto(nd2)
+
+	// adding endpoints to the network devices
+	nd1Proto.Endpoints = append(nd1Proto.Endpoints, ep1Proto)
+	nd2Proto.Endpoints = append(nd2Proto.Endpoints, ep2Proto)
+
+	// updating network device to have endpoints from NB API
+	retList, err := grpcClient.UpdateDeviceList(ctx, server.CreateUpdateDeviceListRequest([]*apiv1.NetworkDevice{nd1Proto, nd2Proto}))
+	require.NoError(t, err)
+	require.NotNil(t, retList)
+	assert.Len(t, retList.GetDevices(), 2)
+
+	// check that Network Devices were updated with endpoints
+	nd1, err = db.GetNetworkDeviceByID(ctx, client, nd1.ID)
+	require.NoError(t, err)
+	require.NotNil(t, nd1)
+	assert.NotNil(t, nd1.Edges.Endpoints)
+
+	nd2, err = db.GetNetworkDeviceByID(ctx, client, nd2.ID)
+	require.NoError(t, err)
+	require.NotNil(t, nd2)
+	assert.NotNil(t, nd2.Edges.Endpoints)
 }

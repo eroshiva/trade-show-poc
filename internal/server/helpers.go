@@ -6,11 +6,7 @@ import apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 // CreateAddDeviceRequest is a helper wrapper function that creates an AddDeviceRequest message.
 func CreateAddDeviceRequest(vendor apiv1.Vendor, model string, endpoints []*apiv1.Endpoint) *apiv1.AddDeviceRequest {
 	return &apiv1.AddDeviceRequest{
-		Device: &apiv1.NetworkDevice{
-			Vendor:    vendor,
-			Model:     model,
-			Endpoints: endpoints,
-		},
+		Device: CreateNetworkDevice(vendor, model, endpoints),
 	}
 }
 
@@ -36,5 +32,28 @@ func DeviceStatus(status apiv1.Status, lastSeen string) *apiv1.DeviceStatus {
 	return &apiv1.DeviceStatus{
 		Status:   status,
 		LastSeen: lastSeen,
+	}
+}
+
+// CreateDeleteDeviceRequest is a helper wrapper function that creates DeleteDeviceRequest.
+func CreateDeleteDeviceRequest(id string) *apiv1.DeleteDeviceRequest {
+	return &apiv1.DeleteDeviceRequest{
+		Id: id,
+	}
+}
+
+// CreateNetworkDevice is a helper wrapper function that creates NetworkDevice.
+func CreateNetworkDevice(vendor apiv1.Vendor, model string, endpoints []*apiv1.Endpoint) *apiv1.NetworkDevice {
+	return &apiv1.NetworkDevice{
+		Vendor:    vendor,
+		Model:     model,
+		Endpoints: endpoints,
+	}
+}
+
+// CreateUpdateDeviceListRequest is a helper wrapper function that creates UpdateDeviceListRequest.
+func CreateUpdateDeviceListRequest(nds []*apiv1.NetworkDevice) *apiv1.UpdateDeviceListRequest {
+	return &apiv1.UpdateDeviceListRequest{
+		Devices: nds,
 	}
 }

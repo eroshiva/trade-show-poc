@@ -3,8 +3,8 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"net"
 	"net/http"
 	"os"
@@ -19,6 +19,7 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -283,4 +284,41 @@ func (srv *server) GetDeviceList(ctx context.Context, _ *emptypb.Empty) (*apiv1.
 	return &apiv1.GetDeviceListResponse{
 		Devices: protoNDlist,
 	}, nil
+}
+
+func (srv *server) UpdateDeviceList(ctx context.Context, req *apiv1.UpdateDeviceListRequest) (*apiv1.UpdateDeviceListResponse, error) {
+	zlog.Info().Msgf("Updating network devices")
+
+	retList := make([]*apiv1.NetworkDevice, 0)
+	var cumulativeErr error
+	for _, nd := range req.GetDevices() {
+		protoND, err := srv.UpdateNetworkDevice(ctx, nd)
+		if err != nil {
+			zlog.Error().Err(err).Msg("Failed to update network device")
+			cumulativeErr = errors.Join(cumulativeErr, err)
+			continue
+		}
+		retList = append(retList, protoND)
+	}
+	if cumulativeErr != nil {
+		// errors occurred during the update
+		zlog.Info().Msgf("Errors occurred during bulk update of the network devices")
+	}
+	return &apiv1.UpdateDeviceListResponse{
+		Devices: retList,
+	}, cumulativeErr
+}
+
+func (srv *server) UpdateNetworkDevice(ctx context.Context, nd *apiv1.NetworkDevice) (*apiv1.NetworkDevice, error) {
+	zlog.Info().Msgf("Updating network device (%s)", nd.GetId())
+
+	entVendor := ConvertProtoVendorToEntVendor(nd.GetVendor())
+	entEndpoints := ConvertProtoEndpointsToEndpoints(nd.GetEndpoints())
+	updND, err := db.UpdateNetworkDeviceByUser(ctx, srv.dbClient, nd.GetId(), nd.GetModel(), entVendor, entEndpoints)
+	if err != nil {
+		return nil, err
+	}
+
+	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(updND)
+	return protoND, nil
 }
