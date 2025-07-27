@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -10,10 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"entgo.io/ent/dialect"
-	"github.com/eroshiva/trade-show-poc/internal/ent"
-	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
-	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	_ "github.com/lib/pq" // SQL driver, necessary for DB interaction
@@ -45,101 +40,22 @@ func main() {
 
 	readyChan := make(chan bool, 1)
 
-	client := runSchemaMigration()
-	// gracefully close client
+	dbClient, err := db.RunSchemaMigration()
+	if err != nil {
+		zlog.Fatal().Err(err).Msg("Failed to instantiate connection with PostgreSQL DB")
+	}
+	// gracefully closing client at the very end of execution
 	defer func() {
-		err := client.Close()
-		if err != nil {
-			zlog.Error().Err(err).Msg("failed closing postgres client")
+		err = db.GracefullyCloseDBClient(dbClient)
+		if err == nil {
+			zlog.Info().Msg("Connection to the DB was gracefully closed.")
 		}
+		// in the opposite case, error is already logged in within function GracefullyCloseDBClient.
 	}()
 
-	// sample of creating and updating resources:
-	err := createResources(client)
-	if err != nil {
-		zlog.Error().Err(err).Msg("failed creating resources")
-		return
-	}
+	// starting NB API server (user interactions and creation of resource).
+	server.StartServer(dbClient, termChan, readyChan)
 
-	zlog.Info().Msgf("starting server")
-	server.StartServer(termChan, readyChan)
-}
-
-func runSchemaMigration() *ent.Client {
-	zlog.Debug().Msgf("Opening connection to PostreSQL...")
-	client, err := ent.Open(dialect.Postgres, "host=localhost port=5432 user=admin dbname=postgres password=pass")
-	if err != nil {
-		zlog.Fatal().Msgf("failed opening connection to postgres: %v", err)
-	}
-
-	zlog.Debug().Msgf("Migrating database schema...")
-	// Run the auto migration tool.
-	if err := client.Schema.Create(context.Background()); err != nil {
-		zlog.Fatal().Msgf("failed creating schema resources: %v", err)
-	}
-
-	return client
-}
-
-func createResources(client *ent.Client) error {
-	// creating three endpoints - two for the first device, one for the second device
-	ep1, err := db.CreateEndpoint(context.Background(), client, "192.168.0.1", "532", endpoint.ProtocolPROTOCOL_SNMP)
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep1)
-
-	ep2, err := db.CreateEndpoint(context.Background(), client, "192.168.0.2", "1084", endpoint.ProtocolPROTOCOL_NETCONF)
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep2)
-
-	ep3, err := db.CreateEndpoint(context.Background(), client, "192.168.0.3", "532", endpoint.ProtocolPROTOCOL_SNMP)
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Endpoint has been created in the DB: %v", ep3)
-
-	// creating Network device
-	nd, err := db.CreateNetworkDevice(context.Background(), client, "MODEL-XYZ", networkdevice.VendorVENDOR_UBIQUITI, []*ent.Endpoint{ep1, ep2})
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Network device has been created in the DB: %v", nd)
-
-	// creating another Network device
-	nd2, err := db.CreateNetworkDevice(context.Background(), client, "MODEL-YZX", networkdevice.VendorVENDOR_JUNIPER, []*ent.Endpoint{ep3})
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Another Network device has been created in the DB: %v", nd2)
-
-	// retrieving other network device
-	ndBack, err := db.GetNetworkDeviceByID(context.Background(), client, nd2.ID)
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Returned network device is: %v", ndBack)
-
-	ndBack1, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep2.Host, ep2.Port)
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Returned network device is: %v", ndBack1)
-
-	ndBack2, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep3.Host, ep3.Port)
-	if err != nil {
-		return err
-	}
-	zlog.Info().Msgf("Returned network device is: %v", ndBack2)
-
-	// this must be an error
-	ndBackErr, err := db.GetNetworkDeviceByEndpoint(context.Background(), client, ep1.Host, ep2.Port)
-	if err != nil {
-		zlog.Error().Err(err).Msg("Failed to return a network device")
-	}
-	zlog.Info().Msgf("%v", ndBackErr)
-
-	return nil
+	// starting SB handler (updates device status and other monitoring information)
+	// controller.StartController(dbClient)
 }

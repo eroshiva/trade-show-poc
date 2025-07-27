@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 	code := m.Run()
-	err = monitoring_testing.GracefullyCloseEntClient(client)
+	err = db.GracefullyCloseDBClient(client)
 	if err != nil {
 		panic(err)
 	}
