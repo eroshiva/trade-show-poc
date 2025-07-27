@@ -28,6 +28,10 @@ const (
 	host2     = "192.168.0.2"
 	port2     = "456"
 	protocol2 = endpoint.ProtocolPROTOCOL_SNMP
+
+	host3     = "192.168.0.3"
+	port3     = "789"
+	protocol3 = endpoint.ProtocolPROTOCOL_RESTCONF
 )
 
 var (

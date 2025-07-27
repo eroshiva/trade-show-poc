@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -244,9 +246,163 @@ func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (
 	nd.Edges.Endpoints = endpoints
 
 	// converting to Proto bindings
-	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide(nd)
+	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(nd)
 	return &apiv1.AddDeviceResponse{
 		Device: protoND,
 		Added:  true,
 	}, nil
+}
+
+func (srv *server) DeleteDevice(ctx context.Context, req *apiv1.DeleteDeviceRequest) (*apiv1.DeleteDeviceResponse, error) {
+	zlog.Info().Msgf("Removing network device (%s)", req.GetId())
+
+	resp := &apiv1.DeleteDeviceResponse{
+		Id:      req.GetId(),
+		Deleted: false,
+	}
+	err := db.DeleteNetworkDeviceByID(ctx, srv.dbClient, req.GetId())
+	if err != nil {
+		// failed to delete network device
+		return resp, err
+	}
+	// network device was deleted
+	resp.Deleted = true
+	return resp, nil
+}
+
+func (srv *server) GetDeviceList(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetDeviceListResponse, error) {
+	zlog.Info().Msgf("Retrieving all available network devices")
+
+	ndList, err := db.ListNetworkDevices(ctx, srv.dbClient)
+	if err != nil {
+		// failed to retrieve network devices
+		return nil, err
+	}
+	// network devices were retrieved
+	// converting list of network devices to proto notation
+	protoNDlist := ConvertNetworkDeviceResourcesToNetworkDevicesProto(ndList)
+	return &apiv1.GetDeviceListResponse{
+		Devices: protoNDlist,
+	}, nil
+}
+
+func (srv *server) UpdateDeviceList(ctx context.Context, req *apiv1.UpdateDeviceListRequest) (*apiv1.UpdateDeviceListResponse, error) {
+	zlog.Info().Msgf("Updating network devices")
+
+	retList := make([]*apiv1.NetworkDevice, 0)
+	var cumulativeErr error
+	for _, nd := range req.GetDevices() {
+		protoND, err := srv.UpdateNetworkDevice(ctx, nd)
+		if err != nil {
+			zlog.Error().Err(err).Msg("Failed to update network device")
+			cumulativeErr = errors.Join(cumulativeErr, err)
+			continue
+		}
+		retList = append(retList, protoND)
+	}
+	if cumulativeErr != nil {
+		// errors occurred during the update
+		zlog.Info().Msgf("Errors occurred during bulk update of the network devices")
+	}
+	return &apiv1.UpdateDeviceListResponse{
+		Devices: retList,
+	}, cumulativeErr
+}
+
+func (srv *server) UpdateNetworkDevice(ctx context.Context, nd *apiv1.NetworkDevice) (*apiv1.NetworkDevice, error) {
+	zlog.Info().Msgf("Updating network device (%s)", nd.GetId())
+
+	entVendor := ConvertProtoVendorToEntVendor(nd.GetVendor())
+	entEndpoints := ConvertProtoEndpointsToEndpoints(nd.GetEndpoints())
+	updND, err := db.UpdateNetworkDeviceByUser(ctx, srv.dbClient, nd.GetId(), nd.GetModel(), entVendor, entEndpoints)
+	if err != nil {
+		return nil, err
+	}
+
+	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(updND)
+	return protoND, nil
+}
+
+func (srv *server) GetDeviceStatus(ctx context.Context, req *apiv1.GetDeviceStatusRequest) (*apiv1.GetDeviceStatusResponse, error) {
+	zlog.Info().Msgf("Retrieving network device status (%s)", req.GetId())
+
+	// first, retrieving network device resource by ID
+	nd, err := db.GetNetworkDeviceByID(ctx, srv.dbClient, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	// then, retrieving network device resource by its endpoint
+	altNd, err := db.GetNetworkDeviceByEndpoint(ctx, srv.dbClient, req.GetEndpoint().GetHost(), req.GetEndpoint().GetPort())
+	if err != nil {
+		return nil, err
+	}
+
+	// now, comparing if it is the same device
+	if !CompareNetworkDeviceResources(nd, altNd) {
+		// resource violation is happening - network device resources are not identical
+		newErr := fmt.Errorf("resource violation in the DB")
+		zlog.Error().Err(newErr).Msgf("Network device resource violation in the DB: %v and %v", nd, altNd)
+		return nil, newErr
+	}
+
+	// resources are identical, proceeding
+	// retrieving device status
+	s, err := db.GetDeviceStatusByNetworkDeviceID(ctx, srv.dbClient, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	protoStatus := ConvertEntDeviceStatusToProtoDeviceStatus(s)
+	return &apiv1.GetDeviceStatusResponse{
+		Id:       req.GetId(),
+		Endpoint: req.GetEndpoint(),
+		Status:   protoStatus,
+	}, nil
+}
+
+func (srv *server) GetSummary(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetSummaryResponse, error) {
+	zlog.Info().Msgf("Retrieving network device summary")
+
+	// retrieving all network devices currently available in the system
+	ndList, err := srv.GetDeviceList(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &apiv1.GetSummaryResponse{}
+	var cumulativeErr error
+	// fetching device status for each device and gathering statistics right away
+	for _, nd := range ndList.GetDevices() {
+		// fetching device status for at least one endpoint
+		for _, ep := range nd.GetEndpoints() {
+			ds, err := srv.GetDeviceStatus(ctx, CreateGetDeviceStatusRequest(nd.GetId(), ep))
+			if err != nil {
+				// aggregating errors
+				cumulativeErr = errors.Join(cumulativeErr, err)
+				continue
+			}
+			// device status was successfully fetched
+			// gathering statistics
+			resp = getStatistics(resp, ds.GetStatus())
+			break // no need for further iterations
+		}
+	}
+	if cumulativeErr != nil {
+		zlog.Warn().Msgf("Errors occurred during network device summary collection")
+	}
+	return resp, cumulativeErr
+}
+
+func getStatistics(stats *apiv1.GetSummaryResponse, ds *apiv1.DeviceStatus) *apiv1.GetSummaryResponse {
+	stats.DevicesTotal++
+	switch ds.GetStatus() {
+	case apiv1.Status_STATUS_DEVICE_UP:
+		stats.DevicesUp++
+	case apiv1.Status_STATUS_DEVICE_DOWN:
+		stats.DownDevices++
+	case apiv1.Status_STATUS_DEVICE_UNHEALTHY:
+		stats.DevicesUnhealthy++
+	}
+	return stats
 }
