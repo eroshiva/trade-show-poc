@@ -91,10 +91,13 @@ func performControlLoopRoutine(dbClient *ent.Client, controlLoopTick time.Durati
 	// finished iteration
 }
 
-// processNetworkDevice runs routine to get network device status and update it in the DB.
+// processNetworkDevice runs routine to get network device status, SW, FW, and HW versions from the device and update them in the DB.
 func processNetworkDevice(ctx context.Context, dbClient *ent.Client, networkDevice *ent.NetworkDevice) {
 	// iterating over endpoints and checking if any of them is alive.
 	// it is enough to find one alive Endpoint.
+	hwV := ""
+	swV := &ent.Version{}
+	fwV := &ent.Version{}
 	status := devicestatus.StatusSTATUS_DEVICE_DOWN
 	aliveConnectionFound := false
 	for _, ep := range networkDevice.Edges.Endpoints {
@@ -108,20 +111,43 @@ func processNetworkDevice(ctx context.Context, dbClient *ent.Client, networkDevi
 		s, err := connector.GetStatus(ctx)
 		if err != nil {
 			// failed to retrieve status, proceeding with other the endpoint.
+			// assuming that error is already logged in within the function.
 			continue
 		}
 		// device status was retrieved, break the loop and perform an update.
 		aliveConnectionFound = true
 		status = s // assuming that any live connection is different from down
-		break      // no need in further sniffing of other endpoints
+
+		// checking HW version
+		hwV, _ = connector.GetHWVersion(ctx)
+		// in case of error, assuming that error is already logged in within the function.
+		// even if this call fails, continue to retrieve the other versions.
+		// DB client will do sanity check and skip default values.
+
+		swV, _ = connector.GetSWVersion(ctx)
+		// in case of error, assuming that error is already logged in within the function.
+		// even if this call fails, continue to retrieve the other version.
+		// DB client will do sanity check and skip default values.
+
+		fwV, _ = connector.GetFWVersion(ctx)
+		// in case of error, assuming that error is already logged in within the function.
+		// even if this call fails, continue to retrieve the other versions.
+		// DB client will do sanity check and skip default values.
+
+		// no need in further sniffing of other endpoints
+		break
 	}
 
 	lastSeen := time.Now().String()
 	if !aliveConnectionFound {
-		// no alive endpoint was found, updating device status to down state.
+		// no alive endpoint was found, updating device status to down state and resetting timestamp.
 		lastSeen = ""
 	}
-	// alive connection was found, status was fetched (and already fixed, updating device status
+	// alive connection was found and status was fetched (and already fixed, updating device status
 	_, _ = db.UpdateDeviceStatusByNetworkDeviceID(ctx, dbClient, networkDevice.ID, status, lastSeen)
+	// error is already logged in in the internal function
+
+	// updating HW, SW, and FW versions
+	_, _ = db.UpdateNetworkDeviceVersions(ctx, dbClient, networkDevice.ID, hwV, swV, fwV)
 	// error is already logged in in the internal function
 }

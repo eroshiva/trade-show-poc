@@ -28,6 +28,9 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 // and retrieving its status.
 type Connector interface {
 	GetStatus(ctx context.Context) (devicestatus.Status, error)
+	GetHWVersion(ctx context.Context) (string, error)
+	GetSWVersion(ctx context.Context) (*ent.Version, error)
+	GetFWVersion(ctx context.Context) (*ent.Version, error)
 }
 
 // NewConnector function returns the correct connector for a given endpoint protocol.
