@@ -89,3 +89,30 @@ func TestDeleteDevice(t *testing.T) {
 	assert.True(t, resp.GetDeleted())
 	assert.Empty(t, resp.GetDetails())
 }
+
+func TestGetDeviceList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
+	t.Cleanup(cancel)
+
+	// creating network device resource with no endpoints
+	nd1, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{})
+	require.NoError(t, err)
+	require.NotNil(t, nd1)
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd1.ID)
+		assert.NoError(t, err)
+	})
+
+	nd2, err := db.CreateNetworkDevice(ctx, client, deviceModel+"-new", deviceVendor, []*ent.Endpoint{})
+	require.NoError(t, err)
+	require.NotNil(t, nd2)
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd2.ID)
+		assert.NoError(t, err)
+	})
+
+	ndList, err := grpcClient.GetDeviceList(ctx, nil)
+	require.NoError(t, err)
+	require.NotNil(t, ndList)
+	assert.Len(t, ndList.GetDevices(), 2)
+}

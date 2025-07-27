@@ -4,6 +4,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"net"
 	"net/http"
 	"os"
@@ -244,7 +245,7 @@ func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (
 	nd.Edges.Endpoints = endpoints
 
 	// converting to Proto bindings
-	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide(nd)
+	protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(nd)
 	return &apiv1.AddDeviceResponse{
 		Device: protoND,
 		Added:  true,
@@ -266,4 +267,20 @@ func (srv *server) DeleteDevice(ctx context.Context, req *apiv1.DeleteDeviceRequ
 	// network device was deleted
 	resp.Deleted = true
 	return resp, nil
+}
+
+func (srv *server) GetDeviceList(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetDeviceListResponse, error) {
+	zlog.Info().Msgf("Retrieving all available network devices")
+
+	ndList, err := db.ListNetworkDevices(ctx, srv.dbClient)
+	if err != nil {
+		// failed to retrieve network devices
+		return nil, err
+	}
+	// network devices were retrieved
+	// converting list of network devices to proto notation
+	protoNDlist := ConvertNetworkDeviceResourcesToNetworkDevicesProto(ndList)
+	return &apiv1.GetDeviceListResponse{
+		Devices: protoNDlist,
+	}, nil
 }

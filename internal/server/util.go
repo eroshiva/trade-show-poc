@@ -8,35 +8,40 @@ import (
 	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 )
 
-// ConvertNetworkDeviceResourceToNetworkDeviceProto converts ENT Network Device to Proto Network Device.
-func ConvertNetworkDeviceResourceToNetworkDeviceProto(nd *ent.NetworkDevice) *apiv1.NetworkDevice {
-	endpoints := ConvertEndpointsToEndpointsProto(nd.Edges.Endpoints)
-	sw := ConvertEntVersionToProtoVersion(nd.Edges.SwVersion)
-	fw := ConvertEntVersionToProtoVersion(nd.Edges.FwVersion)
-	return &apiv1.NetworkDevice{
-		Id:        nd.ID,
-		Vendor:    ConvertEntVendorToProtoVendor(nd.Vendor),
-		Model:     nd.Model,
-		Endpoints: endpoints,
-		HwVersion: nd.HwVersion,
-		SwVersion: sw,
-		FwVersion: fw,
+// ConvertNetworkDeviceResourcesToNetworkDevicesProto converts a list of ENT Network Device to Proto Network Device.
+func ConvertNetworkDeviceResourcesToNetworkDevicesProto(nds []*ent.NetworkDevice) []*apiv1.NetworkDevice {
+	ret := make([]*apiv1.NetworkDevice, 0)
+	for _, nd := range nds {
+		protoND := ConvertNetworkDeviceResourceToNetworkDeviceProto(nd)
+		ret = append(ret, protoND)
 	}
+	return ret
 }
 
-// ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide converts limited amount of parameters explicitly set by user
-// from ENT Network Device to Proto Network Device.
-func ConvertNetworkDeviceResourceToNetworkDeviceProtoUserSide(nd *ent.NetworkDevice) *apiv1.NetworkDevice {
-	protoND := &apiv1.NetworkDevice{
+// ConvertNetworkDeviceResourceToNetworkDeviceProto converts ENT Network Device to Proto Network Device.
+func ConvertNetworkDeviceResourceToNetworkDeviceProto(nd *ent.NetworkDevice) *apiv1.NetworkDevice {
+	sw := &apiv1.Version{}
+	if nd.Edges.SwVersion != nil {
+		sw = ConvertEntVersionToProtoVersion(nd.Edges.SwVersion)
+	}
+	fw := &apiv1.Version{}
+	if nd.Edges.FwVersion != nil {
+		fw = ConvertEntVersionToProtoVersion(nd.Edges.FwVersion)
+	}
+
+	ret := &apiv1.NetworkDevice{
 		Id:        nd.ID,
 		Vendor:    ConvertEntVendorToProtoVendor(nd.Vendor),
 		Model:     nd.Model,
 		Endpoints: make([]*apiv1.Endpoint, 0),
+		HwVersion: nd.HwVersion,
+		SwVersion: sw,
+		FwVersion: fw,
 	}
-	endpoints := ConvertEndpointsToEndpointsProto(nd.Edges.Endpoints)
-	protoND.Endpoints = append(protoND.Endpoints, endpoints...)
 
-	return protoND
+	endpoints := ConvertEndpointsToEndpointsProto(nd.Edges.Endpoints)
+	ret.Endpoints = append(ret.Endpoints, endpoints...)
+	return ret
 }
 
 // ConvertEntVendorToProtoVendor converts ENT Vendor to Proto Vendor.
