@@ -3,6 +3,7 @@ package server_test
 
 import (
 	"context"
+	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"os"
 	"testing"
 
@@ -68,4 +69,23 @@ func TestAddDevice(t *testing.T) {
 	assert.Equal(t, res.GetDevice().GetModel(), nd.Model)
 	assert.Len(t, res.GetDevice().GetEndpoints(), 2)
 	assert.Len(t, nd.Edges.Endpoints, 2)
+}
+
+func TestDeleteDevice(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
+	t.Cleanup(cancel)
+
+	// creating network device resource with no endpoints
+	nd, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{})
+	require.NoError(t, err)
+	require.NotNil(t, nd)
+
+	// removing network device via API
+	resp, err := grpcClient.DeleteDevice(ctx, &apiv1.DeleteDeviceRequest{
+		Id: nd.ID,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, resp.GetId(), nd.ID)
+	assert.True(t, resp.GetDeleted())
+	assert.Empty(t, resp.GetDetails())
 }

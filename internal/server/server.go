@@ -250,3 +250,20 @@ func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (
 		Added:  true,
 	}, nil
 }
+
+func (srv *server) DeleteDevice(ctx context.Context, req *apiv1.DeleteDeviceRequest) (*apiv1.DeleteDeviceResponse, error) {
+	zlog.Info().Msgf("Removing network device (%s)", req.GetId())
+
+	resp := &apiv1.DeleteDeviceResponse{
+		Id:      req.GetId(),
+		Deleted: false,
+	}
+	err := db.DeleteNetworkDeviceByID(ctx, srv.dbClient, req.GetId())
+	if err != nil {
+		// failed to delete network device
+		return resp, err
+	}
+	// network device was deleted
+	resp.Deleted = true
+	return resp, nil
+}
