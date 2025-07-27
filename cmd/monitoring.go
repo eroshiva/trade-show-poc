@@ -31,30 +31,39 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 func main() {
 	// channels to handle termination and capture signals
 	termChan := make(chan bool)
+	reverseProxyTermChan := make(chan bool)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
 	readyChan := make(chan bool, 1)
+	reverseProxyReadyChan := make(chan bool, 1)
 
 	dbClient, err := db.RunSchemaMigration()
 	if err != nil {
 		zlog.Fatal().Err(err).Msg("Failed to instantiate connection with PostgreSQL DB")
 	}
 
-	go func() {
-		<-sigChan
-		close(termChan)
-
-		// gracefully closing client at the very end of execution
-		_ = db.GracefullyCloseDBClient(dbClient)
-	}()
-
 	// creating waitgroup so main will wait for servers to exit cleanly
 	wg := &sync.WaitGroup{}
 
+	wg.Add(1)
+	go func() {
+		<-sigChan
+		close(termChan)
+		close(reverseProxyTermChan)
+
+		// gracefully closing client at the very end of execution
+		_ = db.GracefullyCloseDBClient(dbClient)
+		wg.Done()
+	}()
+
 	// starting NB API server (user interactions and creation of resource).
 	wg.Add(1)
-	server.StartServer(dbClient, wg, termChan, readyChan)
+	go func() {
+		wg.Add(1) //nolint:staticcheck
+		server.StartServer(dbClient, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		wg.Done()
+	}()
 
 	// starting SB handler (updates device status and other monitoring information)
 	// controller.StartController(dbClient)

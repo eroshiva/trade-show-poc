@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/eroshiva/trade-show-poc/internal/ent"
@@ -38,20 +37,6 @@ var (
 	fwVersion  = "fw-" + version
 	fwChecksum = fmt.Sprintf("%x", sha256.Sum256([]byte(fwVersion)))
 )
-
-func TestMain(m *testing.M) {
-	var err error
-	client, err = monitoring_testing.Setup()
-	if err != nil {
-		panic(err)
-	}
-	code := m.Run()
-	err = db.GracefullyCloseDBClient(client)
-	if err != nil {
-		panic(err)
-	}
-	os.Exit(code)
-}
 
 func TestConvertNetworkDeviceResourceToNetworkDeviceProto(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)

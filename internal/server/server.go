@@ -58,7 +58,10 @@ func getServerOptions(_ *Options) ([]grpc.ServerOption, error) {
 	return optionsList, nil
 }
 
-func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptions []grpc.ServerOption, termChan chan bool, readyChan chan bool) {
+func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptions []grpc.ServerOption,
+	termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool,
+) {
+	grpcReadyChan := make(chan bool, 1)
 	lis, err := net.Listen(tcpNetwork, address)
 	if err != nil {
 		zlog.Fatal().Err(err).Msgf("Failed to listen on %s", address)
@@ -81,6 +84,7 @@ func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptio
 		// On testing will be nil
 		if readyChan != nil {
 			readyChan <- true
+			grpcReadyChan <- true
 		}
 		if err := s.Serve(lis); err != nil {
 			zlog.Fatal().Err(err).Msgf("Failed to serve")
@@ -89,7 +93,11 @@ func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptio
 
 	// starting reverse proxy
 	wg.Add(1)
-	startReverseProxy(address, wg, termChan)
+	go func() {
+		wg.Add(1) //nolint:staticcheck
+		startReverseProxy(address, wg, grpcReadyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		wg.Done()
+	}()
 
 	// handle termination signals
 	termSig := <-termChan
@@ -102,8 +110,10 @@ func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptio
 }
 
 // startReverseProxy starts the gRPC reverse proxy server which is connected to the HTTP handler.
-func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, termChan chan bool) {
-	zlog.Info().Msg("Starting reverse proxy")
+func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, grocReadyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool) {
+	// waiting for the gRPC server to start first
+	<-grocReadyChan
+	zlog.Info().Msg("Starting reverse HTTP proxy")
 
 	// read env variable, where HTTP server is running
 	httpServerAddress := os.Getenv(envHTTPServerAddress)
@@ -135,13 +145,18 @@ func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, termChan ch
 		Handler: mux,
 	}
 
-	zlog.Info().Msgf("Starting HTTP gateway on %s", httpServerAddress)
-	if err = gwServer.ListenAndServe(); err != nil {
-		zlog.Fatal().Err(err).Msg("Failed to serve HTTP gateway")
-	}
+	go func() {
+		// On testing will be nil
+		if reverseProxyReadyChan != nil {
+			reverseProxyReadyChan <- true
+		}
+		if err = gwServer.ListenAndServe(); err != nil {
+			zlog.Fatal().Err(err).Msg("Failed to serve HTTP gateway")
+		}
+	}()
 
 	// handle termination signals
-	termSig := <-termChan
+	termSig := <-reverseProxyTermChan
 	if termSig {
 		zlog.Info().Msg("Gracefully stopping HTTP server")
 		err = gwServer.Shutdown(context.Background())
@@ -154,7 +169,7 @@ func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, termChan ch
 }
 
 // StartServer function configures and brings up gRPC server.
-func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan chan bool, readyChan chan bool) {
+func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool) {
 	zlog.Info().Msgf("Starting gRPC server...")
 	// read env variable, where gRPC server is running
 	serverAddress := os.Getenv(envServerAddress)
@@ -171,7 +186,7 @@ func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan chan bool, r
 	}
 
 	// start server
-	serve(serverAddress, dbClient, wg, serverOptions, termChan, readyChan)
+	serve(serverAddress, dbClient, wg, serverOptions, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
 }
 
 func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (*apiv1.AddDeviceResponse, error) {

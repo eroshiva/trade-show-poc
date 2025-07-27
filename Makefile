@@ -6,6 +6,7 @@ POC_NAME := monitoring
 POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.3.0
+GOFUMPT_VERSION := v0.8.0
 BUF_VERSION := v1.55.1
 GRPC_GATEWAY_VERSION := v2.27.1
 PROTOC_GEN_ENT_VERSION := v0.6.0
@@ -55,6 +56,7 @@ build-monitoring: ## Build the Go binary for network device monitoring service
 deps: buf-install go-linters-install atlas-install ## Installs developer prerequisites for this project
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
 	go install entgo.io/contrib/entproto/cmd/protoc-gen-ent@${PROTOC_GEN_ENT_VERSION}
+	go install mvdan.cc/gofumpt@${GOFUMPT_VERSION}
 
 atlas-inspect: ## Inspect connection with DB with atlas
 	atlas schema inspect --url "postgresql://${PGUSER}:${PGPASSWORD}@localhost:${PGPORT}/${PGDATABASE}?search_path=public" --format "OK"
