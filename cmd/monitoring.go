@@ -11,7 +11,6 @@ import (
 
 	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
-	_ "github.com/lib/pq" // SQL driver, necessary for DB interaction
 	"github.com/rs/zerolog"
 )
 
@@ -33,10 +32,6 @@ func main() {
 	termChan := make(chan bool)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
-	go func() {
-		<-sigChan
-		close(termChan)
-	}()
 
 	readyChan := make(chan bool, 1)
 
@@ -44,13 +39,13 @@ func main() {
 	if err != nil {
 		zlog.Fatal().Err(err).Msg("Failed to instantiate connection with PostgreSQL DB")
 	}
-	// gracefully closing client at the very end of execution
-	defer func() {
-		err = db.GracefullyCloseDBClient(dbClient)
-		if err == nil {
-			zlog.Info().Msg("Connection to the DB was gracefully closed.")
-		}
-		// in the opposite case, error is already logged in within function GracefullyCloseDBClient.
+
+	go func() {
+		<-sigChan
+		close(termChan)
+
+		// gracefully closing client at the very end of execution
+		_ = db.GracefullyCloseDBClient(dbClient)
 	}()
 
 	// starting NB API server (user interactions and creation of resource).

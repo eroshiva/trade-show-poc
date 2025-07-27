@@ -105,6 +105,7 @@ func RunSchemaMigration() (*ent.Client, error) {
 
 // GracefullyCloseDBClient gracefully closes connection with the DB.
 func GracefullyCloseDBClient(client *ent.Client) error {
+	zlog.Info().Msg("Gracefully closing connection to the DB")
 	err := client.Close()
 	if err != nil {
 		zlog.Error().Err(err).Msgf("failed closing connection to postgres")

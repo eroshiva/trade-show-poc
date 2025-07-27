@@ -12,7 +12,6 @@ import (
 	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
-	_ "github.com/lib/pq" // SQL driver, necessary for DB interaction
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 )
@@ -42,14 +41,25 @@ type server struct {
 	dbClient *ent.Client
 }
 
-func serve(address string, dbClient *ent.Client, termChan chan bool, readyChan chan bool) {
+// Options structure defines server's features enablement.
+type Options struct {
+	EnableInterceptor bool
+}
+
+func getServerOptions(_ *Options) ([]grpc.ServerOption, error) {
+	// parse server options from configuration
+	optionsList := make([]grpc.ServerOption, 0)
+	return optionsList, nil
+}
+
+func serve(address string, dbClient *ent.Client, serverOptions []grpc.ServerOption, termChan chan bool, readyChan chan bool) {
 	lis, err := net.Listen(tcpNetwork, address)
 	if err != nil {
 		zlog.Fatal().Err(err).Msgf("Failed to listen on %s", address)
 	}
 
 	// Create a new gRPC server instance.
-	s := grpc.NewServer(nil)
+	s := grpc.NewServer(serverOptions...)
 
 	gRPCServer := &server{
 		dbClient: dbClient,
@@ -90,8 +100,14 @@ func StartServer(dbClient *ent.Client, termChan chan bool, readyChan chan bool) 
 		serverAddress = defaultServerAddress
 	}
 
+	// get server options
+	serverOptions, err := getServerOptions(nil)
+	if err != nil {
+		zlog.Fatal().Err(err).Msg("Failed to get server options")
+	}
+
 	// start server
-	serve(serverAddress, dbClient, termChan, readyChan)
+	serve(serverAddress, dbClient, serverOptions, termChan, readyChan)
 }
 
 func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (*apiv1.AddDeviceResponse, error) {
