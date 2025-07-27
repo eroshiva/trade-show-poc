@@ -34,7 +34,11 @@ buf-install: ## Installs buf to convert protobuf into Golang code
 
 buf-generate: clean-vendor buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
 	mkdir -p internal/ent/schema
-	buf generate --exclude-path api/v1/ent --path api/v1/monitoring.proto --path pkg/mocks/simulator.proto
+	buf generate --exclude-path api/v1/ent --path api/v1/monitoring.proto
+
+buf-generate-simulator-api: clean-vendor buf-install buf-update ## Generates Golang-driven bindings out of Protobuf for Network Device Simulator
+	mkdir -p internal/ent/schema
+	buf generate --path pkg/mocks/simulator.proto
 
 buf-update: ## Updates the buf dependencies
 	buf dep update
