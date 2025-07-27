@@ -5,24 +5,30 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
 	component     = "component"
 	componentName = "grpc-server"
 	// server configuration-related constants
-	tcpNetwork           = "tcp"
-	defaultServerAddress = "localhost:50051"
-	envServerAddress     = "GRPC_SERVER_ADDRESS" // must be in form address:port, e.g., localhost:50051.
+	tcpNetwork               = "tcp"
+	defaultServerAddress     = "localhost:50051"
+	envServerAddress         = "GRPC_SERVER_ADDRESS" // must be in form address:port, e.g., localhost:50051.
+	envHTTPServerAddress     = "HTTP_SERVER_ADDRESS" // must be in form address:port, e.g., localhost:80.
+	defaultHTTPServerAddress = "localhost:50052"
 )
 
 var zlog = zerolog.New(zerolog.ConsoleWriter{
@@ -52,7 +58,7 @@ func getServerOptions(_ *Options) ([]grpc.ServerOption, error) {
 	return optionsList, nil
 }
 
-func serve(address string, dbClient *ent.Client, serverOptions []grpc.ServerOption, termChan chan bool, readyChan chan bool) {
+func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptions []grpc.ServerOption, termChan chan bool, readyChan chan bool) {
 	lis, err := net.Listen(tcpNetwork, address)
 	if err != nil {
 		zlog.Fatal().Err(err).Msgf("Failed to listen on %s", address)
@@ -81,18 +87,76 @@ func serve(address string, dbClient *ent.Client, serverOptions []grpc.ServerOpti
 		}
 	}()
 
+	// starting reverse proxy
+	wg.Add(1)
+	startReverseProxy(address, wg, termChan)
+
 	// handle termination signals
 	termSig := <-termChan
 	if termSig {
+		zlog.Info().Msg("Gracefully stopping gRPC server")
 		s.Stop()
-		zlog.Warn().Msg("stopping server")
 	}
+	// report to waitgroup that process is finished
+	wg.Done()
+}
+
+// startReverseProxy starts the gRPC reverse proxy server which is connected to the HTTP handler.
+func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, termChan chan bool) {
+	zlog.Info().Msg("Starting reverse proxy")
+
+	// read env variable, where HTTP server is running
+	httpServerAddress := os.Getenv(envHTTPServerAddress)
+	if httpServerAddress == "" {
+		zlog.Warn().Msgf("environment variable \"%s\" is not set, using default address: %s",
+			envHTTPServerAddress, defaultHTTPServerAddress)
+		httpServerAddress = defaultHTTPServerAddress
+	}
+
+	// creating the gRPC-Gateway reverse proxy.
+	conn, err := grpc.NewClient(
+		grpcServerAddress, // The address of the gRPC server
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		zlog.Fatal().Err(err).Msg("Failed to dial to gRPC server")
+	}
+
+	mux := runtime.NewServeMux()
+
+	// Registering HTTP handler for our service and connecting the gateway to our gRPC server.
+	if err = apiv1.RegisterDeviceMonitoringServiceHandler(context.Background(), mux, conn); err != nil {
+		zlog.Fatal().Err(err).Msg("Failed to register HTTP gateway")
+	}
+
+	// now, create and start the HTTP server (i.e., our gateway).
+	gwServer := &http.Server{
+		Addr:    httpServerAddress,
+		Handler: mux,
+	}
+
+	zlog.Info().Msgf("Starting HTTP gateway on %s", httpServerAddress)
+	if err = gwServer.ListenAndServe(); err != nil {
+		zlog.Fatal().Err(err).Msg("Failed to serve HTTP gateway")
+	}
+
+	// handle termination signals
+	termSig := <-termChan
+	if termSig {
+		zlog.Info().Msg("Gracefully stopping HTTP server")
+		err = gwServer.Shutdown(context.Background())
+		if err != nil {
+			zlog.Fatal().Err(err).Msg("Failed to gracefully shutdown HTTP gateway")
+		}
+	}
+	// report to waitgroup that process is finished
+	wg.Done()
 }
 
 // StartServer function configures and brings up gRPC server.
-func StartServer(dbClient *ent.Client, termChan chan bool, readyChan chan bool) {
-	zlog.Info().Msgf("Starting server...")
-	// read env variable, where server is running
+func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan chan bool, readyChan chan bool) {
+	zlog.Info().Msgf("Starting gRPC server...")
+	// read env variable, where gRPC server is running
 	serverAddress := os.Getenv(envServerAddress)
 	if serverAddress == "" {
 		zlog.Warn().Msgf("environment variable \"%s\" is not set, using default address: %s",
@@ -107,7 +171,7 @@ func StartServer(dbClient *ent.Client, termChan chan bool, readyChan chan bool) 
 	}
 
 	// start server
-	serve(serverAddress, dbClient, serverOptions, termChan, readyChan)
+	serve(serverAddress, dbClient, wg, serverOptions, termChan, readyChan)
 }
 
 func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (*apiv1.AddDeviceResponse, error) {

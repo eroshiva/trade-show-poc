@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 
@@ -48,9 +49,15 @@ func main() {
 		_ = db.GracefullyCloseDBClient(dbClient)
 	}()
 
+	// creating waitgroup so main will wait for servers to exit cleanly
+	wg := &sync.WaitGroup{}
+
 	// starting NB API server (user interactions and creation of resource).
-	server.StartServer(dbClient, termChan, readyChan)
+	wg.Add(1)
+	server.StartServer(dbClient, wg, termChan, readyChan)
 
 	// starting SB handler (updates device status and other monitoring information)
 	// controller.StartController(dbClient)
+
+	wg.Wait()
 }
