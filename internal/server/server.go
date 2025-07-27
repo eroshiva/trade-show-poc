@@ -360,3 +360,49 @@ func (srv *server) GetDeviceStatus(ctx context.Context, req *apiv1.GetDeviceStat
 		Status:   protoStatus,
 	}, nil
 }
+
+func (srv *server) GetSummary(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetSummaryResponse, error) {
+	zlog.Info().Msgf("Retrieving network device summary")
+
+	// retrieving all network devices currently available in the system
+	ndList, err := srv.GetDeviceList(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &apiv1.GetSummaryResponse{}
+	var cumulativeErr error
+	// fetching device status for each device and gathering statistics right away
+	for _, nd := range ndList.GetDevices() {
+		// fetching device status for at least one endpoint
+		for _, ep := range nd.GetEndpoints() {
+			ds, err := srv.GetDeviceStatus(ctx, CreateGetDeviceStatusRequest(nd.GetId(), ep))
+			if err != nil {
+				// aggregating errors
+				cumulativeErr = errors.Join(cumulativeErr, err)
+				continue
+			}
+			// device status was successfully fetched
+			// gathering statistics
+			resp = getStatistics(resp, ds.GetStatus())
+			break // no need for further iterations
+		}
+	}
+	if cumulativeErr != nil {
+		zlog.Warn().Msgf("Errors occurred during network device summary collection")
+	}
+	return resp, cumulativeErr
+}
+
+func getStatistics(stats *apiv1.GetSummaryResponse, ds *apiv1.DeviceStatus) *apiv1.GetSummaryResponse {
+	stats.DevicesTotal++
+	switch ds.GetStatus() {
+	case apiv1.Status_STATUS_DEVICE_UP:
+		stats.DevicesUp++
+	case apiv1.Status_STATUS_DEVICE_DOWN:
+		stats.DownDevices++
+	case apiv1.Status_STATUS_DEVICE_UNHEALTHY:
+		stats.DevicesUnhealthy++
+	}
+	return stats
+}

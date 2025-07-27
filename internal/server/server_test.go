@@ -191,7 +191,7 @@ func TestGetDeviceStatus(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
 	t.Cleanup(cancel)
 
-	// creating endpoints
+	// creating endpoint
 	ep1, err := db.CreateEndpoint(ctx, client, host1, port1, protocol1)
 	require.NoError(t, err)
 	require.NotNil(t, ep1)
@@ -233,4 +233,110 @@ func TestGetDeviceStatus(t *testing.T) {
 	assert.Equal(t, retDS.GetStatus().GetId(), ds.ID)
 	assert.Equal(t, retDS.GetStatus().GetStatus(), server.ConvertEntStatusToProtoStatus(ds.Status))
 	assert.Equal(t, retDS.GetStatus().GetLastSeen(), timestamp)
+}
+
+func TestGetSummary(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
+	t.Cleanup(cancel)
+
+	// creating endpoint
+	ep1, err := db.CreateEndpoint(ctx, client, host1, port1, protocol1)
+	require.NoError(t, err)
+	require.NotNil(t, ep1)
+	t.Cleanup(func() {
+		err = db.DeleteEndpointByID(ctx, client, ep1.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating network device resource with no endpoints
+	nd1, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{ep1})
+	require.NoError(t, err)
+	require.NotNil(t, nd1)
+	assert.NotNil(t, nd1.Edges.Endpoints) // make sure there is one endpoint
+	assert.Len(t, nd1.Edges.Endpoints, 1)
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd1.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating device status
+	timestamp1 := time.Now().String()
+	ds1, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, timestamp1, nd1)
+	require.NoError(t, err)
+	require.NotNil(t, ds1)
+	t.Cleanup(func() {
+		err = db.DeleteDeviceStatusByID(ctx, client, ds1.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating endpoint
+	ep2, err := db.CreateEndpoint(ctx, client, host2, port2, protocol2)
+	require.NoError(t, err)
+	require.NotNil(t, ep2)
+	t.Cleanup(func() {
+		err = db.DeleteEndpointByID(ctx, client, ep2.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating network device resource with no endpoints
+	nd2, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{ep2})
+	require.NoError(t, err)
+	require.NotNil(t, nd2)
+	assert.NotNil(t, nd2.Edges.Endpoints) // make sure there is one endpoint
+	assert.Len(t, nd2.Edges.Endpoints, 1)
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd2.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating device status
+	timestamp2 := time.Now().String()
+	ds2, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_DOWN, timestamp2, nd2)
+	require.NoError(t, err)
+	require.NotNil(t, ds2)
+	t.Cleanup(func() {
+		err = db.DeleteDeviceStatusByID(ctx, client, ds2.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating endpoint
+	ep3, err := db.CreateEndpoint(ctx, client, host3, port3, protocol3)
+	require.NoError(t, err)
+	require.NotNil(t, ep3)
+	t.Cleanup(func() {
+		err = db.DeleteEndpointByID(ctx, client, ep3.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating network device resource with no endpoints
+	nd3, err := db.CreateNetworkDevice(ctx, client, deviceModel, deviceVendor, []*ent.Endpoint{ep3})
+	require.NoError(t, err)
+	require.NotNil(t, nd3)
+	assert.NotNil(t, nd3.Edges.Endpoints) // make sure there is one endpoint
+	assert.Len(t, nd3.Edges.Endpoints, 1)
+	t.Cleanup(func() {
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd3.ID)
+		assert.NoError(t, err)
+	})
+
+	// creating device status
+	timestamp3 := time.Now().String()
+	ds3, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UNHEALTHY, timestamp3, nd3)
+	require.NoError(t, err)
+	require.NotNil(t, ds3)
+	t.Cleanup(func() {
+		err = db.DeleteDeviceStatusByID(ctx, client, ds3.ID)
+		assert.NoError(t, err)
+	})
+
+	// retrieving summary
+	summary, err := grpcClient.GetSummary(ctx, nil)
+	require.NoError(t, err)
+	require.NotNil(t, summary)
+
+	// running assertions
+	assert.Equal(t, summary.GetDevicesTotal(), int32(3))
+	assert.Equal(t, summary.GetDevicesUp(), int32(1))
+	assert.Equal(t, summary.GetDownDevices(), int32(1))
+	assert.Equal(t, summary.GetDevicesUnhealthy(), int32(1))
 }
