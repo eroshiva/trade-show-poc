@@ -12,7 +12,7 @@ var (
 	DeviceStatusColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"STATUS_UNSPECIFIED", "STATUS_DEVICE_DOWN", "STATUS_DEVICE_UNHEALTHY", "STATUS_DEVICE_UP"}},
-		{Name: "last_seen", Type: field.TypeString},
+		{Name: "last_seen", Type: field.TypeString, Nullable: true},
 		{Name: "device_status_network_device", Type: field.TypeString, Nullable: true},
 	}
 	// DeviceStatusTable holds the schema information for the "device_status" table.

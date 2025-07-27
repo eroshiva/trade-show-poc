@@ -219,9 +219,22 @@ func (m *DeviceStatusMutation) OldLastSeen(ctx context.Context) (v string, err e
 	return oldValue.LastSeen, nil
 }
 
+// ClearLastSeen clears the value of the "last_seen" field.
+func (m *DeviceStatusMutation) ClearLastSeen() {
+	m.last_seen = nil
+	m.clearedFields[devicestatus.FieldLastSeen] = struct{}{}
+}
+
+// LastSeenCleared returns if the "last_seen" field was cleared in this mutation.
+func (m *DeviceStatusMutation) LastSeenCleared() bool {
+	_, ok := m.clearedFields[devicestatus.FieldLastSeen]
+	return ok
+}
+
 // ResetLastSeen resets all changes to the "last_seen" field.
 func (m *DeviceStatusMutation) ResetLastSeen() {
 	m.last_seen = nil
+	delete(m.clearedFields, devicestatus.FieldLastSeen)
 }
 
 // SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by id.
@@ -381,7 +394,11 @@ func (m *DeviceStatusMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *DeviceStatusMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(devicestatus.FieldLastSeen) {
+		fields = append(fields, devicestatus.FieldLastSeen)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -394,6 +411,11 @@ func (m *DeviceStatusMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *DeviceStatusMutation) ClearField(name string) error {
+	switch name {
+	case devicestatus.FieldLastSeen:
+		m.ClearLastSeen()
+		return nil
+	}
 	return fmt.Errorf("unknown DeviceStatus nullable field %s", name)
 }
 

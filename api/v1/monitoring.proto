@@ -202,7 +202,7 @@ message DeviceStatus {
   // Current status of the Network device.
   Status status = 2;
   // A timestamp when the device was last seen in the UP or unhealthy state.
-  string last_seen = 3; // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
+  string last_seen = 3 [(ent.field) = {optional: true}];// originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
 
   NetworkDevice network_device = 10 [(ent.edge) = {unique: true}];
 }

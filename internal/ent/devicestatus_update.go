@@ -56,6 +56,12 @@ func (dsu *DeviceStatusUpdate) SetNillableLastSeen(s *string) *DeviceStatusUpdat
 	return dsu
 }
 
+// ClearLastSeen clears the value of the "last_seen" field.
+func (dsu *DeviceStatusUpdate) ClearLastSeen() *DeviceStatusUpdate {
+	dsu.mutation.ClearLastSeen()
+	return dsu
+}
+
 // SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
 func (dsu *DeviceStatusUpdate) SetNetworkDeviceID(id string) *DeviceStatusUpdate {
 	dsu.mutation.SetNetworkDeviceID(id)
@@ -141,6 +147,9 @@ func (dsu *DeviceStatusUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := dsu.mutation.LastSeen(); ok {
 		_spec.SetField(devicestatus.FieldLastSeen, field.TypeString, value)
 	}
+	if dsu.mutation.LastSeenCleared() {
+		_spec.ClearField(devicestatus.FieldLastSeen, field.TypeString)
+	}
 	if dsu.mutation.NetworkDeviceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -215,6 +224,12 @@ func (dsuo *DeviceStatusUpdateOne) SetNillableLastSeen(s *string) *DeviceStatusU
 	if s != nil {
 		dsuo.SetLastSeen(*s)
 	}
+	return dsuo
+}
+
+// ClearLastSeen clears the value of the "last_seen" field.
+func (dsuo *DeviceStatusUpdateOne) ClearLastSeen() *DeviceStatusUpdateOne {
+	dsuo.mutation.ClearLastSeen()
 	return dsuo
 }
 
@@ -332,6 +347,9 @@ func (dsuo *DeviceStatusUpdateOne) sqlSave(ctx context.Context) (_node *DeviceSt
 	}
 	if value, ok := dsuo.mutation.LastSeen(); ok {
 		_spec.SetField(devicestatus.FieldLastSeen, field.TypeString, value)
+	}
+	if dsuo.mutation.LastSeenCleared() {
+		_spec.ClearField(devicestatus.FieldLastSeen, field.TypeString)
 	}
 	if dsuo.mutation.NetworkDeviceCleared() {
 		edge := &sqlgraph.EdgeSpec{

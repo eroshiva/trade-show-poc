@@ -1114,11 +1114,11 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\n" +
 	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tswVersion\x126\n" +
 	"\n" +
-	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"\xb1\x01\n" +
+	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"\xb9\x01\n" +
 	"\fDeviceStatus\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
-	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12\x1b\n" +
-	"\tlast_seen\x18\x03 \x01(\tR\blastSeen\x12D\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12#\n" +
+	"\tlast_seen\x18\x03 \x01(\tB\x06\xba\xa6I\x02\b\x01R\blastSeen\x12D\n" +
 	"\x0enetwork_device\x18\n" +
 	" \x01(\v2\x15.api.v1.NetworkDeviceB\x06¦I\x02\b\x01R\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"\xc9\x01\n" +
 	"\bEndpoint\x12\x0e\n" +

@@ -21,7 +21,7 @@ CREATE TABLE "network_devices" (
 CREATE TABLE "device_status" (
   "id" character varying NOT NULL,
   "status" character varying NOT NULL,
-  "last_seen" character varying NOT NULL,
+  "last_seen" character varying NULL,
   "device_status_network_device" character varying NULL,
   PRIMARY KEY ("id"),
   CONSTRAINT "device_status_network_devices_network_device" FOREIGN KEY ("device_status_network_device") REFERENCES "network_devices" ("id") ON UPDATE NO ACTION ON DELETE SET NULL

@@ -32,6 +32,14 @@ func (dsc *DeviceStatusCreate) SetLastSeen(s string) *DeviceStatusCreate {
 	return dsc
 }
 
+// SetNillableLastSeen sets the "last_seen" field if the given value is not nil.
+func (dsc *DeviceStatusCreate) SetNillableLastSeen(s *string) *DeviceStatusCreate {
+	if s != nil {
+		dsc.SetLastSeen(*s)
+	}
+	return dsc
+}
+
 // SetID sets the "id" field.
 func (dsc *DeviceStatusCreate) SetID(s string) *DeviceStatusCreate {
 	dsc.mutation.SetID(s)
@@ -98,9 +106,6 @@ func (dsc *DeviceStatusCreate) check() error {
 		if err := devicestatus.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "DeviceStatus.status": %w`, err)}
 		}
-	}
-	if _, ok := dsc.mutation.LastSeen(); !ok {
-		return &ValidationError{Name: "last_seen", err: errors.New(`ent: missing required field "DeviceStatus.last_seen"`)}
 	}
 	return nil
 }

@@ -143,6 +143,16 @@ func LastSeenHasSuffix(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldHasSuffix(FieldLastSeen, v))
 }
 
+// LastSeenIsNil applies the IsNil predicate on the "last_seen" field.
+func LastSeenIsNil() predicate.DeviceStatus {
+	return predicate.DeviceStatus(sql.FieldIsNull(FieldLastSeen))
+}
+
+// LastSeenNotNil applies the NotNil predicate on the "last_seen" field.
+func LastSeenNotNil() predicate.DeviceStatus {
+	return predicate.DeviceStatus(sql.FieldNotNull(FieldLastSeen))
+}
+
 // LastSeenEqualFold applies the EqualFold predicate on the "last_seen" field.
 func LastSeenEqualFold(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldEqualFold(FieldLastSeen, v))
