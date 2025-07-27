@@ -2,10 +2,12 @@
 package testing
 
 import (
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/eroshiva/trade-show-poc/internal/ent"
+	"github.com/eroshiva/trade-show-poc/internal/server"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +19,42 @@ const DefaultTestTimeout = time.Second * 1
 // Setup function sets up testing environment. Currently, only uploading schema to the DB.
 func Setup() (*ent.Client, error) {
 	return db.RunSchemaMigration()
+}
+
+// SetupFull function sets up testing environment.It uploads schema to the DB and starts gRPC and HTTP reverse proxy servers.
+func SetupFull() (*ent.Client, *sync.WaitGroup, chan bool, chan bool, error) {
+	client, err := db.RunSchemaMigration()
+	if err != nil {
+		return nil, nil, nil, nil, err
+	}
+
+	wg := &sync.WaitGroup{}
+	termChan := make(chan bool, 1)
+	readyChan := make(chan bool, 1)
+	reverseProxyReadyChan := make(chan bool, 1)
+	reverseProxyTermChan := make(chan bool, 1)
+	wg.Add(1)
+	go func() {
+		wg.Add(1) //nolint:staticcheck
+		server.StartServer(client, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		wg.Done()
+	}()
+	// Waiting until both servers are up and running
+	<-readyChan
+	<-reverseProxyReadyChan
+
+	return client, wg, termChan, reverseProxyTermChan, nil
+}
+
+// TeardownFull function tears down testing suite including DB connection, gRPC and HTTP reverse proxy servers.
+func TeardownFull(client *ent.Client, wg *sync.WaitGroup, termChan, reverseProxyTermChan chan bool) {
+	close(termChan)
+	close(reverseProxyTermChan)
+	err := db.GracefullyCloseDBClient(client)
+	if err != nil {
+		panic(err)
+	}
+	wg.Wait()
 }
 
 // AssertEqualVersion runs assertions on the fields of Version resources.
