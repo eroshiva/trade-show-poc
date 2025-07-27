@@ -120,7 +120,7 @@ func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, grocReadyCh
 	// read env variable, where HTTP server is running
 	httpServerAddress := os.Getenv(envHTTPServerAddress)
 	if httpServerAddress == "" {
-		zlog.Warn().Msgf("environment variable \"%s\" is not set, using default address: %s",
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
 			envHTTPServerAddress, defaultHTTPServerAddress)
 		httpServerAddress = defaultHTTPServerAddress
 	}
@@ -176,7 +176,7 @@ func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan, readyChan, 
 	// read env variable, where gRPC server is running
 	serverAddress := os.Getenv(envServerAddress)
 	if serverAddress == "" {
-		zlog.Warn().Msgf("environment variable \"%s\" is not set, using default address: %s",
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
 			envServerAddress, defaultServerAddress)
 		serverAddress = defaultServerAddress
 	}

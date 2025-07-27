@@ -11,6 +11,7 @@ import (
 
 	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
+	"github.com/eroshiva/trade-show-poc/pkg/checksum"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	"github.com/eroshiva/trade-show-poc/pkg/connectors"
 	"github.com/rs/zerolog"
@@ -32,19 +33,30 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 	},
 }).Level(zerolog.TraceLevel).With().Caller().Timestamp().Str(component, componentName).Logger()
 
+// Manager structure holds the dependencies for main control loop.
+type Manager struct {
+	dbClient          *ent.Client
+	checksumGenerator checksum.Generator
+}
+
 // StartManager function starts main control loop that periodically fetches data from the network devices.
-func StartManager(dbClient *ent.Client, termChan chan bool) {
+func StartManager(dbClient *ent.Client, checksumGen checksum.Generator, termChan chan bool) {
+	m := &Manager{
+		dbClient:          dbClient,
+		checksumGenerator: checksumGen,
+	}
+
 	controlLoopTick := defaultControlLoopPerioud
 	// read env variable, where Control Loop Period is specified
 	envControlLoopTick := os.Getenv(envControlLoopPeriod)
 	if envControlLoopTick == "" {
-		zlog.Warn().Msgf("environment variable \"%s\" is not set, using default address: %s",
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
 			envControlLoopPeriod, defaultControlLoopPerioud)
 	} else {
 		// control loop tick is specified
 		duration, err := strconv.Atoi(envControlLoopTick)
 		if err != nil {
-			zlog.Fatal().Err(err).Msgf("failed to convert \"%s\"variable to number", envControlLoopPeriod)
+			zlog.Fatal().Err(err).Msgf("Failed to convert \"%s\"variable to number", envControlLoopPeriod)
 		}
 		controlLoopTick = time.Duration(duration) * time.Second
 	}
@@ -52,26 +64,29 @@ func StartManager(dbClient *ent.Client, termChan chan bool) {
 	// creating ticker
 	ticker := time.NewTicker(controlLoopTick)
 
+	zlog.Info().Msgf("Starting periodical (%s seconds) execution of main control loop", controlLoopTick)
 	// starting infinite control loop
 	for {
 		select {
 		case <-ticker.C:
 			// performing control loop routine
-			performControlLoopRoutine(dbClient, controlLoopTick)
+			m.performControlLoopRoutine(controlLoopTick)
 		case <-termChan:
 			// shutting down this routine
+			zlog.Info().Msgf("Stopping main control loop")
 			return
 		}
 	}
 }
 
 // performControlLoopRoutine runs main control loop routine, i.e., fetches all devices and updates theirs status.
-func performControlLoopRoutine(dbClient *ent.Client, controlLoopTick time.Duration) {
+func (m *Manager) performControlLoopRoutine(controlLoopTick time.Duration) {
+	zlog.Info().Msgf("Executing main control loop routine")
 	ctx, cancel := context.WithTimeout(context.Background(), controlLoopTick)
 	defer cancel()
 
 	// fetching all devices from the DB
-	ndList, err := db.ListNetworkDevices(ctx, dbClient)
+	ndList, err := db.ListNetworkDevices(ctx, m.dbClient)
 	if err != nil {
 		// error is already logged in in the inner function
 		return
@@ -80,19 +95,20 @@ func performControlLoopRoutine(dbClient *ent.Client, controlLoopTick time.Durati
 	// checking if we retrieved more than 0 network devices
 	if len(ndList) == 0 {
 		// no devices were retrieved, nothing to do
-		zlog.Warn().Msgf("no network devices found in the DB")
+		zlog.Warn().Msgf("No network devices found in the DB")
 		return
 	}
 
 	// updating network devices concurrently
 	for _, nd := range ndList {
-		go processNetworkDevice(ctx, dbClient, nd)
+		go m.processNetworkDevice(ctx, nd)
 	}
 	// finished iteration
 }
 
 // processNetworkDevice runs routine to get network device status, SW, FW, and HW versions from the device and update them in the DB.
-func processNetworkDevice(ctx context.Context, dbClient *ent.Client, networkDevice *ent.NetworkDevice) {
+func (m *Manager) processNetworkDevice(ctx context.Context, networkDevice *ent.NetworkDevice) {
+	zlog.Debug().Msgf("Processing network device (%s)", networkDevice.ID)
 	// iterating over endpoints and checking if any of them is alive.
 	// it is enough to find one alive Endpoint.
 	hwV := ""
@@ -144,10 +160,40 @@ func processNetworkDevice(ctx context.Context, dbClient *ent.Client, networkDevi
 		lastSeen = ""
 	}
 	// alive connection was found and status was fetched (and already fixed, updating device status
-	_, _ = db.UpdateDeviceStatusByNetworkDeviceID(ctx, dbClient, networkDevice.ID, status, lastSeen)
+	_, _ = db.UpdateDeviceStatusByNetworkDeviceID(ctx, m.dbClient, networkDevice.ID, status, lastSeen)
 	// error is already logged in in the internal function
 
+	// conducting checksum verifications
+	err := m.verifyChecksum(swV)
+	if err != nil {
+		// resetting SW version, do not updating it in the DB
+		swV = &ent.Version{}
+	}
+	err = m.verifyChecksum(fwV)
+	if err != nil {
+		// resetting FW version, do not updating it in the DB
+		fwV = &ent.Version{}
+	}
+
 	// updating HW, SW, and FW versions
-	_, _ = db.UpdateNetworkDeviceVersions(ctx, dbClient, networkDevice.ID, hwV, swV, fwV)
+	_, _ = db.UpdateNetworkDeviceVersions(ctx, m.dbClient, networkDevice.ID, hwV, swV, fwV)
 	// error is already logged in in the internal function
+}
+
+// verifyChecksum runs checksum verification against checksum generator binary.
+func (m *Manager) verifyChecksum(version *ent.Version) error {
+	checksumGen, err := m.checksumGenerator.Generate([]byte(version.Version))
+	if err != nil {
+		// failed generating checksum, assuming that error is logged in internally in function
+		return err
+	}
+	// comparing checksums, they should be identical
+	if checksumGen != version.Checksum {
+		// checksums are different, reporting error
+		newErr := fmt.Errorf("checksum verification failed - invalid checksum")
+		zlog.Error().Err(newErr).Msgf("Checksum verification failed")
+		return newErr
+	}
+	// all good
+	return nil
 }

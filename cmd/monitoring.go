@@ -10,7 +10,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/eroshiva/trade-show-poc/internal/manager"
 	"github.com/eroshiva/trade-show-poc/internal/server"
+	"github.com/eroshiva/trade-show-poc/pkg/checksum"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
 	"github.com/rs/zerolog"
 )
@@ -32,6 +34,7 @@ func main() {
 	// channels to handle termination and capture signals
 	termChan := make(chan bool)
 	reverseProxyTermChan := make(chan bool)
+	managerTermChan := make(chan bool)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
@@ -51,6 +54,7 @@ func main() {
 		<-sigChan
 		close(termChan)
 		close(reverseProxyTermChan)
+		close(managerTermChan)
 
 		// gracefully closing client at the very end of execution
 		_ = db.GracefullyCloseDBClient(dbClient)
@@ -65,8 +69,9 @@ func main() {
 		wg.Done()
 	}()
 
+	checksumGen := checksum.NewMockGenerator() // right now, invoking mock generator for smooth testing
 	// starting SB handler (updates device status and other monitoring information)
-	// controller.StartController(dbClient)
+	manager.StartManager(dbClient, checksumGen, managerTermChan)
 
 	wg.Wait()
 }
