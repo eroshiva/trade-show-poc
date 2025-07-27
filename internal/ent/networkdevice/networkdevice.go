@@ -20,28 +20,30 @@ const (
 	FieldModel = "model"
 	// FieldHwVersion holds the string denoting the hw_version field in the database.
 	FieldHwVersion = "hw_version"
-	// EdgeEndpoint holds the string denoting the endpoint edge name in mutations.
-	EdgeEndpoint = "endpoint"
+	// EdgeEndpoints holds the string denoting the endpoints edge name in mutations.
+	EdgeEndpoints = "endpoints"
 	// EdgeSwVersion holds the string denoting the sw_version edge name in mutations.
 	EdgeSwVersion = "sw_version"
 	// EdgeFwVersion holds the string denoting the fw_version edge name in mutations.
 	EdgeFwVersion = "fw_version"
 	// Table holds the table name of the networkdevice in the database.
 	Table = "network_devices"
-	// EndpointTable is the table that holds the endpoint relation/edge. The primary key declared below.
-	EndpointTable = "network_device_endpoint"
-	// EndpointInverseTable is the table name for the Endpoint entity.
+	// EndpointsTable is the table that holds the endpoints relation/edge.
+	EndpointsTable = "endpoints"
+	// EndpointsInverseTable is the table name for the Endpoint entity.
 	// It exists in this package in order to avoid circular dependency with the "endpoint" package.
-	EndpointInverseTable = "endpoints"
+	EndpointsInverseTable = "endpoints"
+	// EndpointsColumn is the table column denoting the endpoints relation/edge.
+	EndpointsColumn = "network_device_endpoints"
 	// SwVersionTable is the table that holds the sw_version relation/edge.
-	SwVersionTable = "versions"
+	SwVersionTable = "network_devices"
 	// SwVersionInverseTable is the table name for the Version entity.
 	// It exists in this package in order to avoid circular dependency with the "version" package.
 	SwVersionInverseTable = "versions"
 	// SwVersionColumn is the table column denoting the sw_version relation/edge.
 	SwVersionColumn = "network_device_sw_version"
 	// FwVersionTable is the table that holds the fw_version relation/edge.
-	FwVersionTable = "versions"
+	FwVersionTable = "network_devices"
 	// FwVersionInverseTable is the table name for the Version entity.
 	// It exists in this package in order to avoid circular dependency with the "version" package.
 	FwVersionInverseTable = "versions"
@@ -57,16 +59,22 @@ var Columns = []string{
 	FieldHwVersion,
 }
 
-var (
-	// EndpointPrimaryKey and EndpointColumn2 are the table columns denoting the
-	// primary key for the endpoint relation (M2M).
-	EndpointPrimaryKey = []string{"network_device_id", "endpoint_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "network_devices"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"network_device_sw_version",
+	"network_device_fw_version",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -121,65 +129,51 @@ func ByHwVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldHwVersion, opts...).ToFunc()
 }
 
-// ByEndpointCount orders the results by endpoint count.
-func ByEndpointCount(opts ...sql.OrderTermOption) OrderOption {
+// ByEndpointsCount orders the results by endpoints count.
+func ByEndpointsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newEndpointStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newEndpointsStep(), opts...)
 	}
 }
 
-// ByEndpoint orders the results by endpoint terms.
-func ByEndpoint(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByEndpoints orders the results by endpoints terms.
+func ByEndpoints(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newEndpointStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newEndpointsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
-// BySwVersionCount orders the results by sw_version count.
-func BySwVersionCount(opts ...sql.OrderTermOption) OrderOption {
+// BySwVersionField orders the results by sw_version field.
+func BySwVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSwVersionStep(), opts...)
+		sqlgraph.OrderByNeighborTerms(s, newSwVersionStep(), sql.OrderByField(field, opts...))
 	}
 }
 
-// BySwVersion orders the results by sw_version terms.
-func BySwVersion(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByFwVersionField orders the results by fw_version field.
+func ByFwVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSwVersionStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newFwVersionStep(), sql.OrderByField(field, opts...))
 	}
 }
-
-// ByFwVersionCount orders the results by fw_version count.
-func ByFwVersionCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newFwVersionStep(), opts...)
-	}
-}
-
-// ByFwVersion orders the results by fw_version terms.
-func ByFwVersion(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newFwVersionStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-func newEndpointStep() *sqlgraph.Step {
+func newEndpointsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(EndpointInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, EndpointTable, EndpointPrimaryKey...),
+		sqlgraph.To(EndpointsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EndpointsTable, EndpointsColumn),
 	)
 }
 func newSwVersionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(SwVersionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, SwVersionTable, SwVersionColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, SwVersionTable, SwVersionColumn),
 	)
 }
 func newFwVersionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(FwVersionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, FwVersionTable, FwVersionColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, FwVersionTable, FwVersionColumn),
 	)
 }

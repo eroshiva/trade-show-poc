@@ -88,7 +88,7 @@ func (vu *VersionUpdate) ExecX(ctx context.Context) {
 }
 
 func (vu *VersionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(version.Table, version.Columns, sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(version.Table, version.Columns, sqlgraph.NewFieldSpec(version.FieldID, field.TypeString))
 	if ps := vu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -196,7 +196,7 @@ func (vuo *VersionUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (vuo *VersionUpdateOne) sqlSave(ctx context.Context) (_node *Version, err error) {
-	_spec := sqlgraph.NewUpdateSpec(version.Table, version.Columns, sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(version.Table, version.Columns, sqlgraph.NewFieldSpec(version.FieldID, field.TypeString))
 	id, ok := vuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Version.id" for update`)}

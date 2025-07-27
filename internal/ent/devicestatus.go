@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
+	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 )
 
 // DeviceStatus is the model entity for the DeviceStatus schema.
@@ -19,8 +20,32 @@ type DeviceStatus struct {
 	// Status holds the value of the "status" field.
 	Status devicestatus.Status `json:"status,omitempty"`
 	// LastSeen holds the value of the "last_seen" field.
-	LastSeen     string `json:"last_seen,omitempty"`
-	selectValues sql.SelectValues
+	LastSeen string `json:"last_seen,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the DeviceStatusQuery when eager-loading is set.
+	Edges                        DeviceStatusEdges `json:"edges"`
+	device_status_network_device *string
+	selectValues                 sql.SelectValues
+}
+
+// DeviceStatusEdges holds the relations/edges for other nodes in the graph.
+type DeviceStatusEdges struct {
+	// NetworkDevice holds the value of the network_device edge.
+	NetworkDevice *NetworkDevice `json:"network_device,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// NetworkDeviceOrErr returns the NetworkDevice value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e DeviceStatusEdges) NetworkDeviceOrErr() (*NetworkDevice, error) {
+	if e.NetworkDevice != nil {
+		return e.NetworkDevice, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: networkdevice.Label}
+	}
+	return nil, &NotLoadedError{edge: "network_device"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -29,6 +54,8 @@ func (*DeviceStatus) scanValues(columns []string) ([]any, error) {
 	for i := range columns {
 		switch columns[i] {
 		case devicestatus.FieldID, devicestatus.FieldStatus, devicestatus.FieldLastSeen:
+			values[i] = new(sql.NullString)
+		case devicestatus.ForeignKeys[0]: // device_status_network_device
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -63,6 +90,13 @@ func (ds *DeviceStatus) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ds.LastSeen = value.String
 			}
+		case devicestatus.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field device_status_network_device", values[i])
+			} else if value.Valid {
+				ds.device_status_network_device = new(string)
+				*ds.device_status_network_device = value.String
+			}
 		default:
 			ds.selectValues.Set(columns[i], values[i])
 		}
@@ -74,6 +108,11 @@ func (ds *DeviceStatus) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ds *DeviceStatus) Value(name string) (ent.Value, error) {
 	return ds.selectValues.Get(name)
+}
+
+// QueryNetworkDevice queries the "network_device" edge of the DeviceStatus entity.
+func (ds *DeviceStatus) QueryNetworkDevice() *NetworkDeviceQuery {
+	return NewDeviceStatusClient(ds.config).QueryNetworkDevice(ds)
 }
 
 // Update returns a builder for updating this DeviceStatus.

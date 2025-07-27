@@ -213,6 +213,16 @@ func HwVersionHasSuffix(v string) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.FieldHasSuffix(FieldHwVersion, v))
 }
 
+// HwVersionIsNil applies the IsNil predicate on the "hw_version" field.
+func HwVersionIsNil() predicate.NetworkDevice {
+	return predicate.NetworkDevice(sql.FieldIsNull(FieldHwVersion))
+}
+
+// HwVersionNotNil applies the NotNil predicate on the "hw_version" field.
+func HwVersionNotNil() predicate.NetworkDevice {
+	return predicate.NetworkDevice(sql.FieldNotNull(FieldHwVersion))
+}
+
 // HwVersionEqualFold applies the EqualFold predicate on the "hw_version" field.
 func HwVersionEqualFold(v string) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.FieldEqualFold(FieldHwVersion, v))
@@ -223,21 +233,21 @@ func HwVersionContainsFold(v string) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.FieldContainsFold(FieldHwVersion, v))
 }
 
-// HasEndpoint applies the HasEdge predicate on the "endpoint" edge.
-func HasEndpoint() predicate.NetworkDevice {
+// HasEndpoints applies the HasEdge predicate on the "endpoints" edge.
+func HasEndpoints() predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, EndpointTable, EndpointPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, EndpointsTable, EndpointsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasEndpointWith applies the HasEdge predicate on the "endpoint" edge with a given conditions (other predicates).
-func HasEndpointWith(preds ...predicate.Endpoint) predicate.NetworkDevice {
+// HasEndpointsWith applies the HasEdge predicate on the "endpoints" edge with a given conditions (other predicates).
+func HasEndpointsWith(preds ...predicate.Endpoint) predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
-		step := newEndpointStep()
+		step := newEndpointsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -251,7 +261,7 @@ func HasSwVersion() predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, SwVersionTable, SwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, SwVersionTable, SwVersionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -274,7 +284,7 @@ func HasFwVersion() predicate.NetworkDevice {
 	return predicate.NetworkDevice(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, FwVersionTable, FwVersionColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, FwVersionTable, FwVersionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

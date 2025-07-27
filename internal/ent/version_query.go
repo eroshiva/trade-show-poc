@@ -22,7 +22,6 @@ type VersionQuery struct {
 	order      []version.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Version
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -83,8 +82,8 @@ func (vq *VersionQuery) FirstX(ctx context.Context) *Version {
 
 // FirstID returns the first Version ID from the query.
 // Returns a *NotFoundError when no Version ID was found.
-func (vq *VersionQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (vq *VersionQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = vq.Limit(1).IDs(setContextOp(ctx, vq.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
@@ -96,7 +95,7 @@ func (vq *VersionQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (vq *VersionQuery) FirstIDX(ctx context.Context) int {
+func (vq *VersionQuery) FirstIDX(ctx context.Context) string {
 	id, err := vq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -134,8 +133,8 @@ func (vq *VersionQuery) OnlyX(ctx context.Context) *Version {
 // OnlyID is like Only, but returns the only Version ID in the query.
 // Returns a *NotSingularError when more than one Version ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (vq *VersionQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (vq *VersionQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = vq.Limit(2).IDs(setContextOp(ctx, vq.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
@@ -151,7 +150,7 @@ func (vq *VersionQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (vq *VersionQuery) OnlyIDX(ctx context.Context) int {
+func (vq *VersionQuery) OnlyIDX(ctx context.Context) string {
 	id, err := vq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -179,7 +178,7 @@ func (vq *VersionQuery) AllX(ctx context.Context) []*Version {
 }
 
 // IDs executes the query and returns a list of Version IDs.
-func (vq *VersionQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (vq *VersionQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if vq.ctx.Unique == nil && vq.path != nil {
 		vq.Unique(true)
 	}
@@ -191,7 +190,7 @@ func (vq *VersionQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (vq *VersionQuery) IDsX(ctx context.Context) []int {
+func (vq *VersionQuery) IDsX(ctx context.Context) []string {
 	ids, err := vq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -333,13 +332,9 @@ func (vq *VersionQuery) prepareQuery(ctx context.Context) error {
 
 func (vq *VersionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Version, error) {
 	var (
-		nodes   = []*Version{}
-		withFKs = vq.withFKs
-		_spec   = vq.querySpec()
+		nodes = []*Version{}
+		_spec = vq.querySpec()
 	)
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, version.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Version).scanValues(nil, columns)
 	}
@@ -370,7 +365,7 @@ func (vq *VersionQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (vq *VersionQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(version.Table, version.Columns, sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(version.Table, version.Columns, sqlgraph.NewFieldSpec(version.FieldID, field.TypeString))
 	_spec.From = vq.sql
 	if unique := vq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

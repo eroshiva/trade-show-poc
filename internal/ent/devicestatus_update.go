@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
+	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 	"github.com/eroshiva/trade-show-poc/internal/ent/predicate"
 )
 
@@ -55,9 +56,40 @@ func (dsu *DeviceStatusUpdate) SetNillableLastSeen(s *string) *DeviceStatusUpdat
 	return dsu
 }
 
+// ClearLastSeen clears the value of the "last_seen" field.
+func (dsu *DeviceStatusUpdate) ClearLastSeen() *DeviceStatusUpdate {
+	dsu.mutation.ClearLastSeen()
+	return dsu
+}
+
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (dsu *DeviceStatusUpdate) SetNetworkDeviceID(id string) *DeviceStatusUpdate {
+	dsu.mutation.SetNetworkDeviceID(id)
+	return dsu
+}
+
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (dsu *DeviceStatusUpdate) SetNillableNetworkDeviceID(id *string) *DeviceStatusUpdate {
+	if id != nil {
+		dsu = dsu.SetNetworkDeviceID(*id)
+	}
+	return dsu
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (dsu *DeviceStatusUpdate) SetNetworkDevice(n *NetworkDevice) *DeviceStatusUpdate {
+	return dsu.SetNetworkDeviceID(n.ID)
+}
+
 // Mutation returns the DeviceStatusMutation object of the builder.
 func (dsu *DeviceStatusUpdate) Mutation() *DeviceStatusMutation {
 	return dsu.mutation
+}
+
+// ClearNetworkDevice clears the "network_device" edge to the NetworkDevice entity.
+func (dsu *DeviceStatusUpdate) ClearNetworkDevice() *DeviceStatusUpdate {
+	dsu.mutation.ClearNetworkDevice()
+	return dsu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -115,6 +147,38 @@ func (dsu *DeviceStatusUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := dsu.mutation.LastSeen(); ok {
 		_spec.SetField(devicestatus.FieldLastSeen, field.TypeString, value)
 	}
+	if dsu.mutation.LastSeenCleared() {
+		_spec.ClearField(devicestatus.FieldLastSeen, field.TypeString)
+	}
+	if dsu.mutation.NetworkDeviceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   devicestatus.NetworkDeviceTable,
+			Columns: []string{devicestatus.NetworkDeviceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := dsu.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   devicestatus.NetworkDeviceTable,
+			Columns: []string{devicestatus.NetworkDeviceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, dsu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{devicestatus.Label}
@@ -163,9 +227,40 @@ func (dsuo *DeviceStatusUpdateOne) SetNillableLastSeen(s *string) *DeviceStatusU
 	return dsuo
 }
 
+// ClearLastSeen clears the value of the "last_seen" field.
+func (dsuo *DeviceStatusUpdateOne) ClearLastSeen() *DeviceStatusUpdateOne {
+	dsuo.mutation.ClearLastSeen()
+	return dsuo
+}
+
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (dsuo *DeviceStatusUpdateOne) SetNetworkDeviceID(id string) *DeviceStatusUpdateOne {
+	dsuo.mutation.SetNetworkDeviceID(id)
+	return dsuo
+}
+
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (dsuo *DeviceStatusUpdateOne) SetNillableNetworkDeviceID(id *string) *DeviceStatusUpdateOne {
+	if id != nil {
+		dsuo = dsuo.SetNetworkDeviceID(*id)
+	}
+	return dsuo
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (dsuo *DeviceStatusUpdateOne) SetNetworkDevice(n *NetworkDevice) *DeviceStatusUpdateOne {
+	return dsuo.SetNetworkDeviceID(n.ID)
+}
+
 // Mutation returns the DeviceStatusMutation object of the builder.
 func (dsuo *DeviceStatusUpdateOne) Mutation() *DeviceStatusMutation {
 	return dsuo.mutation
+}
+
+// ClearNetworkDevice clears the "network_device" edge to the NetworkDevice entity.
+func (dsuo *DeviceStatusUpdateOne) ClearNetworkDevice() *DeviceStatusUpdateOne {
+	dsuo.mutation.ClearNetworkDevice()
+	return dsuo
 }
 
 // Where appends a list predicates to the DeviceStatusUpdate builder.
@@ -252,6 +347,38 @@ func (dsuo *DeviceStatusUpdateOne) sqlSave(ctx context.Context) (_node *DeviceSt
 	}
 	if value, ok := dsuo.mutation.LastSeen(); ok {
 		_spec.SetField(devicestatus.FieldLastSeen, field.TypeString, value)
+	}
+	if dsuo.mutation.LastSeenCleared() {
+		_spec.ClearField(devicestatus.FieldLastSeen, field.TypeString)
+	}
+	if dsuo.mutation.NetworkDeviceCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   devicestatus.NetworkDeviceTable,
+			Columns: []string{devicestatus.NetworkDeviceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := dsuo.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   devicestatus.NetworkDeviceTable,
+			Columns: []string{devicestatus.NetworkDeviceColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &DeviceStatus{config: dsuo.config}
 	_spec.Assign = _node.assignValues

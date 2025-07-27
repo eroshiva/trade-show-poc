@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
+	"github.com/eroshiva/trade-show-poc/internal/ent/version"
 )
 
 // NetworkDevice is the model entity for the NetworkDevice schema.
@@ -24,46 +25,52 @@ type NetworkDevice struct {
 	HwVersion string `json:"hw_version,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the NetworkDeviceQuery when eager-loading is set.
-	Edges        NetworkDeviceEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                     NetworkDeviceEdges `json:"edges"`
+	network_device_sw_version *string
+	network_device_fw_version *string
+	selectValues              sql.SelectValues
 }
 
 // NetworkDeviceEdges holds the relations/edges for other nodes in the graph.
 type NetworkDeviceEdges struct {
-	// Endpoint holds the value of the endpoint edge.
-	Endpoint []*Endpoint `json:"endpoint,omitempty"`
+	// Endpoints holds the value of the endpoints edge.
+	Endpoints []*Endpoint `json:"endpoints,omitempty"`
 	// SwVersion holds the value of the sw_version edge.
-	SwVersion []*Version `json:"sw_version,omitempty"`
+	SwVersion *Version `json:"sw_version,omitempty"`
 	// FwVersion holds the value of the fw_version edge.
-	FwVersion []*Version `json:"fw_version,omitempty"`
+	FwVersion *Version `json:"fw_version,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
-// EndpointOrErr returns the Endpoint value or an error if the edge
+// EndpointsOrErr returns the Endpoints value or an error if the edge
 // was not loaded in eager-loading.
-func (e NetworkDeviceEdges) EndpointOrErr() ([]*Endpoint, error) {
+func (e NetworkDeviceEdges) EndpointsOrErr() ([]*Endpoint, error) {
 	if e.loadedTypes[0] {
-		return e.Endpoint, nil
+		return e.Endpoints, nil
 	}
-	return nil, &NotLoadedError{edge: "endpoint"}
+	return nil, &NotLoadedError{edge: "endpoints"}
 }
 
 // SwVersionOrErr returns the SwVersion value or an error if the edge
-// was not loaded in eager-loading.
-func (e NetworkDeviceEdges) SwVersionOrErr() ([]*Version, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e NetworkDeviceEdges) SwVersionOrErr() (*Version, error) {
+	if e.SwVersion != nil {
 		return e.SwVersion, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: version.Label}
 	}
 	return nil, &NotLoadedError{edge: "sw_version"}
 }
 
 // FwVersionOrErr returns the FwVersion value or an error if the edge
-// was not loaded in eager-loading.
-func (e NetworkDeviceEdges) FwVersionOrErr() ([]*Version, error) {
-	if e.loadedTypes[2] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e NetworkDeviceEdges) FwVersionOrErr() (*Version, error) {
+	if e.FwVersion != nil {
 		return e.FwVersion, nil
+	} else if e.loadedTypes[2] {
+		return nil, &NotFoundError{label: version.Label}
 	}
 	return nil, &NotLoadedError{edge: "fw_version"}
 }
@@ -74,6 +81,10 @@ func (*NetworkDevice) scanValues(columns []string) ([]any, error) {
 	for i := range columns {
 		switch columns[i] {
 		case networkdevice.FieldID, networkdevice.FieldVendor, networkdevice.FieldModel, networkdevice.FieldHwVersion:
+			values[i] = new(sql.NullString)
+		case networkdevice.ForeignKeys[0]: // network_device_sw_version
+			values[i] = new(sql.NullString)
+		case networkdevice.ForeignKeys[1]: // network_device_fw_version
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -114,6 +125,20 @@ func (nd *NetworkDevice) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				nd.HwVersion = value.String
 			}
+		case networkdevice.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field network_device_sw_version", values[i])
+			} else if value.Valid {
+				nd.network_device_sw_version = new(string)
+				*nd.network_device_sw_version = value.String
+			}
+		case networkdevice.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field network_device_fw_version", values[i])
+			} else if value.Valid {
+				nd.network_device_fw_version = new(string)
+				*nd.network_device_fw_version = value.String
+			}
 		default:
 			nd.selectValues.Set(columns[i], values[i])
 		}
@@ -127,9 +152,9 @@ func (nd *NetworkDevice) Value(name string) (ent.Value, error) {
 	return nd.selectValues.Get(name)
 }
 
-// QueryEndpoint queries the "endpoint" edge of the NetworkDevice entity.
-func (nd *NetworkDevice) QueryEndpoint() *EndpointQuery {
-	return NewNetworkDeviceClient(nd.config).QueryEndpoint(nd)
+// QueryEndpoints queries the "endpoints" edge of the NetworkDevice entity.
+func (nd *NetworkDevice) QueryEndpoints() *EndpointQuery {
+	return NewNetworkDeviceClient(nd.config).QueryEndpoints(nd)
 }
 
 // QuerySwVersion queries the "sw_version" edge of the NetworkDevice entity.

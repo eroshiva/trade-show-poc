@@ -39,55 +39,71 @@ func (ndc *NetworkDeviceCreate) SetHwVersion(s string) *NetworkDeviceCreate {
 	return ndc
 }
 
+// SetNillableHwVersion sets the "hw_version" field if the given value is not nil.
+func (ndc *NetworkDeviceCreate) SetNillableHwVersion(s *string) *NetworkDeviceCreate {
+	if s != nil {
+		ndc.SetHwVersion(*s)
+	}
+	return ndc
+}
+
 // SetID sets the "id" field.
 func (ndc *NetworkDeviceCreate) SetID(s string) *NetworkDeviceCreate {
 	ndc.mutation.SetID(s)
 	return ndc
 }
 
-// AddEndpointIDs adds the "endpoint" edge to the Endpoint entity by IDs.
-func (ndc *NetworkDeviceCreate) AddEndpointIDs(ids ...int) *NetworkDeviceCreate {
+// AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by IDs.
+func (ndc *NetworkDeviceCreate) AddEndpointIDs(ids ...string) *NetworkDeviceCreate {
 	ndc.mutation.AddEndpointIDs(ids...)
 	return ndc
 }
 
-// AddEndpoint adds the "endpoint" edges to the Endpoint entity.
-func (ndc *NetworkDeviceCreate) AddEndpoint(e ...*Endpoint) *NetworkDeviceCreate {
-	ids := make([]int, len(e))
+// AddEndpoints adds the "endpoints" edges to the Endpoint entity.
+func (ndc *NetworkDeviceCreate) AddEndpoints(e ...*Endpoint) *NetworkDeviceCreate {
+	ids := make([]string, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
 	return ndc.AddEndpointIDs(ids...)
 }
 
-// AddSwVersionIDs adds the "sw_version" edge to the Version entity by IDs.
-func (ndc *NetworkDeviceCreate) AddSwVersionIDs(ids ...int) *NetworkDeviceCreate {
-	ndc.mutation.AddSwVersionIDs(ids...)
+// SetSwVersionID sets the "sw_version" edge to the Version entity by ID.
+func (ndc *NetworkDeviceCreate) SetSwVersionID(id string) *NetworkDeviceCreate {
+	ndc.mutation.SetSwVersionID(id)
 	return ndc
 }
 
-// AddSwVersion adds the "sw_version" edges to the Version entity.
-func (ndc *NetworkDeviceCreate) AddSwVersion(v ...*Version) *NetworkDeviceCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
+// SetNillableSwVersionID sets the "sw_version" edge to the Version entity by ID if the given value is not nil.
+func (ndc *NetworkDeviceCreate) SetNillableSwVersionID(id *string) *NetworkDeviceCreate {
+	if id != nil {
+		ndc = ndc.SetSwVersionID(*id)
 	}
-	return ndc.AddSwVersionIDs(ids...)
-}
-
-// AddFwVersionIDs adds the "fw_version" edge to the Version entity by IDs.
-func (ndc *NetworkDeviceCreate) AddFwVersionIDs(ids ...int) *NetworkDeviceCreate {
-	ndc.mutation.AddFwVersionIDs(ids...)
 	return ndc
 }
 
-// AddFwVersion adds the "fw_version" edges to the Version entity.
-func (ndc *NetworkDeviceCreate) AddFwVersion(v ...*Version) *NetworkDeviceCreate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
+// SetSwVersion sets the "sw_version" edge to the Version entity.
+func (ndc *NetworkDeviceCreate) SetSwVersion(v *Version) *NetworkDeviceCreate {
+	return ndc.SetSwVersionID(v.ID)
+}
+
+// SetFwVersionID sets the "fw_version" edge to the Version entity by ID.
+func (ndc *NetworkDeviceCreate) SetFwVersionID(id string) *NetworkDeviceCreate {
+	ndc.mutation.SetFwVersionID(id)
+	return ndc
+}
+
+// SetNillableFwVersionID sets the "fw_version" edge to the Version entity by ID if the given value is not nil.
+func (ndc *NetworkDeviceCreate) SetNillableFwVersionID(id *string) *NetworkDeviceCreate {
+	if id != nil {
+		ndc = ndc.SetFwVersionID(*id)
 	}
-	return ndc.AddFwVersionIDs(ids...)
+	return ndc
+}
+
+// SetFwVersion sets the "fw_version" edge to the Version entity.
+func (ndc *NetworkDeviceCreate) SetFwVersion(v *Version) *NetworkDeviceCreate {
+	return ndc.SetFwVersionID(v.ID)
 }
 
 // Mutation returns the NetworkDeviceMutation object of the builder.
@@ -134,9 +150,6 @@ func (ndc *NetworkDeviceCreate) check() error {
 	}
 	if _, ok := ndc.mutation.Model(); !ok {
 		return &ValidationError{Name: "model", err: errors.New(`ent: missing required field "NetworkDevice.model"`)}
-	}
-	if _, ok := ndc.mutation.HwVersion(); !ok {
-		return &ValidationError{Name: "hw_version", err: errors.New(`ent: missing required field "NetworkDevice.hw_version"`)}
 	}
 	return nil
 }
@@ -185,15 +198,15 @@ func (ndc *NetworkDeviceCreate) createSpec() (*NetworkDevice, *sqlgraph.CreateSp
 		_spec.SetField(networkdevice.FieldHwVersion, field.TypeString, value)
 		_node.HwVersion = value
 	}
-	if nodes := ndc.mutation.EndpointIDs(); len(nodes) > 0 {
+	if nodes := ndc.mutation.EndpointsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -203,34 +216,36 @@ func (ndc *NetworkDeviceCreate) createSpec() (*NetworkDevice, *sqlgraph.CreateSp
 	}
 	if nodes := ndc.mutation.SwVersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.SwVersionTable,
 			Columns: []string{networkdevice.SwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.network_device_sw_version = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := ndc.mutation.FwVersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.FwVersionTable,
 			Columns: []string{networkdevice.FwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.network_device_fw_version = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

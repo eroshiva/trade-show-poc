@@ -4,6 +4,7 @@ package devicestatus
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/eroshiva/trade-show-poc/internal/ent/predicate"
 )
 
@@ -142,6 +143,16 @@ func LastSeenHasSuffix(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldHasSuffix(FieldLastSeen, v))
 }
 
+// LastSeenIsNil applies the IsNil predicate on the "last_seen" field.
+func LastSeenIsNil() predicate.DeviceStatus {
+	return predicate.DeviceStatus(sql.FieldIsNull(FieldLastSeen))
+}
+
+// LastSeenNotNil applies the NotNil predicate on the "last_seen" field.
+func LastSeenNotNil() predicate.DeviceStatus {
+	return predicate.DeviceStatus(sql.FieldNotNull(FieldLastSeen))
+}
+
 // LastSeenEqualFold applies the EqualFold predicate on the "last_seen" field.
 func LastSeenEqualFold(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldEqualFold(FieldLastSeen, v))
@@ -150,6 +161,29 @@ func LastSeenEqualFold(v string) predicate.DeviceStatus {
 // LastSeenContainsFold applies the ContainsFold predicate on the "last_seen" field.
 func LastSeenContainsFold(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldContainsFold(FieldLastSeen, v))
+}
+
+// HasNetworkDevice applies the HasEdge predicate on the "network_device" edge.
+func HasNetworkDevice() predicate.DeviceStatus {
+	return predicate.DeviceStatus(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, NetworkDeviceTable, NetworkDeviceColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasNetworkDeviceWith applies the HasEdge predicate on the "network_device" edge with a given conditions (other predicates).
+func HasNetworkDeviceWith(preds ...predicate.NetworkDevice) predicate.DeviceStatus {
+	return predicate.DeviceStatus(func(s *sql.Selector) {
+		step := newNetworkDeviceStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

@@ -31,6 +31,12 @@ func (vc *VersionCreate) SetChecksum(s string) *VersionCreate {
 	return vc
 }
 
+// SetID sets the "id" field.
+func (vc *VersionCreate) SetID(s string) *VersionCreate {
+	vc.mutation.SetID(s)
+	return vc
+}
+
 // Mutation returns the VersionMutation object of the builder.
 func (vc *VersionCreate) Mutation() *VersionMutation {
 	return vc.mutation
@@ -85,8 +91,13 @@ func (vc *VersionCreate) sqlSave(ctx context.Context) (*Version, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Version.ID type: %T", _spec.ID.Value)
+		}
+	}
 	vc.mutation.id = &_node.ID
 	vc.mutation.done = true
 	return _node, nil
@@ -95,8 +106,12 @@ func (vc *VersionCreate) sqlSave(ctx context.Context) (*Version, error) {
 func (vc *VersionCreate) createSpec() (*Version, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Version{config: vc.config}
-		_spec = sqlgraph.NewCreateSpec(version.Table, sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(version.Table, sqlgraph.NewFieldSpec(version.FieldID, field.TypeString))
 	)
+	if id, ok := vc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := vc.mutation.Version(); ok {
 		_spec.SetField(version.FieldVersion, field.TypeString, value)
 		_node.Version = value
@@ -152,10 +167,6 @@ func (vcb *VersionCreateBulk) Save(ctx context.Context) ([]*Version, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

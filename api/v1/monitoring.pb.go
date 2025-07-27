@@ -756,9 +756,9 @@ type NetworkDevice struct {
 	// Network device model.
 	Model string `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
 	// Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols).
-	Endpoint []*Endpoint `protobuf:"bytes,10,rep,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Endpoints []*Endpoint `protobuf:"bytes,10,rep,name=endpoints,proto3" json:"endpoints,omitempty"`
 	// HW version (i.e., HW revision, different from model version).
-	HwVersion string `protobuf:"bytes,20,opt,name=hw_version,json=hwVersion,proto3" json:"hw_version,omitempty"`
+	HwVersion string `protobuf:"bytes,20,opt,name=hw_version,json=hwVersion,proto3" json:"hw_version,omitempty"` // this is to not require this field to be set, when User creates this resour
 	// SW version (i.e., SW revision).
 	SwVersion *Version `protobuf:"bytes,21,opt,name=sw_version,json=swVersion,proto3" json:"sw_version,omitempty"`
 	// FW version (i.e., FW revision).
@@ -818,9 +818,9 @@ func (x *NetworkDevice) GetModel() string {
 	return ""
 }
 
-func (x *NetworkDevice) GetEndpoint() []*Endpoint {
+func (x *NetworkDevice) GetEndpoints() []*Endpoint {
 	if x != nil {
-		return x.Endpoint
+		return x.Endpoints
 	}
 	return nil
 }
@@ -849,12 +849,13 @@ func (x *NetworkDevice) GetFwVersion() *Version {
 // DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state.
 type DeviceStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Internal (to the system) ID of the device.
+	// ID of the device status resource internally assigned by the controller.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Current status of the Network device.
 	Status Status `protobuf:"varint,2,opt,name=status,proto3,enum=api.v1.Status" json:"status,omitempty"`
 	// A timestamp when the device was last seen in the UP or unhealthy state.
-	LastSeen      string `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"` // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
+	LastSeen      string         `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"` // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
+	NetworkDevice *NetworkDevice `protobuf:"bytes,10,opt,name=network_device,json=networkDevice,proto3" json:"network_device,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -910,13 +911,22 @@ func (x *DeviceStatus) GetLastSeen() string {
 	return ""
 }
 
+func (x *DeviceStatus) GetNetworkDevice() *NetworkDevice {
+	if x != nil {
+		return x.NetworkDevice
+	}
+	return nil
+}
+
 // Endpoint defines an endpoint structure.
 type Endpoint struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the device status resource internally assigned by the controller.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// Host address in CIDR form of IP or FQDN, if applicable.
-	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
 	// Port number, where device health point is reachable.
-	Port string `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
+	Port string `protobuf:"bytes,3,opt,name=port,proto3" json:"port,omitempty"`
 	// Supported by the network device protocol for communicating over this endpoint.
 	Protocol      Protocol       `protobuf:"varint,10,opt,name=protocol,proto3,enum=api.v1.Protocol" json:"protocol,omitempty"`
 	NetworkDevice *NetworkDevice `protobuf:"bytes,50,opt,name=network_device,json=networkDevice,proto3" json:"network_device,omitempty"`
@@ -954,6 +964,13 @@ func (*Endpoint) Descriptor() ([]byte, []int) {
 	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{12}
 }
 
+func (x *Endpoint) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
 func (x *Endpoint) GetHost() string {
 	if x != nil {
 		return x.Host
@@ -985,10 +1002,12 @@ func (x *Endpoint) GetNetworkDevice() *NetworkDevice {
 // Version message is a generic message for reporting a version.
 type Version struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
+	// ID of the device status resource internally assigned by the controller.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// SW/FW Version number.
-	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	Version string `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
 	// Checksum of the current revision.
-	Checksum      string `protobuf:"bytes,2,opt,name=checksum,proto3" json:"checksum,omitempty"`
+	Checksum      string `protobuf:"bytes,3,opt,name=checksum,proto3" json:"checksum,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1021,6 +1040,13 @@ func (x *Version) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Version.ProtoReflect.Descriptor instead.
 func (*Version) Descriptor() ([]byte, []int) {
 	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Version) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 func (x *Version) GetVersion() string {
@@ -1076,33 +1102,36 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\x18UpdateDeviceListResponse\x12/\n" +
 	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"H\n" +
 	"\x15GetDeviceListResponse\x12/\n" +
-	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xa4\x02\n" +
+	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xb2\x02\n" +
 	"\rNetworkDevice\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06vendor\x18\x02 \x01(\x0e2\x0e.api.v1.VendorR\x06vendor\x12\x14\n" +
-	"\x05model\x18\x03 \x01(\tR\x05model\x122\n" +
-	"\bendpoint\x18\n" +
-	" \x03(\v2\x10.api.v1.EndpointB\x04¦I\x00R\bendpoint\x12\x1d\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x124\n" +
+	"\tendpoints\x18\n" +
+	" \x03(\v2\x10.api.v1.EndpointB\x04¦I\x00R\tendpoints\x12%\n" +
 	"\n" +
-	"hw_version\x18\x14 \x01(\tR\thwVersion\x124\n" +
+	"hw_version\x18\x14 \x01(\tB\x06\xba\xa6I\x02\b\x01R\thwVersion\x126\n" +
 	"\n" +
-	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionB\x04¦I\x00R\tswVersion\x124\n" +
+	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tswVersion\x126\n" +
 	"\n" +
-	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x04¦I\x00R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"k\n" +
+	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"\xb9\x01\n" +
 	"\fDeviceStatus\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
-	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12\x1b\n" +
-	"\tlast_seen\x18\x03 \x01(\tR\blastSeen:\x06\xba\xa6I\x02\b\x01\"\xb6\x01\n" +
-	"\bEndpoint\x12\x12\n" +
-	"\x04host\x18\x01 \x01(\tR\x04host\x12\x12\n" +
-	"\x04port\x18\x02 \x01(\tR\x04port\x12,\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12#\n" +
+	"\tlast_seen\x18\x03 \x01(\tB\x06\xba\xa6I\x02\b\x01R\blastSeen\x12D\n" +
+	"\x0enetwork_device\x18\n" +
+	" \x01(\v2\x15.api.v1.NetworkDeviceB\x06¦I\x02\b\x01R\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"\xc9\x01\n" +
+	"\bEndpoint\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04host\x18\x02 \x01(\tR\x04host\x12\x12\n" +
+	"\x04port\x18\x03 \x01(\tR\x04port\x12,\n" +
 	"\bprotocol\x18\n" +
-	" \x01(\x0e2\x10.api.v1.ProtocolR\bprotocol\x12L\n" +
-	"\x0enetwork_device\x182 \x01(\v2\x15.api.v1.NetworkDeviceB\x0e¦I\n" +
-	"\x12\bendpointR\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"G\n" +
-	"\aVersion\x12\x18\n" +
-	"\aversion\x18\x01 \x01(\tR\aversion\x12\x1a\n" +
-	"\bchecksum\x18\x02 \x01(\tR\bchecksum:\x06\xba\xa6I\x02\b\x01*[\n" +
+	" \x01(\x0e2\x10.api.v1.ProtocolR\bprotocol\x12O\n" +
+	"\x0enetwork_device\x182 \x01(\v2\x15.api.v1.NetworkDeviceB\x11¦I\r\b\x01\x12\tendpointsR\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"W\n" +
+	"\aVersion\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\x12\x1a\n" +
+	"\bchecksum\x18\x03 \x01(\tR\bchecksum:\x06\xba\xa6I\x02\b\x01*[\n" +
 	"\x06Vendor\x12\x16\n" +
 	"\x12VENDOR_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fVENDOR_UBIQUITI\x10\x01\x12\x10\n" +
@@ -1172,29 +1201,30 @@ var file_api_v1_monitoring_proto_depIdxs = []int32{
 	13, // 6: api.v1.UpdateDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
 	13, // 7: api.v1.GetDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
 	0,  // 8: api.v1.NetworkDevice.vendor:type_name -> api.v1.Vendor
-	15, // 9: api.v1.NetworkDevice.endpoint:type_name -> api.v1.Endpoint
+	15, // 9: api.v1.NetworkDevice.endpoints:type_name -> api.v1.Endpoint
 	16, // 10: api.v1.NetworkDevice.sw_version:type_name -> api.v1.Version
 	16, // 11: api.v1.NetworkDevice.fw_version:type_name -> api.v1.Version
 	1,  // 12: api.v1.DeviceStatus.status:type_name -> api.v1.Status
-	2,  // 13: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
-	13, // 14: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
-	10, // 15: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
-	17, // 16: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
-	4,  // 17: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
-	6,  // 18: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
-	8,  // 19: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
-	17, // 20: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
-	11, // 21: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
-	12, // 22: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
-	5,  // 23: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse
-	7,  // 24: api.v1.DeviceMonitoringService.DeleteDevice:output_type -> api.v1.DeleteDeviceResponse
-	9,  // 25: api.v1.DeviceMonitoringService.GetDeviceStatus:output_type -> api.v1.GetDeviceStatusResponse
-	3,  // 26: api.v1.DeviceMonitoringService.GetSummary:output_type -> api.v1.GetSummaryResponse
-	21, // [21:27] is the sub-list for method output_type
-	15, // [15:21] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	13, // 13: api.v1.DeviceStatus.network_device:type_name -> api.v1.NetworkDevice
+	2,  // 14: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
+	13, // 15: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
+	10, // 16: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
+	17, // 17: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
+	4,  // 18: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
+	6,  // 19: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
+	8,  // 20: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
+	17, // 21: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
+	11, // 22: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
+	12, // 23: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
+	5,  // 24: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse
+	7,  // 25: api.v1.DeviceMonitoringService.DeleteDevice:output_type -> api.v1.DeleteDeviceResponse
+	9,  // 26: api.v1.DeviceMonitoringService.GetDeviceStatus:output_type -> api.v1.GetDeviceStatusResponse
+	3,  // 27: api.v1.DeviceMonitoringService.GetSummary:output_type -> api.v1.GetSummaryResponse
+	22, // [22:28] is the sub-list for method output_type
+	16, // [16:22] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_monitoring_proto_init() }

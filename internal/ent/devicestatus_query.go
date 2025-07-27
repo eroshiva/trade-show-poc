@@ -12,16 +12,19 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
+	"github.com/eroshiva/trade-show-poc/internal/ent/networkdevice"
 	"github.com/eroshiva/trade-show-poc/internal/ent/predicate"
 )
 
 // DeviceStatusQuery is the builder for querying DeviceStatus entities.
 type DeviceStatusQuery struct {
 	config
-	ctx        *QueryContext
-	order      []devicestatus.OrderOption
-	inters     []Interceptor
-	predicates []predicate.DeviceStatus
+	ctx               *QueryContext
+	order             []devicestatus.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.DeviceStatus
+	withNetworkDevice *NetworkDeviceQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +59,28 @@ func (dsq *DeviceStatusQuery) Unique(unique bool) *DeviceStatusQuery {
 func (dsq *DeviceStatusQuery) Order(o ...devicestatus.OrderOption) *DeviceStatusQuery {
 	dsq.order = append(dsq.order, o...)
 	return dsq
+}
+
+// QueryNetworkDevice chains the current query on the "network_device" edge.
+func (dsq *DeviceStatusQuery) QueryNetworkDevice() *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: dsq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := dsq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := dsq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(devicestatus.Table, devicestatus.FieldID, selector),
+			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, devicestatus.NetworkDeviceTable, devicestatus.NetworkDeviceColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(dsq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first DeviceStatus entity from the query.
@@ -245,15 +270,27 @@ func (dsq *DeviceStatusQuery) Clone() *DeviceStatusQuery {
 		return nil
 	}
 	return &DeviceStatusQuery{
-		config:     dsq.config,
-		ctx:        dsq.ctx.Clone(),
-		order:      append([]devicestatus.OrderOption{}, dsq.order...),
-		inters:     append([]Interceptor{}, dsq.inters...),
-		predicates: append([]predicate.DeviceStatus{}, dsq.predicates...),
+		config:            dsq.config,
+		ctx:               dsq.ctx.Clone(),
+		order:             append([]devicestatus.OrderOption{}, dsq.order...),
+		inters:            append([]Interceptor{}, dsq.inters...),
+		predicates:        append([]predicate.DeviceStatus{}, dsq.predicates...),
+		withNetworkDevice: dsq.withNetworkDevice.Clone(),
 		// clone intermediate query.
 		sql:  dsq.sql.Clone(),
 		path: dsq.path,
 	}
+}
+
+// WithNetworkDevice tells the query-builder to eager-load the nodes that are connected to
+// the "network_device" edge. The optional arguments are used to configure the query builder of the edge.
+func (dsq *DeviceStatusQuery) WithNetworkDevice(opts ...func(*NetworkDeviceQuery)) *DeviceStatusQuery {
+	query := (&NetworkDeviceClient{config: dsq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	dsq.withNetworkDevice = query
+	return dsq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,15 +369,26 @@ func (dsq *DeviceStatusQuery) prepareQuery(ctx context.Context) error {
 
 func (dsq *DeviceStatusQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DeviceStatus, error) {
 	var (
-		nodes = []*DeviceStatus{}
-		_spec = dsq.querySpec()
+		nodes       = []*DeviceStatus{}
+		withFKs     = dsq.withFKs
+		_spec       = dsq.querySpec()
+		loadedTypes = [1]bool{
+			dsq.withNetworkDevice != nil,
+		}
 	)
+	if dsq.withNetworkDevice != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, devicestatus.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*DeviceStatus).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &DeviceStatus{config: dsq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +400,46 @@ func (dsq *DeviceStatusQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := dsq.withNetworkDevice; query != nil {
+		if err := dsq.loadNetworkDevice(ctx, query, nodes, nil,
+			func(n *DeviceStatus, e *NetworkDevice) { n.Edges.NetworkDevice = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (dsq *DeviceStatusQuery) loadNetworkDevice(ctx context.Context, query *NetworkDeviceQuery, nodes []*DeviceStatus, init func(*DeviceStatus), assign func(*DeviceStatus, *NetworkDevice)) error {
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*DeviceStatus)
+	for i := range nodes {
+		if nodes[i].device_status_network_device == nil {
+			continue
+		}
+		fk := *nodes[i].device_status_network_device
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(networkdevice.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "device_status_network_device" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (dsq *DeviceStatusQuery) sqlCount(ctx context.Context) (int, error) {

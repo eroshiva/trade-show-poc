@@ -170,6 +170,13 @@
             "type": "string"
           },
           {
+            "name": "endpoint.id",
+            "description": "ID of the device status resource internally assigned by the controller.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "endpoint.host",
             "description": "Host address in CIDR form of IP or FQDN, if applicable.",
             "in": "query",
@@ -228,7 +235,14 @@
           },
           {
             "name": "endpoint.networkDevice.hwVersion",
-            "description": "HW version (i.e., HW revision, different from model version).",
+            "description": "HW version (i.e., HW revision, different from model version).\n\nthis is to not require this field to be set, when User creates this resour",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.swVersion.id",
+            "description": "ID of the device status resource internally assigned by the controller.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -243,6 +257,13 @@
           {
             "name": "endpoint.networkDevice.swVersion.checksum",
             "description": "Checksum of the current revision.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endpoint.networkDevice.fwVersion.id",
+            "description": "ID of the device status resource internally assigned by the controller.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -385,7 +406,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Internal (to the system) ID of the device."
+          "description": "ID of the device status resource internally assigned by the controller."
         },
         "status": {
           "$ref": "#/definitions/apiv1Status",
@@ -394,6 +415,9 @@
         "lastSeen": {
           "type": "string",
           "description": "A timestamp when the device was last seen in the UP or unhealthy state.\n\noriginally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that."
+        },
+        "networkDevice": {
+          "$ref": "#/definitions/v1NetworkDevice"
         }
       },
       "description": "DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state."
@@ -401,6 +425,10 @@
     "v1Endpoint": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of the device status resource internally assigned by the controller."
+        },
         "host": {
           "type": "string",
           "description": "Host address in CIDR form of IP or FQDN, if applicable."
@@ -491,7 +519,7 @@
           "type": "string",
           "description": "Network device model."
         },
-        "endpoint": {
+        "endpoints": {
           "type": "array",
           "items": {
             "type": "object",
@@ -501,7 +529,7 @@
         },
         "hwVersion": {
           "type": "string",
-          "description": "HW version (i.e., HW revision, different from model version)."
+          "description": "HW version (i.e., HW revision, different from model version).\n\nthis is to not require this field to be set, when User creates this resour"
         },
         "swVersion": {
           "$ref": "#/definitions/v1Version",
@@ -567,6 +595,10 @@
     "v1Version": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of the device status resource internally assigned by the controller."
+        },
         "version": {
           "type": "string",
           "description": "SW/FW Version number."

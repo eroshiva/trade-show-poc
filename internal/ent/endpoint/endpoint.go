@@ -24,11 +24,13 @@ const (
 	EdgeNetworkDevice = "network_device"
 	// Table holds the table name of the endpoint in the database.
 	Table = "endpoints"
-	// NetworkDeviceTable is the table that holds the network_device relation/edge. The primary key declared below.
-	NetworkDeviceTable = "network_device_endpoint"
+	// NetworkDeviceTable is the table that holds the network_device relation/edge.
+	NetworkDeviceTable = "endpoints"
 	// NetworkDeviceInverseTable is the table name for the NetworkDevice entity.
 	// It exists in this package in order to avoid circular dependency with the "networkdevice" package.
 	NetworkDeviceInverseTable = "network_devices"
+	// NetworkDeviceColumn is the table column denoting the network_device relation/edge.
+	NetworkDeviceColumn = "network_device_endpoints"
 )
 
 // Columns holds all SQL columns for endpoint fields.
@@ -39,16 +41,21 @@ var Columns = []string{
 	FieldProtocol,
 }
 
-var (
-	// NetworkDevicePrimaryKey and NetworkDeviceColumn2 are the table columns denoting the
-	// primary key for the network_device relation (M2M).
-	NetworkDevicePrimaryKey = []string{"network_device_id", "endpoint_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "endpoints"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"network_device_endpoints",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -104,23 +111,16 @@ func ByProtocol(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProtocol, opts...).ToFunc()
 }
 
-// ByNetworkDeviceCount orders the results by network_device count.
-func ByNetworkDeviceCount(opts ...sql.OrderTermOption) OrderOption {
+// ByNetworkDeviceField orders the results by network_device field.
+func ByNetworkDeviceField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newNetworkDeviceStep(), opts...)
-	}
-}
-
-// ByNetworkDevice orders the results by network_device terms.
-func ByNetworkDevice(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newNetworkDeviceStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newNetworkDeviceStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newNetworkDeviceStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(NetworkDeviceInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, NetworkDeviceTable, NetworkDevicePrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, true, NetworkDeviceTable, NetworkDeviceColumn),
 	)
 }

@@ -13,7 +13,7 @@ type Version struct {
 }
 
 func (Version) Fields() []ent.Field {
-	return []ent.Field{field.String("version"), field.String("checksum")}
+	return []ent.Field{field.String("id"), field.String("version"), field.String("checksum")}
 }
 func (Version) Edges() []ent.Edge {
 	return nil

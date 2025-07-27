@@ -71,49 +71,63 @@ func (ndu *NetworkDeviceUpdate) SetNillableHwVersion(s *string) *NetworkDeviceUp
 	return ndu
 }
 
-// AddEndpointIDs adds the "endpoint" edge to the Endpoint entity by IDs.
-func (ndu *NetworkDeviceUpdate) AddEndpointIDs(ids ...int) *NetworkDeviceUpdate {
+// ClearHwVersion clears the value of the "hw_version" field.
+func (ndu *NetworkDeviceUpdate) ClearHwVersion() *NetworkDeviceUpdate {
+	ndu.mutation.ClearHwVersion()
+	return ndu
+}
+
+// AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by IDs.
+func (ndu *NetworkDeviceUpdate) AddEndpointIDs(ids ...string) *NetworkDeviceUpdate {
 	ndu.mutation.AddEndpointIDs(ids...)
 	return ndu
 }
 
-// AddEndpoint adds the "endpoint" edges to the Endpoint entity.
-func (ndu *NetworkDeviceUpdate) AddEndpoint(e ...*Endpoint) *NetworkDeviceUpdate {
-	ids := make([]int, len(e))
+// AddEndpoints adds the "endpoints" edges to the Endpoint entity.
+func (ndu *NetworkDeviceUpdate) AddEndpoints(e ...*Endpoint) *NetworkDeviceUpdate {
+	ids := make([]string, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
 	return ndu.AddEndpointIDs(ids...)
 }
 
-// AddSwVersionIDs adds the "sw_version" edge to the Version entity by IDs.
-func (ndu *NetworkDeviceUpdate) AddSwVersionIDs(ids ...int) *NetworkDeviceUpdate {
-	ndu.mutation.AddSwVersionIDs(ids...)
+// SetSwVersionID sets the "sw_version" edge to the Version entity by ID.
+func (ndu *NetworkDeviceUpdate) SetSwVersionID(id string) *NetworkDeviceUpdate {
+	ndu.mutation.SetSwVersionID(id)
 	return ndu
 }
 
-// AddSwVersion adds the "sw_version" edges to the Version entity.
-func (ndu *NetworkDeviceUpdate) AddSwVersion(v ...*Version) *NetworkDeviceUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
+// SetNillableSwVersionID sets the "sw_version" edge to the Version entity by ID if the given value is not nil.
+func (ndu *NetworkDeviceUpdate) SetNillableSwVersionID(id *string) *NetworkDeviceUpdate {
+	if id != nil {
+		ndu = ndu.SetSwVersionID(*id)
 	}
-	return ndu.AddSwVersionIDs(ids...)
-}
-
-// AddFwVersionIDs adds the "fw_version" edge to the Version entity by IDs.
-func (ndu *NetworkDeviceUpdate) AddFwVersionIDs(ids ...int) *NetworkDeviceUpdate {
-	ndu.mutation.AddFwVersionIDs(ids...)
 	return ndu
 }
 
-// AddFwVersion adds the "fw_version" edges to the Version entity.
-func (ndu *NetworkDeviceUpdate) AddFwVersion(v ...*Version) *NetworkDeviceUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
+// SetSwVersion sets the "sw_version" edge to the Version entity.
+func (ndu *NetworkDeviceUpdate) SetSwVersion(v *Version) *NetworkDeviceUpdate {
+	return ndu.SetSwVersionID(v.ID)
+}
+
+// SetFwVersionID sets the "fw_version" edge to the Version entity by ID.
+func (ndu *NetworkDeviceUpdate) SetFwVersionID(id string) *NetworkDeviceUpdate {
+	ndu.mutation.SetFwVersionID(id)
+	return ndu
+}
+
+// SetNillableFwVersionID sets the "fw_version" edge to the Version entity by ID if the given value is not nil.
+func (ndu *NetworkDeviceUpdate) SetNillableFwVersionID(id *string) *NetworkDeviceUpdate {
+	if id != nil {
+		ndu = ndu.SetFwVersionID(*id)
 	}
-	return ndu.AddFwVersionIDs(ids...)
+	return ndu
+}
+
+// SetFwVersion sets the "fw_version" edge to the Version entity.
+func (ndu *NetworkDeviceUpdate) SetFwVersion(v *Version) *NetworkDeviceUpdate {
+	return ndu.SetFwVersionID(v.ID)
 }
 
 // Mutation returns the NetworkDeviceMutation object of the builder.
@@ -121,67 +135,37 @@ func (ndu *NetworkDeviceUpdate) Mutation() *NetworkDeviceMutation {
 	return ndu.mutation
 }
 
-// ClearEndpoint clears all "endpoint" edges to the Endpoint entity.
-func (ndu *NetworkDeviceUpdate) ClearEndpoint() *NetworkDeviceUpdate {
-	ndu.mutation.ClearEndpoint()
+// ClearEndpoints clears all "endpoints" edges to the Endpoint entity.
+func (ndu *NetworkDeviceUpdate) ClearEndpoints() *NetworkDeviceUpdate {
+	ndu.mutation.ClearEndpoints()
 	return ndu
 }
 
-// RemoveEndpointIDs removes the "endpoint" edge to Endpoint entities by IDs.
-func (ndu *NetworkDeviceUpdate) RemoveEndpointIDs(ids ...int) *NetworkDeviceUpdate {
+// RemoveEndpointIDs removes the "endpoints" edge to Endpoint entities by IDs.
+func (ndu *NetworkDeviceUpdate) RemoveEndpointIDs(ids ...string) *NetworkDeviceUpdate {
 	ndu.mutation.RemoveEndpointIDs(ids...)
 	return ndu
 }
 
-// RemoveEndpoint removes "endpoint" edges to Endpoint entities.
-func (ndu *NetworkDeviceUpdate) RemoveEndpoint(e ...*Endpoint) *NetworkDeviceUpdate {
-	ids := make([]int, len(e))
+// RemoveEndpoints removes "endpoints" edges to Endpoint entities.
+func (ndu *NetworkDeviceUpdate) RemoveEndpoints(e ...*Endpoint) *NetworkDeviceUpdate {
+	ids := make([]string, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
 	return ndu.RemoveEndpointIDs(ids...)
 }
 
-// ClearSwVersion clears all "sw_version" edges to the Version entity.
+// ClearSwVersion clears the "sw_version" edge to the Version entity.
 func (ndu *NetworkDeviceUpdate) ClearSwVersion() *NetworkDeviceUpdate {
 	ndu.mutation.ClearSwVersion()
 	return ndu
 }
 
-// RemoveSwVersionIDs removes the "sw_version" edge to Version entities by IDs.
-func (ndu *NetworkDeviceUpdate) RemoveSwVersionIDs(ids ...int) *NetworkDeviceUpdate {
-	ndu.mutation.RemoveSwVersionIDs(ids...)
-	return ndu
-}
-
-// RemoveSwVersion removes "sw_version" edges to Version entities.
-func (ndu *NetworkDeviceUpdate) RemoveSwVersion(v ...*Version) *NetworkDeviceUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return ndu.RemoveSwVersionIDs(ids...)
-}
-
-// ClearFwVersion clears all "fw_version" edges to the Version entity.
+// ClearFwVersion clears the "fw_version" edge to the Version entity.
 func (ndu *NetworkDeviceUpdate) ClearFwVersion() *NetworkDeviceUpdate {
 	ndu.mutation.ClearFwVersion()
 	return ndu
-}
-
-// RemoveFwVersionIDs removes the "fw_version" edge to Version entities by IDs.
-func (ndu *NetworkDeviceUpdate) RemoveFwVersionIDs(ids ...int) *NetworkDeviceUpdate {
-	ndu.mutation.RemoveFwVersionIDs(ids...)
-	return ndu
-}
-
-// RemoveFwVersion removes "fw_version" edges to Version entities.
-func (ndu *NetworkDeviceUpdate) RemoveFwVersion(v ...*Version) *NetworkDeviceUpdate {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return ndu.RemoveFwVersionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -242,28 +226,31 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if value, ok := ndu.mutation.HwVersion(); ok {
 		_spec.SetField(networkdevice.FieldHwVersion, field.TypeString, value)
 	}
-	if ndu.mutation.EndpointCleared() {
+	if ndu.mutation.HwVersionCleared() {
+		_spec.ClearField(networkdevice.FieldHwVersion, field.TypeString)
+	}
+	if ndu.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ndu.mutation.RemovedEndpointIDs(); len(nodes) > 0 && !ndu.mutation.EndpointCleared() {
+	if nodes := ndu.mutation.RemovedEndpointsIDs(); len(nodes) > 0 && !ndu.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -271,15 +258,15 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ndu.mutation.EndpointIDs(); len(nodes) > 0 {
+	if nodes := ndu.mutation.EndpointsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -289,42 +276,26 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	}
 	if ndu.mutation.SwVersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.SwVersionTable,
 			Columns: []string{networkdevice.SwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ndu.mutation.RemovedSwVersionIDs(); len(nodes) > 0 && !ndu.mutation.SwVersionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   networkdevice.SwVersionTable,
-			Columns: []string{networkdevice.SwVersionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ndu.mutation.SwVersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.SwVersionTable,
 			Columns: []string{networkdevice.SwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -334,42 +305,26 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	}
 	if ndu.mutation.FwVersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.FwVersionTable,
 			Columns: []string{networkdevice.FwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ndu.mutation.RemovedFwVersionIDs(); len(nodes) > 0 && !ndu.mutation.FwVersionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   networkdevice.FwVersionTable,
-			Columns: []string{networkdevice.FwVersionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ndu.mutation.FwVersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.FwVersionTable,
 			Columns: []string{networkdevice.FwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -439,49 +394,63 @@ func (nduo *NetworkDeviceUpdateOne) SetNillableHwVersion(s *string) *NetworkDevi
 	return nduo
 }
 
-// AddEndpointIDs adds the "endpoint" edge to the Endpoint entity by IDs.
-func (nduo *NetworkDeviceUpdateOne) AddEndpointIDs(ids ...int) *NetworkDeviceUpdateOne {
+// ClearHwVersion clears the value of the "hw_version" field.
+func (nduo *NetworkDeviceUpdateOne) ClearHwVersion() *NetworkDeviceUpdateOne {
+	nduo.mutation.ClearHwVersion()
+	return nduo
+}
+
+// AddEndpointIDs adds the "endpoints" edge to the Endpoint entity by IDs.
+func (nduo *NetworkDeviceUpdateOne) AddEndpointIDs(ids ...string) *NetworkDeviceUpdateOne {
 	nduo.mutation.AddEndpointIDs(ids...)
 	return nduo
 }
 
-// AddEndpoint adds the "endpoint" edges to the Endpoint entity.
-func (nduo *NetworkDeviceUpdateOne) AddEndpoint(e ...*Endpoint) *NetworkDeviceUpdateOne {
-	ids := make([]int, len(e))
+// AddEndpoints adds the "endpoints" edges to the Endpoint entity.
+func (nduo *NetworkDeviceUpdateOne) AddEndpoints(e ...*Endpoint) *NetworkDeviceUpdateOne {
+	ids := make([]string, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
 	return nduo.AddEndpointIDs(ids...)
 }
 
-// AddSwVersionIDs adds the "sw_version" edge to the Version entity by IDs.
-func (nduo *NetworkDeviceUpdateOne) AddSwVersionIDs(ids ...int) *NetworkDeviceUpdateOne {
-	nduo.mutation.AddSwVersionIDs(ids...)
+// SetSwVersionID sets the "sw_version" edge to the Version entity by ID.
+func (nduo *NetworkDeviceUpdateOne) SetSwVersionID(id string) *NetworkDeviceUpdateOne {
+	nduo.mutation.SetSwVersionID(id)
 	return nduo
 }
 
-// AddSwVersion adds the "sw_version" edges to the Version entity.
-func (nduo *NetworkDeviceUpdateOne) AddSwVersion(v ...*Version) *NetworkDeviceUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
+// SetNillableSwVersionID sets the "sw_version" edge to the Version entity by ID if the given value is not nil.
+func (nduo *NetworkDeviceUpdateOne) SetNillableSwVersionID(id *string) *NetworkDeviceUpdateOne {
+	if id != nil {
+		nduo = nduo.SetSwVersionID(*id)
 	}
-	return nduo.AddSwVersionIDs(ids...)
-}
-
-// AddFwVersionIDs adds the "fw_version" edge to the Version entity by IDs.
-func (nduo *NetworkDeviceUpdateOne) AddFwVersionIDs(ids ...int) *NetworkDeviceUpdateOne {
-	nduo.mutation.AddFwVersionIDs(ids...)
 	return nduo
 }
 
-// AddFwVersion adds the "fw_version" edges to the Version entity.
-func (nduo *NetworkDeviceUpdateOne) AddFwVersion(v ...*Version) *NetworkDeviceUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
+// SetSwVersion sets the "sw_version" edge to the Version entity.
+func (nduo *NetworkDeviceUpdateOne) SetSwVersion(v *Version) *NetworkDeviceUpdateOne {
+	return nduo.SetSwVersionID(v.ID)
+}
+
+// SetFwVersionID sets the "fw_version" edge to the Version entity by ID.
+func (nduo *NetworkDeviceUpdateOne) SetFwVersionID(id string) *NetworkDeviceUpdateOne {
+	nduo.mutation.SetFwVersionID(id)
+	return nduo
+}
+
+// SetNillableFwVersionID sets the "fw_version" edge to the Version entity by ID if the given value is not nil.
+func (nduo *NetworkDeviceUpdateOne) SetNillableFwVersionID(id *string) *NetworkDeviceUpdateOne {
+	if id != nil {
+		nduo = nduo.SetFwVersionID(*id)
 	}
-	return nduo.AddFwVersionIDs(ids...)
+	return nduo
+}
+
+// SetFwVersion sets the "fw_version" edge to the Version entity.
+func (nduo *NetworkDeviceUpdateOne) SetFwVersion(v *Version) *NetworkDeviceUpdateOne {
+	return nduo.SetFwVersionID(v.ID)
 }
 
 // Mutation returns the NetworkDeviceMutation object of the builder.
@@ -489,67 +458,37 @@ func (nduo *NetworkDeviceUpdateOne) Mutation() *NetworkDeviceMutation {
 	return nduo.mutation
 }
 
-// ClearEndpoint clears all "endpoint" edges to the Endpoint entity.
-func (nduo *NetworkDeviceUpdateOne) ClearEndpoint() *NetworkDeviceUpdateOne {
-	nduo.mutation.ClearEndpoint()
+// ClearEndpoints clears all "endpoints" edges to the Endpoint entity.
+func (nduo *NetworkDeviceUpdateOne) ClearEndpoints() *NetworkDeviceUpdateOne {
+	nduo.mutation.ClearEndpoints()
 	return nduo
 }
 
-// RemoveEndpointIDs removes the "endpoint" edge to Endpoint entities by IDs.
-func (nduo *NetworkDeviceUpdateOne) RemoveEndpointIDs(ids ...int) *NetworkDeviceUpdateOne {
+// RemoveEndpointIDs removes the "endpoints" edge to Endpoint entities by IDs.
+func (nduo *NetworkDeviceUpdateOne) RemoveEndpointIDs(ids ...string) *NetworkDeviceUpdateOne {
 	nduo.mutation.RemoveEndpointIDs(ids...)
 	return nduo
 }
 
-// RemoveEndpoint removes "endpoint" edges to Endpoint entities.
-func (nduo *NetworkDeviceUpdateOne) RemoveEndpoint(e ...*Endpoint) *NetworkDeviceUpdateOne {
-	ids := make([]int, len(e))
+// RemoveEndpoints removes "endpoints" edges to Endpoint entities.
+func (nduo *NetworkDeviceUpdateOne) RemoveEndpoints(e ...*Endpoint) *NetworkDeviceUpdateOne {
+	ids := make([]string, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
 	return nduo.RemoveEndpointIDs(ids...)
 }
 
-// ClearSwVersion clears all "sw_version" edges to the Version entity.
+// ClearSwVersion clears the "sw_version" edge to the Version entity.
 func (nduo *NetworkDeviceUpdateOne) ClearSwVersion() *NetworkDeviceUpdateOne {
 	nduo.mutation.ClearSwVersion()
 	return nduo
 }
 
-// RemoveSwVersionIDs removes the "sw_version" edge to Version entities by IDs.
-func (nduo *NetworkDeviceUpdateOne) RemoveSwVersionIDs(ids ...int) *NetworkDeviceUpdateOne {
-	nduo.mutation.RemoveSwVersionIDs(ids...)
-	return nduo
-}
-
-// RemoveSwVersion removes "sw_version" edges to Version entities.
-func (nduo *NetworkDeviceUpdateOne) RemoveSwVersion(v ...*Version) *NetworkDeviceUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return nduo.RemoveSwVersionIDs(ids...)
-}
-
-// ClearFwVersion clears all "fw_version" edges to the Version entity.
+// ClearFwVersion clears the "fw_version" edge to the Version entity.
 func (nduo *NetworkDeviceUpdateOne) ClearFwVersion() *NetworkDeviceUpdateOne {
 	nduo.mutation.ClearFwVersion()
 	return nduo
-}
-
-// RemoveFwVersionIDs removes the "fw_version" edge to Version entities by IDs.
-func (nduo *NetworkDeviceUpdateOne) RemoveFwVersionIDs(ids ...int) *NetworkDeviceUpdateOne {
-	nduo.mutation.RemoveFwVersionIDs(ids...)
-	return nduo
-}
-
-// RemoveFwVersion removes "fw_version" edges to Version entities.
-func (nduo *NetworkDeviceUpdateOne) RemoveFwVersion(v ...*Version) *NetworkDeviceUpdateOne {
-	ids := make([]int, len(v))
-	for i := range v {
-		ids[i] = v[i].ID
-	}
-	return nduo.RemoveFwVersionIDs(ids...)
 }
 
 // Where appends a list predicates to the NetworkDeviceUpdate builder.
@@ -640,28 +579,31 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 	if value, ok := nduo.mutation.HwVersion(); ok {
 		_spec.SetField(networkdevice.FieldHwVersion, field.TypeString, value)
 	}
-	if nduo.mutation.EndpointCleared() {
+	if nduo.mutation.HwVersionCleared() {
+		_spec.ClearField(networkdevice.FieldHwVersion, field.TypeString)
+	}
+	if nduo.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := nduo.mutation.RemovedEndpointIDs(); len(nodes) > 0 && !nduo.mutation.EndpointCleared() {
+	if nodes := nduo.mutation.RemovedEndpointsIDs(); len(nodes) > 0 && !nduo.mutation.EndpointsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -669,15 +611,15 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := nduo.mutation.EndpointIDs(); len(nodes) > 0 {
+	if nodes := nduo.mutation.EndpointsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   networkdevice.EndpointTable,
-			Columns: networkdevice.EndpointPrimaryKey,
+			Table:   networkdevice.EndpointsTable,
+			Columns: []string{networkdevice.EndpointsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -687,42 +629,26 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 	}
 	if nduo.mutation.SwVersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.SwVersionTable,
 			Columns: []string{networkdevice.SwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nduo.mutation.RemovedSwVersionIDs(); len(nodes) > 0 && !nduo.mutation.SwVersionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   networkdevice.SwVersionTable,
-			Columns: []string{networkdevice.SwVersionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nduo.mutation.SwVersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.SwVersionTable,
 			Columns: []string{networkdevice.SwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -732,42 +658,26 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 	}
 	if nduo.mutation.FwVersionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.FwVersionTable,
 			Columns: []string{networkdevice.FwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := nduo.mutation.RemovedFwVersionIDs(); len(nodes) > 0 && !nduo.mutation.FwVersionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   networkdevice.FwVersionTable,
-			Columns: []string{networkdevice.FwVersionColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := nduo.mutation.FwVersionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   networkdevice.FwVersionTable,
 			Columns: []string{networkdevice.FwVersionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

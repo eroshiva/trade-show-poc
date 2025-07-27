@@ -40,7 +40,7 @@ func (vd *VersionDelete) ExecX(ctx context.Context) int {
 }
 
 func (vd *VersionDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(version.Table, sqlgraph.NewFieldSpec(version.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewDeleteSpec(version.Table, sqlgraph.NewFieldSpec(version.FieldID, field.TypeString))
 	if ps := vd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

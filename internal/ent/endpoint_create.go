@@ -38,19 +38,29 @@ func (ec *EndpointCreate) SetProtocol(e endpoint.Protocol) *EndpointCreate {
 	return ec
 }
 
-// AddNetworkDeviceIDs adds the "network_device" edge to the NetworkDevice entity by IDs.
-func (ec *EndpointCreate) AddNetworkDeviceIDs(ids ...string) *EndpointCreate {
-	ec.mutation.AddNetworkDeviceIDs(ids...)
+// SetID sets the "id" field.
+func (ec *EndpointCreate) SetID(s string) *EndpointCreate {
+	ec.mutation.SetID(s)
 	return ec
 }
 
-// AddNetworkDevice adds the "network_device" edges to the NetworkDevice entity.
-func (ec *EndpointCreate) AddNetworkDevice(n ...*NetworkDevice) *EndpointCreate {
-	ids := make([]string, len(n))
-	for i := range n {
-		ids[i] = n[i].ID
+// SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
+func (ec *EndpointCreate) SetNetworkDeviceID(id string) *EndpointCreate {
+	ec.mutation.SetNetworkDeviceID(id)
+	return ec
+}
+
+// SetNillableNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID if the given value is not nil.
+func (ec *EndpointCreate) SetNillableNetworkDeviceID(id *string) *EndpointCreate {
+	if id != nil {
+		ec = ec.SetNetworkDeviceID(*id)
 	}
-	return ec.AddNetworkDeviceIDs(ids...)
+	return ec
+}
+
+// SetNetworkDevice sets the "network_device" edge to the NetworkDevice entity.
+func (ec *EndpointCreate) SetNetworkDevice(n *NetworkDevice) *EndpointCreate {
+	return ec.SetNetworkDeviceID(n.ID)
 }
 
 // Mutation returns the EndpointMutation object of the builder.
@@ -115,8 +125,13 @@ func (ec *EndpointCreate) sqlSave(ctx context.Context) (*Endpoint, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Endpoint.ID type: %T", _spec.ID.Value)
+		}
+	}
 	ec.mutation.id = &_node.ID
 	ec.mutation.done = true
 	return _node, nil
@@ -125,8 +140,12 @@ func (ec *EndpointCreate) sqlSave(ctx context.Context) (*Endpoint, error) {
 func (ec *EndpointCreate) createSpec() (*Endpoint, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Endpoint{config: ec.config}
-		_spec = sqlgraph.NewCreateSpec(endpoint.Table, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(endpoint.Table, sqlgraph.NewFieldSpec(endpoint.FieldID, field.TypeString))
 	)
+	if id, ok := ec.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := ec.mutation.Host(); ok {
 		_spec.SetField(endpoint.FieldHost, field.TypeString, value)
 		_node.Host = value
@@ -141,10 +160,10 @@ func (ec *EndpointCreate) createSpec() (*Endpoint, *sqlgraph.CreateSpec) {
 	}
 	if nodes := ec.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   endpoint.NetworkDeviceTable,
-			Columns: endpoint.NetworkDevicePrimaryKey,
+			Columns: []string{endpoint.NetworkDeviceColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
@@ -153,6 +172,7 @@ func (ec *EndpointCreate) createSpec() (*Endpoint, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.network_device_endpoints = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -202,10 +222,6 @@ func (ecb *EndpointCreateBulk) Save(ctx context.Context) ([]*Endpoint, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

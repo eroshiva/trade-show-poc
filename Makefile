@@ -2,7 +2,7 @@ export GO111MODULE=on
 export CGO_ENABLED=1
 export GOPRIVATE=github.com/eroshiva
 
-POC_NAME := network-device-monitoring
+POC_NAME := monitoring
 POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.3.0
@@ -31,7 +31,7 @@ atlas-install: ## Installs Atlas tool for generating migrations
 buf-install: ## Installs buf to convert protobuf into Golang code
 	go install github.com/bufbuild/buf/cmd/buf@${BUF_VERSION}
 
-buf-generate: buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
+buf-generate: clean-vendor buf-install buf-update ## Generates Golang-driven bindings out of Protobuf
 	mkdir -p internal/ent/schema
 	buf generate --exclude-path api/v1/ent --path api/v1/monitoring.proto
 
@@ -47,10 +47,10 @@ buf-breaking: ## Checks Protobuf schema on breaking changes
 generate: buf-generate ## Generates all necessary code bindings
 	go generate ./internal/ent
 
-build: go-tidy build-api ## Builds all code
+build: go-tidy build-monitoring ## Builds all code
 
-build-api: ## Build the Go binary for gRPC API Gateway
-	go build -mod=vendor -o build/_output/api-gateway ./cmd/api-gateway.go
+build-monitoring: ## Build the Go binary for network device monitoring service
+	go build -mod=vendor -o build/_output/${POC_NAME} ./cmd/monitoring.go
 
 deps: buf-install go-linters-install atlas-install ## Installs developer prerequisites for this project
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
@@ -65,9 +65,11 @@ migration-apply: ## Uploads migration to the running DB instance
 	atlas migrate apply --dir file://internal/ent/migrate/migrations \
       --url postgresql://${PGUSER}:${PGPASSWORD}@localhost:${PGPORT}/${PGDATABASE}?search_path=public
 
+migration-hash: ## Hashes the atlas checksum to correspond to the migration
+	atlas migrate hash --dir file://internal/ent/migrate/migrations
+
 migration-generate: ## Generate DB migration "make migration-generate MIGRATION=<migration-name>"
 	@if test -z $(MIGRATION); then echo "Please specify migration name" && exit 1; fi
-	$(MAKE) db-stop
 	$(MAKE) db-start
 	sleep 5;
 	atlas migrate diff $(MIGRATION) \
@@ -75,11 +77,9 @@ migration-generate: ## Generate DB migration "make migration-generate MIGRATION=
   		--to "ent://internal/ent/schema" \
   		--dev-url "docker://postgres/15/${PGDATABASE}?search_path=public"
 	$(MAKE) db-stop
-	#$(GOCMD) run internal/ent/migrate/gen_code_migrations.go
 
 db-start: ## Starts PostgreSQL Docker instance with uploaded migration
 	- $(MAKE) db-stop
-	#docker run --rm --name ${DOCKER_POSTGRESQL_NAME} --network host -d -p 3306:3306 -e MYSQL_DATABASE=ent -e MYSQL_ROOT_PASSWORD=pass mysql:8
 	docker run --name ${DOCKER_POSTGRESQL_NAME} --rm -p ${PGPORT}:${PGPORT} -e POSTGRES_PASSWORD=${PGPASSWORD} -e POSTGRES_DB=${PGDATABASE} -e POSTGRES_USER=${PGUSER} -d postgres:$(DOCKER_POSTGRESQL_VERSION)
 
 db-stop: ## Stops PostgreSQL Docker instance
@@ -100,14 +100,17 @@ govulncheck: govulncheck-install ## Runs govulncheck on the current codebase
 go-vet: ## Searching for suspicious constructs in Go code
 	go vet ./...
 
-go-test: ## Run unit tests present in the codebase
+go-test: db-start ## Run unit tests present in the codebase
 	mkdir -p tmp
+	sleep 5;
 	go test -coverprofile=./tmp/test-cover.out -race ./...
+	$(MAKE) db-stop
 
 test-ci: generate buf-lint buf-breaking build go-vet govulncheck go-linters go-test ## Test the whole codebase (mimics CI/CD)
 
-run: build-api ## Runs compiled API Gateway instance
-	./build/_output/api-gateway
+run: go-tidy build-monitoring db-start ## Runs compiled network device monitoring service
+	sleep 5;
+	./build/_output/${POC_NAME}
 
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
@@ -125,6 +128,9 @@ kind: image ## Builds Docker image for API Gateway and loads it to the currently
 go-tidy: ## Runs go mod related commands
 	go mod tidy
 	go mod vendor
+
+clean-vendor: ## Cleans only vendor folder
+	rm -rf ./vendor
 
 clean: ## Remove all the build artifacts
 	rm -rf ./build/_output ./vendor ./tmp
