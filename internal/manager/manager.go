@@ -12,6 +12,7 @@ import (
 	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
 	"github.com/eroshiva/trade-show-poc/pkg/client/db"
+	"github.com/eroshiva/trade-show-poc/pkg/connectors"
 	"github.com/rs/zerolog"
 )
 
@@ -88,7 +89,6 @@ func performControlLoopRoutine(dbClient *ent.Client, controlLoopTick time.Durati
 		go processNetworkDevice(ctx, dbClient, nd)
 	}
 	// finished iteration
-	return
 }
 
 // processNetworkDevice runs routine to get network device status and update it in the DB.
@@ -99,11 +99,21 @@ func processNetworkDevice(ctx context.Context, dbClient *ent.Client, networkDevi
 	aliveConnectionFound := false
 	for _, ep := range networkDevice.Edges.Endpoints {
 		// obtain connection based on the protocol.
+		connector, err := connectors.NewConnector(ep)
+		if err != nil {
+			// we've hit an unsupported protocol case, skipping the rest of the iteration
+			continue
+		}
 		// retrieve device status.
-		// if device status has failed to retrieve, proceed with other endpoint.
-		// if device status was retrieved, break the loop and perform an update.
-		// aliveConnectionFound = true
-		// status = devicestatus.StatusSTATUS_DEVICE_UP
+		s, err := connector.GetStatus(ctx)
+		if err != nil {
+			// failed to retrieve status, proceeding with other the endpoint.
+			continue
+		}
+		// device status was retrieved, break the loop and perform an update.
+		aliveConnectionFound = true
+		status = s // assuming that any live connection is different from down
+		break      // no need in further sniffing of other endpoints
 	}
 
 	lastSeen := time.Now().String()
@@ -114,5 +124,4 @@ func processNetworkDevice(ctx context.Context, dbClient *ent.Client, networkDevi
 	// alive connection was found, status was fetched (and already fixed, updating device status
 	_, _ = db.UpdateDeviceStatusByNetworkDeviceID(ctx, dbClient, networkDevice.ID, status, lastSeen)
 	// error is already logged in in the internal function
-	return
 }
