@@ -10,6 +10,7 @@ import (
 	monitoring "github.com/eroshiva/trade-show-poc/api/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,96 +23,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type GetStatusRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The ID of the device will be queried, so the simulator can
-	// return different statuses for different devices.
-	DeviceId      string `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetStatusRequest) Reset() {
-	*x = GetStatusRequest{}
-	mi := &file_pkg_mocks_simulator_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetStatusRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetStatusRequest) ProtoMessage() {}
-
-func (x *GetStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_mocks_simulator_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetStatusRequest.ProtoReflect.Descriptor instead.
-func (*GetStatusRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_mocks_simulator_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *GetStatusRequest) GetDeviceId() string {
-	if x != nil {
-		return x.DeviceId
-	}
-	return ""
-}
-
-type GetVersionRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DeviceId      string                 `protobuf:"bytes,1,opt,name=device_id,json=deviceId,proto3" json:"device_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetVersionRequest) Reset() {
-	*x = GetVersionRequest{}
-	mi := &file_pkg_mocks_simulator_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetVersionRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetVersionRequest) ProtoMessage() {}
-
-func (x *GetVersionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_mocks_simulator_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetVersionRequest.ProtoReflect.Descriptor instead.
-func (*GetVersionRequest) Descriptor() ([]byte, []int) {
-	return file_pkg_mocks_simulator_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *GetVersionRequest) GetDeviceId() string {
-	if x != nil {
-		return x.DeviceId
-	}
-	return ""
-}
-
 type GetVersionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Version       string                 `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
@@ -121,7 +32,7 @@ type GetVersionResponse struct {
 
 func (x *GetVersionResponse) Reset() {
 	*x = GetVersionResponse{}
-	mi := &file_pkg_mocks_simulator_proto_msgTypes[2]
+	mi := &file_pkg_mocks_simulator_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -133,7 +44,7 @@ func (x *GetVersionResponse) String() string {
 func (*GetVersionResponse) ProtoMessage() {}
 
 func (x *GetVersionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_pkg_mocks_simulator_proto_msgTypes[2]
+	mi := &file_pkg_mocks_simulator_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -146,7 +57,7 @@ func (x *GetVersionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetVersionResponse.ProtoReflect.Descriptor instead.
 func (*GetVersionResponse) Descriptor() ([]byte, []int) {
-	return file_pkg_mocks_simulator_proto_rawDescGZIP(), []int{2}
+	return file_pkg_mocks_simulator_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *GetVersionResponse) GetVersion() string {
@@ -160,18 +71,14 @@ var File_pkg_mocks_simulator_proto protoreflect.FileDescriptor
 
 const file_pkg_mocks_simulator_proto_rawDesc = "" +
 	"\n" +
-	"\x19pkg/mocks/simulator.proto\x12\fsimulator.v1\x1a\x17api/v1/monitoring.proto\"/\n" +
-	"\x10GetStatusRequest\x12\x1b\n" +
-	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\"0\n" +
-	"\x11GetVersionRequest\x12\x1b\n" +
-	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\".\n" +
+	"\x19pkg/mocks/simulator.proto\x12\fsimulator.v1\x1a\x17api/v1/monitoring.proto\x1a\x1bgoogle/protobuf/empty.proto\".\n" +
 	"\x12GetVersionResponse\x12\x18\n" +
-	"\aversion\x18\x01 \x01(\tR\aversion2\xb5\x02\n" +
-	"\x11MockDeviceService\x12C\n" +
-	"\tGetStatus\x12\x1e.simulator.v1.GetStatusRequest\x1a\x14.api.v1.DeviceStatus\"\x00\x12S\n" +
-	"\fGetHWVersion\x12\x1f.simulator.v1.GetVersionRequest\x1a .simulator.v1.GetVersionResponse\"\x00\x12B\n" +
-	"\fGetSWVersion\x12\x1f.simulator.v1.GetVersionRequest\x1a\x0f.api.v1.Version\"\x00\x12B\n" +
-	"\fGetFWVersion\x12\x1f.simulator.v1.GetVersionRequest\x1a\x0f.api.v1.Version\"\x00BAZ?github.com/eroshiva/trade-show-poc/api/v1/simulator;simulatorv1b\x06proto3"
+	"\aversion\x18\x01 \x01(\tR\aversion2\x92\x02\n" +
+	"\x11MockDeviceService\x12;\n" +
+	"\tGetStatus\x12\x16.google.protobuf.Empty\x1a\x14.api.v1.DeviceStatus\"\x00\x12J\n" +
+	"\fGetHWVersion\x12\x16.google.protobuf.Empty\x1a .simulator.v1.GetVersionResponse\"\x00\x129\n" +
+	"\fGetSWVersion\x12\x16.google.protobuf.Empty\x1a\x0f.api.v1.Version\"\x00\x129\n" +
+	"\fGetFWVersion\x12\x16.google.protobuf.Empty\x1a\x0f.api.v1.Version\"\x00BAZ?github.com/eroshiva/trade-show-poc/api/v1/simulator;simulatorv1b\x06proto3"
 
 var (
 	file_pkg_mocks_simulator_proto_rawDescOnce sync.Once
@@ -185,23 +92,22 @@ func file_pkg_mocks_simulator_proto_rawDescGZIP() []byte {
 	return file_pkg_mocks_simulator_proto_rawDescData
 }
 
-var file_pkg_mocks_simulator_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_pkg_mocks_simulator_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_pkg_mocks_simulator_proto_goTypes = []any{
-	(*GetStatusRequest)(nil),        // 0: simulator.v1.GetStatusRequest
-	(*GetVersionRequest)(nil),       // 1: simulator.v1.GetVersionRequest
-	(*GetVersionResponse)(nil),      // 2: simulator.v1.GetVersionResponse
-	(*monitoring.DeviceStatus)(nil), // 3: api.v1.DeviceStatus
-	(*monitoring.Version)(nil),      // 4: api.v1.Version
+	(*GetVersionResponse)(nil),      // 0: simulator.v1.GetVersionResponse
+	(*emptypb.Empty)(nil),           // 1: google.protobuf.Empty
+	(*monitoring.DeviceStatus)(nil), // 2: api.v1.DeviceStatus
+	(*monitoring.Version)(nil),      // 3: api.v1.Version
 }
 var file_pkg_mocks_simulator_proto_depIdxs = []int32{
-	0, // 0: simulator.v1.MockDeviceService.GetStatus:input_type -> simulator.v1.GetStatusRequest
-	1, // 1: simulator.v1.MockDeviceService.GetHWVersion:input_type -> simulator.v1.GetVersionRequest
-	1, // 2: simulator.v1.MockDeviceService.GetSWVersion:input_type -> simulator.v1.GetVersionRequest
-	1, // 3: simulator.v1.MockDeviceService.GetFWVersion:input_type -> simulator.v1.GetVersionRequest
-	3, // 4: simulator.v1.MockDeviceService.GetStatus:output_type -> api.v1.DeviceStatus
-	2, // 5: simulator.v1.MockDeviceService.GetHWVersion:output_type -> simulator.v1.GetVersionResponse
-	4, // 6: simulator.v1.MockDeviceService.GetSWVersion:output_type -> api.v1.Version
-	4, // 7: simulator.v1.MockDeviceService.GetFWVersion:output_type -> api.v1.Version
+	1, // 0: simulator.v1.MockDeviceService.GetStatus:input_type -> google.protobuf.Empty
+	1, // 1: simulator.v1.MockDeviceService.GetHWVersion:input_type -> google.protobuf.Empty
+	1, // 2: simulator.v1.MockDeviceService.GetSWVersion:input_type -> google.protobuf.Empty
+	1, // 3: simulator.v1.MockDeviceService.GetFWVersion:input_type -> google.protobuf.Empty
+	2, // 4: simulator.v1.MockDeviceService.GetStatus:output_type -> api.v1.DeviceStatus
+	0, // 5: simulator.v1.MockDeviceService.GetHWVersion:output_type -> simulator.v1.GetVersionResponse
+	3, // 6: simulator.v1.MockDeviceService.GetSWVersion:output_type -> api.v1.Version
+	3, // 7: simulator.v1.MockDeviceService.GetFWVersion:output_type -> api.v1.Version
 	4, // [4:8] is the sub-list for method output_type
 	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -220,7 +126,7 @@ func file_pkg_mocks_simulator_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_pkg_mocks_simulator_proto_rawDesc), len(file_pkg_mocks_simulator_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

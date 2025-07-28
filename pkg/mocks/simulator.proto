@@ -3,25 +3,16 @@ syntax = "proto3";
 package simulator.v1;
 
 import "api/v1/monitoring.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/eroshiva/trade-show-poc/api/v1/simulator;simulatorv1";
 
 // MockDeviceService simulates a real network device.
 service MockDeviceService {
-  rpc GetStatus(GetStatusRequest) returns (api.v1.DeviceStatus) {}
-  rpc GetHWVersion(GetVersionRequest) returns (GetVersionResponse) {}
-  rpc GetSWVersion(GetVersionRequest) returns (api.v1.Version) {}
-  rpc GetFWVersion(GetVersionRequest) returns (api.v1.Version) {}
-}
-
-message GetStatusRequest {
-  // The ID of the device will be queried, so the simulator can
-  // return different statuses for different devices.
-  string device_id = 1;
-}
-
-message GetVersionRequest {
-  string device_id = 1;
+  rpc GetStatus(google.protobuf.Empty) returns (api.v1.DeviceStatus) {}
+  rpc GetHWVersion(google.protobuf.Empty) returns (GetVersionResponse) {}
+  rpc GetSWVersion(google.protobuf.Empty) returns (api.v1.Version) {}
+  rpc GetFWVersion(google.protobuf.Empty) returns (api.v1.Version) {}
 }
 
 message GetVersionResponse {

@@ -12,6 +12,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -30,10 +31,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MockDeviceServiceClient interface {
-	GetStatus(ctx context.Context, in *GetStatusRequest, opts ...grpc.CallOption) (*monitoring.DeviceStatus, error)
-	GetHWVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
-	GetSWVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*monitoring.Version, error)
-	GetFWVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*monitoring.Version, error)
+	GetStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*monitoring.DeviceStatus, error)
+	GetHWVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetVersionResponse, error)
+	GetSWVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*monitoring.Version, error)
+	GetFWVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*monitoring.Version, error)
 }
 
 type mockDeviceServiceClient struct {
@@ -44,7 +45,7 @@ func NewMockDeviceServiceClient(cc grpc.ClientConnInterface) MockDeviceServiceCl
 	return &mockDeviceServiceClient{cc}
 }
 
-func (c *mockDeviceServiceClient) GetStatus(ctx context.Context, in *GetStatusRequest, opts ...grpc.CallOption) (*monitoring.DeviceStatus, error) {
+func (c *mockDeviceServiceClient) GetStatus(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*monitoring.DeviceStatus, error) {
 	out := new(monitoring.DeviceStatus)
 	err := c.cc.Invoke(ctx, MockDeviceService_GetStatus_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -53,7 +54,7 @@ func (c *mockDeviceServiceClient) GetStatus(ctx context.Context, in *GetStatusRe
 	return out, nil
 }
 
-func (c *mockDeviceServiceClient) GetHWVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error) {
+func (c *mockDeviceServiceClient) GetHWVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetVersionResponse, error) {
 	out := new(GetVersionResponse)
 	err := c.cc.Invoke(ctx, MockDeviceService_GetHWVersion_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -62,7 +63,7 @@ func (c *mockDeviceServiceClient) GetHWVersion(ctx context.Context, in *GetVersi
 	return out, nil
 }
 
-func (c *mockDeviceServiceClient) GetSWVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*monitoring.Version, error) {
+func (c *mockDeviceServiceClient) GetSWVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*monitoring.Version, error) {
 	out := new(monitoring.Version)
 	err := c.cc.Invoke(ctx, MockDeviceService_GetSWVersion_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -71,7 +72,7 @@ func (c *mockDeviceServiceClient) GetSWVersion(ctx context.Context, in *GetVersi
 	return out, nil
 }
 
-func (c *mockDeviceServiceClient) GetFWVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*monitoring.Version, error) {
+func (c *mockDeviceServiceClient) GetFWVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*monitoring.Version, error) {
 	out := new(monitoring.Version)
 	err := c.cc.Invoke(ctx, MockDeviceService_GetFWVersion_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -84,26 +85,26 @@ func (c *mockDeviceServiceClient) GetFWVersion(ctx context.Context, in *GetVersi
 // All implementations should embed UnimplementedMockDeviceServiceServer
 // for forward compatibility
 type MockDeviceServiceServer interface {
-	GetStatus(context.Context, *GetStatusRequest) (*monitoring.DeviceStatus, error)
-	GetHWVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
-	GetSWVersion(context.Context, *GetVersionRequest) (*monitoring.Version, error)
-	GetFWVersion(context.Context, *GetVersionRequest) (*monitoring.Version, error)
+	GetStatus(context.Context, *emptypb.Empty) (*monitoring.DeviceStatus, error)
+	GetHWVersion(context.Context, *emptypb.Empty) (*GetVersionResponse, error)
+	GetSWVersion(context.Context, *emptypb.Empty) (*monitoring.Version, error)
+	GetFWVersion(context.Context, *emptypb.Empty) (*monitoring.Version, error)
 }
 
 // UnimplementedMockDeviceServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedMockDeviceServiceServer struct {
 }
 
-func (UnimplementedMockDeviceServiceServer) GetStatus(context.Context, *GetStatusRequest) (*monitoring.DeviceStatus, error) {
+func (UnimplementedMockDeviceServiceServer) GetStatus(context.Context, *emptypb.Empty) (*monitoring.DeviceStatus, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStatus not implemented")
 }
-func (UnimplementedMockDeviceServiceServer) GetHWVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error) {
+func (UnimplementedMockDeviceServiceServer) GetHWVersion(context.Context, *emptypb.Empty) (*GetVersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHWVersion not implemented")
 }
-func (UnimplementedMockDeviceServiceServer) GetSWVersion(context.Context, *GetVersionRequest) (*monitoring.Version, error) {
+func (UnimplementedMockDeviceServiceServer) GetSWVersion(context.Context, *emptypb.Empty) (*monitoring.Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSWVersion not implemented")
 }
-func (UnimplementedMockDeviceServiceServer) GetFWVersion(context.Context, *GetVersionRequest) (*monitoring.Version, error) {
+func (UnimplementedMockDeviceServiceServer) GetFWVersion(context.Context, *emptypb.Empty) (*monitoring.Version, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFWVersion not implemented")
 }
 
@@ -119,7 +120,7 @@ func RegisterMockDeviceServiceServer(s grpc.ServiceRegistrar, srv MockDeviceServ
 }
 
 func _MockDeviceService_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStatusRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -131,13 +132,13 @@ func _MockDeviceService_GetStatus_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: MockDeviceService_GetStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MockDeviceServiceServer).GetStatus(ctx, req.(*GetStatusRequest))
+		return srv.(MockDeviceServiceServer).GetStatus(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MockDeviceService_GetHWVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetVersionRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -149,13 +150,13 @@ func _MockDeviceService_GetHWVersion_Handler(srv interface{}, ctx context.Contex
 		FullMethod: MockDeviceService_GetHWVersion_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MockDeviceServiceServer).GetHWVersion(ctx, req.(*GetVersionRequest))
+		return srv.(MockDeviceServiceServer).GetHWVersion(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MockDeviceService_GetSWVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetVersionRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,13 +168,13 @@ func _MockDeviceService_GetSWVersion_Handler(srv interface{}, ctx context.Contex
 		FullMethod: MockDeviceService_GetSWVersion_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MockDeviceServiceServer).GetSWVersion(ctx, req.(*GetVersionRequest))
+		return srv.(MockDeviceServiceServer).GetSWVersion(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _MockDeviceService_GetFWVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetVersionRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -185,7 +186,7 @@ func _MockDeviceService_GetFWVersion_Handler(srv interface{}, ctx context.Contex
 		FullMethod: MockDeviceService_GetFWVersion_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MockDeviceServiceServer).GetFWVersion(ctx, req.(*GetVersionRequest))
+		return srv.(MockDeviceServiceServer).GetFWVersion(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

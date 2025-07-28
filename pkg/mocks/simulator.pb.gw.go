@@ -22,6 +22,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Suppress "imported and not used" errors
@@ -37,7 +38,7 @@ var (
 
 func request_MockDeviceService_GetStatus_0(ctx context.Context, marshaler runtime.Marshaler, client MockDeviceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetStatusRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -52,7 +53,7 @@ func request_MockDeviceService_GetStatus_0(ctx context.Context, marshaler runtim
 
 func local_request_MockDeviceService_GetStatus_0(ctx context.Context, marshaler runtime.Marshaler, server MockDeviceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetStatusRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -64,7 +65,7 @@ func local_request_MockDeviceService_GetStatus_0(ctx context.Context, marshaler 
 
 func request_MockDeviceService_GetHWVersion_0(ctx context.Context, marshaler runtime.Marshaler, client MockDeviceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetVersionRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -79,7 +80,7 @@ func request_MockDeviceService_GetHWVersion_0(ctx context.Context, marshaler run
 
 func local_request_MockDeviceService_GetHWVersion_0(ctx context.Context, marshaler runtime.Marshaler, server MockDeviceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetVersionRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -91,7 +92,7 @@ func local_request_MockDeviceService_GetHWVersion_0(ctx context.Context, marshal
 
 func request_MockDeviceService_GetSWVersion_0(ctx context.Context, marshaler runtime.Marshaler, client MockDeviceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetVersionRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -106,7 +107,7 @@ func request_MockDeviceService_GetSWVersion_0(ctx context.Context, marshaler run
 
 func local_request_MockDeviceService_GetSWVersion_0(ctx context.Context, marshaler runtime.Marshaler, server MockDeviceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetVersionRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -118,7 +119,7 @@ func local_request_MockDeviceService_GetSWVersion_0(ctx context.Context, marshal
 
 func request_MockDeviceService_GetFWVersion_0(ctx context.Context, marshaler runtime.Marshaler, client MockDeviceServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetVersionRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -133,7 +134,7 @@ func request_MockDeviceService_GetFWVersion_0(ctx context.Context, marshaler run
 
 func local_request_MockDeviceService_GetFWVersion_0(ctx context.Context, marshaler runtime.Marshaler, server MockDeviceServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetVersionRequest
+		protoReq emptypb.Empty
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

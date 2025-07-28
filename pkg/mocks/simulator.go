@@ -18,19 +18,31 @@ import (
 const (
 	component     = "component"
 	componentName = "network-device-simulator"
-	// server configuration-related constants
-	tcpNetwork           = "tcp"
-	defaultServerAddress = "localhost:50151"
-	envServerAddress     = "DEVICE_SIMULATOR_GRPC_SERVER_ADDRESS" // must be in form address:port, e.g., localhost:50151.
 
-	envDeviceStatus     = "DEVICE_SIMULATOR_DEVICE_STATUS" // Can be "UP", "DOWN", "UNHEALTHY"
-	defaultDeviceStatus = "UP"
-	defaultHWModel      = "HW-XYZ"
-	envHWModel          = "DEVICE_SIMULATOR_HW_MODEL"
-	defaultSWVersion    = "1.0.0"
-	envSWVersion        = "DEVICE_SIMULATOR_SW_VERSION"
-	defaultFWVersion    = "0.1.0"
-	envFWVersion        = "DEVICE_SIMULATOR_FW_VERSION"
+	// server configuration-related constants
+	tcpNetwork = "tcp"
+	// EnvServerAddress constant specifies name of the environmental variable for Device Simulator server address.
+	EnvServerAddress     = "DEVICE_SIMULATOR_GRPC_SERVER_ADDRESS" // must be in form address:port, e.g., localhost:50151.
+	defaultServerAddress = "localhost:50151"
+
+	// EnvDeviceStatus constant specifies name of the device status environmental variable.
+	EnvDeviceStatus = "DEVICE_SIMULATOR_DEVICE_STATUS" // Can be "UP", "DOWN", "UNHEALTHY"
+	// DeviceStatusUP corresponds to the UP status reported by the device. Default reported value by simulator.
+	DeviceStatusUP = "UP"
+	// DeviceStatusDOWN corresponds to the DOWN status reported by the device.
+	DeviceStatusDOWN = "DOWN"
+	// DeviceStatusUNHEALTHY corresponds to the UNHEALTHY status reported by the device.
+	DeviceStatusUNHEALTHY = "UNHEALTHY"
+
+	// EnvHWModel constant specifies name of the HW model environmental variable.
+	EnvHWModel     = "DEVICE_SIMULATOR_HW_MODEL"
+	defaultHWModel = "HW-XYZ"
+	// EnvSWVersion constant specifies name of the SW version environmental variable.
+	EnvSWVersion     = "DEVICE_SIMULATOR_SW_VERSION"
+	defaultSWVersion = "1.0.0"
+	// EnvFWVersion constant specifies name of the FW version environmental variable.
+	EnvFWVersion     = "DEVICE_SIMULATOR_FW_VERSION"
+	defaultFWVersion = "0.1.0"
 )
 
 var zlog = zerolog.New(zerolog.ConsoleWriter{
@@ -41,7 +53,7 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 	},
 }).Level(zerolog.TraceLevel).With().Caller().Timestamp().Str(component, componentName).Logger()
 
-// DeviceSimulator is an exportable type of a device simulator.
+// DeviceSimulator is an exportable type of device simulator.
 type DeviceSimulator struct {
 	simulator *grpc.Server
 }
@@ -67,11 +79,11 @@ func convertDeviceStatus(ds string) apiv1.Status {
 // GetStatus returns a status based on the device ID.
 func (s *server) GetStatus(_ context.Context, req *GetStatusRequest) (*apiv1.DeviceStatus, error) {
 	zlog.Info().Msgf("Received GetStatus request for device %s", req.DeviceId)
-	deviceStatus := os.Getenv(envDeviceStatus)
+	deviceStatus := os.Getenv(EnvDeviceStatus)
 	if deviceStatus == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, returning default value: %v",
-			envDeviceStatus, defaultDeviceStatus)
-		deviceStatus = defaultDeviceStatus
+			EnvDeviceStatus, DeviceStatusUP)
+		deviceStatus = DeviceStatusUP
 	}
 	// value is set, converting and returning it
 	status := convertDeviceStatus(deviceStatus)
@@ -88,10 +100,10 @@ func (s *server) GetStatus(_ context.Context, req *GetStatusRequest) (*apiv1.Dev
 // GetHWVersion returns a mock hardware version.
 func (s *server) GetHWVersion(_ context.Context, req *GetVersionRequest) (*GetVersionResponse, error) {
 	zlog.Info().Msgf("Received GetHWVersion request for device %s", req.DeviceId)
-	hwModel := os.Getenv(envHWModel)
+	hwModel := os.Getenv(EnvHWModel)
 	if hwModel == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",
-			envHWModel, defaultHWModel)
+			EnvHWModel, defaultHWModel)
 		hwModel = defaultHWModel
 	}
 
@@ -101,10 +113,10 @@ func (s *server) GetHWVersion(_ context.Context, req *GetVersionRequest) (*GetVe
 // GetSWVersion returns a mock software version.
 func (s *server) GetSWVersion(_ context.Context, req *GetVersionRequest) (*apiv1.Version, error) {
 	zlog.Info().Msgf("Received GetSWVersion request for device %s", req.DeviceId)
-	swVersion := os.Getenv(envSWVersion)
+	swVersion := os.Getenv(EnvSWVersion)
 	if swVersion == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",
-			envSWVersion, defaultSWVersion)
+			EnvSWVersion, defaultSWVersion)
 		swVersion = defaultSWVersion
 	}
 	fwChecksum := fmt.Sprintf("%x", sha256.Sum256([]byte(swVersion)))
@@ -115,10 +127,10 @@ func (s *server) GetSWVersion(_ context.Context, req *GetVersionRequest) (*apiv1
 // GetFWVersion returns a mock firmware version.
 func (s *server) GetFWVersion(_ context.Context, req *GetVersionRequest) (*apiv1.Version, error) {
 	zlog.Info().Msgf("Received GetFWVersion request for device %s", req.DeviceId)
-	fwVersion := os.Getenv(envFWVersion)
+	fwVersion := os.Getenv(EnvFWVersion)
 	if fwVersion == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",
-			envFWVersion, defaultFWVersion)
+			EnvFWVersion, defaultFWVersion)
 		fwVersion = defaultFWVersion
 	}
 	fwChecksum := fmt.Sprintf("%x", sha256.Sum256([]byte(fwVersion)))
@@ -136,10 +148,10 @@ func NewDeviceSimulator() *DeviceSimulator {
 // StartNetworkDeviceSimulator function starts network device simulator. Under the hood, it is a pure gRPC server
 // implemented for the sake of simplicity and showcasing the interaction.
 func (ds *DeviceSimulator) StartNetworkDeviceSimulator() {
-	serverAddress := os.Getenv(envServerAddress)
+	serverAddress := os.Getenv(EnvServerAddress)
 	if serverAddress == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
-			envServerAddress, defaultServerAddress)
+			EnvServerAddress, defaultServerAddress)
 		serverAddress = defaultServerAddress
 	}
 
