@@ -13,6 +13,7 @@ import (
 	apiv1 "github.com/eroshiva/trade-show-poc/api/v1"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -65,11 +66,11 @@ type server struct {
 
 func convertDeviceStatus(ds string) apiv1.Status {
 	switch ds {
-	case "UP":
+	case DeviceStatusUP:
 		return apiv1.Status_STATUS_DEVICE_UP
-	case "DOWN":
+	case DeviceStatusDOWN:
 		return apiv1.Status_STATUS_DEVICE_DOWN
-	case "UNHEALTHY":
+	case DeviceStatusUNHEALTHY:
 		return apiv1.Status_STATUS_DEVICE_UNHEALTHY
 	default:
 		return apiv1.Status_STATUS_UNSPECIFIED
@@ -77,8 +78,8 @@ func convertDeviceStatus(ds string) apiv1.Status {
 }
 
 // GetStatus returns a status based on the device ID.
-func (s *server) GetStatus(_ context.Context, req *GetStatusRequest) (*apiv1.DeviceStatus, error) {
-	zlog.Info().Msgf("Received GetStatus request for device %s", req.DeviceId)
+func (s *server) GetStatus(_ context.Context, _ *emptypb.Empty) (*apiv1.DeviceStatus, error) {
+	zlog.Info().Msg("Received GetStatus request")
 	deviceStatus := os.Getenv(EnvDeviceStatus)
 	if deviceStatus == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, returning default value: %v",
@@ -98,8 +99,8 @@ func (s *server) GetStatus(_ context.Context, req *GetStatusRequest) (*apiv1.Dev
 }
 
 // GetHWVersion returns a mock hardware version.
-func (s *server) GetHWVersion(_ context.Context, req *GetVersionRequest) (*GetVersionResponse, error) {
-	zlog.Info().Msgf("Received GetHWVersion request for device %s", req.DeviceId)
+func (s *server) GetHWVersion(_ context.Context, _ *emptypb.Empty) (*GetVersionResponse, error) {
+	zlog.Info().Msgf("Received GetHWVersion request")
 	hwModel := os.Getenv(EnvHWModel)
 	if hwModel == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",
@@ -111,8 +112,8 @@ func (s *server) GetHWVersion(_ context.Context, req *GetVersionRequest) (*GetVe
 }
 
 // GetSWVersion returns a mock software version.
-func (s *server) GetSWVersion(_ context.Context, req *GetVersionRequest) (*apiv1.Version, error) {
-	zlog.Info().Msgf("Received GetSWVersion request for device %s", req.DeviceId)
+func (s *server) GetSWVersion(_ context.Context, _ *emptypb.Empty) (*apiv1.Version, error) {
+	zlog.Info().Msgf("Received GetSWVersion request")
 	swVersion := os.Getenv(EnvSWVersion)
 	if swVersion == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",
@@ -125,8 +126,8 @@ func (s *server) GetSWVersion(_ context.Context, req *GetVersionRequest) (*apiv1
 }
 
 // GetFWVersion returns a mock firmware version.
-func (s *server) GetFWVersion(_ context.Context, req *GetVersionRequest) (*apiv1.Version, error) {
-	zlog.Info().Msgf("Received GetFWVersion request for device %s", req.DeviceId)
+func (s *server) GetFWVersion(_ context.Context, _ *emptypb.Empty) (*apiv1.Version, error) {
+	zlog.Info().Msgf("Received GetFWVersion request")
 	fwVersion := os.Getenv(EnvFWVersion)
 	if fwVersion == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",

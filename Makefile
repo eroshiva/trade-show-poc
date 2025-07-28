@@ -53,7 +53,7 @@ buf-breaking: ## Checks Protobuf schema on breaking changes
 generate: buf-generate ## Generates all necessary code bindings
 	go generate ./internal/ent
 
-build: go-tidy build-monitoring ## Builds all code
+build: go-tidy build-monitoring build-simulator ## Builds all code
 
 build-monitoring: ## Build the Go binary for network device monitoring service
 	go build -mod=vendor -o build/_output/${POC_NAME} ./cmd/monitoring.go
