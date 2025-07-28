@@ -102,7 +102,7 @@
       },
       "description": "Endpoint defines an endpoint structure."
     },
-    "v1GetVersionResponse": {
+    "v1GetHWModelResponse": {
       "type": "object",
       "properties": {
         "version": {

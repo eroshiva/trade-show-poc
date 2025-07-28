@@ -23,27 +23,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type GetVersionResponse struct {
+type GetHWModelResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Version       string                 `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetVersionResponse) Reset() {
-	*x = GetVersionResponse{}
+func (x *GetHWModelResponse) Reset() {
+	*x = GetHWModelResponse{}
 	mi := &file_pkg_mocks_simulator_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetVersionResponse) String() string {
+func (x *GetHWModelResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetVersionResponse) ProtoMessage() {}
+func (*GetHWModelResponse) ProtoMessage() {}
 
-func (x *GetVersionResponse) ProtoReflect() protoreflect.Message {
+func (x *GetHWModelResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_pkg_mocks_simulator_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,12 +55,12 @@ func (x *GetVersionResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetVersionResponse.ProtoReflect.Descriptor instead.
-func (*GetVersionResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetHWModelResponse.ProtoReflect.Descriptor instead.
+func (*GetHWModelResponse) Descriptor() ([]byte, []int) {
 	return file_pkg_mocks_simulator_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetVersionResponse) GetVersion() string {
+func (x *GetHWModelResponse) GetVersion() string {
 	if x != nil {
 		return x.Version
 	}
@@ -72,11 +72,12 @@ var File_pkg_mocks_simulator_proto protoreflect.FileDescriptor
 const file_pkg_mocks_simulator_proto_rawDesc = "" +
 	"\n" +
 	"\x19pkg/mocks/simulator.proto\x12\fsimulator.v1\x1a\x17api/v1/monitoring.proto\x1a\x1bgoogle/protobuf/empty.proto\".\n" +
-	"\x12GetVersionResponse\x12\x18\n" +
-	"\aversion\x18\x01 \x01(\tR\aversion2\x92\x02\n" +
+	"\x12GetHWModelResponse\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\tR\aversion2\x90\x02\n" +
 	"\x11MockDeviceService\x12;\n" +
-	"\tGetStatus\x12\x16.google.protobuf.Empty\x1a\x14.api.v1.DeviceStatus\"\x00\x12J\n" +
-	"\fGetHWVersion\x12\x16.google.protobuf.Empty\x1a .simulator.v1.GetVersionResponse\"\x00\x129\n" +
+	"\tGetStatus\x12\x16.google.protobuf.Empty\x1a\x14.api.v1.DeviceStatus\"\x00\x12H\n" +
+	"\n" +
+	"GetHWModel\x12\x16.google.protobuf.Empty\x1a .simulator.v1.GetHWModelResponse\"\x00\x129\n" +
 	"\fGetSWVersion\x12\x16.google.protobuf.Empty\x1a\x0f.api.v1.Version\"\x00\x129\n" +
 	"\fGetFWVersion\x12\x16.google.protobuf.Empty\x1a\x0f.api.v1.Version\"\x00BAZ?github.com/eroshiva/trade-show-poc/api/v1/simulator;simulatorv1b\x06proto3"
 
@@ -94,18 +95,18 @@ func file_pkg_mocks_simulator_proto_rawDescGZIP() []byte {
 
 var file_pkg_mocks_simulator_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_pkg_mocks_simulator_proto_goTypes = []any{
-	(*GetVersionResponse)(nil),      // 0: simulator.v1.GetVersionResponse
+	(*GetHWModelResponse)(nil),      // 0: simulator.v1.GetHWModelResponse
 	(*emptypb.Empty)(nil),           // 1: google.protobuf.Empty
 	(*monitoring.DeviceStatus)(nil), // 2: api.v1.DeviceStatus
 	(*monitoring.Version)(nil),      // 3: api.v1.Version
 }
 var file_pkg_mocks_simulator_proto_depIdxs = []int32{
 	1, // 0: simulator.v1.MockDeviceService.GetStatus:input_type -> google.protobuf.Empty
-	1, // 1: simulator.v1.MockDeviceService.GetHWVersion:input_type -> google.protobuf.Empty
+	1, // 1: simulator.v1.MockDeviceService.GetHWModel:input_type -> google.protobuf.Empty
 	1, // 2: simulator.v1.MockDeviceService.GetSWVersion:input_type -> google.protobuf.Empty
 	1, // 3: simulator.v1.MockDeviceService.GetFWVersion:input_type -> google.protobuf.Empty
 	2, // 4: simulator.v1.MockDeviceService.GetStatus:output_type -> api.v1.DeviceStatus
-	0, // 5: simulator.v1.MockDeviceService.GetHWVersion:output_type -> simulator.v1.GetVersionResponse
+	0, // 5: simulator.v1.MockDeviceService.GetHWModel:output_type -> simulator.v1.GetHWModelResponse
 	3, // 6: simulator.v1.MockDeviceService.GetSWVersion:output_type -> api.v1.Version
 	3, // 7: simulator.v1.MockDeviceService.GetFWVersion:output_type -> api.v1.Version
 	4, // [4:8] is the sub-list for method output_type
