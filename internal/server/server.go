@@ -422,3 +422,83 @@ func getStatistics(stats *apiv1.GetSummaryResponse, ds *apiv1.DeviceStatus) *api
 	}
 	return stats
 }
+
+func (srv *server) SwapDeviceList(ctx context.Context, req *apiv1.UpdateDeviceListRequest) (*apiv1.UpdateDeviceListResponse, error) {
+	zlog.Info().Msgf("Performing swap of the network devices in the controller")
+
+	// performing initial sanity check
+	if len(req.GetDevices()) == 0 {
+		err := fmt.Errorf("at least one device is required")
+		zlog.Error().Err(err).Msg("Swapping of network devices has failed")
+		return nil, err
+	}
+
+	// retrieving list of existing devices
+	existingNDList, err := srv.GetDeviceList(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// implementing dumb logic: deleting all existing devices and then creating new devices
+	var cumulativeErr error
+	for _, nd := range existingNDList.GetDevices() {
+		resp, err := srv.DeleteDevice(ctx, CreateDeleteDeviceRequest(nd.GetId()))
+		if err != nil {
+			cumulativeErr = errors.Join(cumulativeErr, err)
+		}
+		if !resp.GetDeleted() {
+			// device was not deleted, crafting error
+			err = fmt.Errorf("network device (%s) was not deleted: %s", nd.GetId(), resp.GetDetails())
+			cumulativeErr = errors.Join(cumulativeErr, err)
+		}
+	}
+	if cumulativeErr != nil {
+		zlog.Error().Err(cumulativeErr).Msgf("Errors occurred during network device deletion")
+	}
+
+	// now, creating new devices
+	cumulativeErr = nil
+	addedDevices := make([]*apiv1.NetworkDevice, 0)
+	for _, nd := range req.GetDevices() {
+		resp, err := srv.AddDevice(ctx, CreateAddDeviceRequest(nd.GetVendor(), nd.GetModel(), nd.GetEndpoints()))
+		if err != nil {
+			cumulativeErr = errors.Join(cumulativeErr, err)
+		}
+		if !resp.GetAdded() {
+			err = fmt.Errorf("network device (%s) was not added: %s", nd.GetId(), resp.GetDetails())
+			cumulativeErr = errors.Join(cumulativeErr, err)
+		}
+		addedDevices = append(addedDevices, resp.GetDevice())
+	}
+	if cumulativeErr != nil {
+		zlog.Error().Err(cumulativeErr).Msgf("Errors occurred during network device addition")
+	}
+	if len(addedDevices) == 0 {
+		err = fmt.Errorf("no network devices were added to the controller")
+		zlog.Error().Err(err).Msgf("Device swap has failed")
+		return nil, err
+	}
+	return &apiv1.UpdateDeviceListResponse{
+		Devices: addedDevices,
+	}, nil
+}
+
+func (srv *server) GetAllDeviceStatuses(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetDeviceStatusesResponse, error) {
+	zlog.Info().Msgf("Retrieving all network device statuses")
+
+	// listing all device statuses
+	dss, err := db.ListDeviceStatuses(ctx, srv.dbClient)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to retrieve all network device statuses")
+		return nil, err
+	}
+
+	retList := make([]*apiv1.DeviceStatus, 0)
+	for _, ds := range dss {
+		protoStatus := ConvertEntDeviceStatusToProtoDeviceStatus(ds)
+		retList = append(retList, protoStatus)
+	}
+	return &apiv1.GetDeviceStatusesResponse{
+		Statuses: retList,
+	}, nil
+}

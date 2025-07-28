@@ -471,6 +471,22 @@ func GetDeviceStatusByID(ctx context.Context, client *ent.Client, id string) (*e
 	return ds, nil
 }
 
+// ListDeviceStatuses retrieves all device statuses present in the DB.
+func ListDeviceStatuses(ctx context.Context, client *ent.Client) ([]*ent.DeviceStatus, error) {
+	zlog.Debug().Msgf("Retrieving all device statuses")
+
+	dss, err := client.DeviceStatus.Query().
+		// Eager-loading network device resources
+		WithNetworkDevice().
+		All(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to get all device statuses")
+		return nil, err
+	}
+
+	return dss, nil
+}
+
 // GetDeviceStatusByNetworkDeviceID retrieves device status resource by provided network device ID.
 func GetDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client, networkDeviceID string) (*ent.DeviceStatus, error) {
 	zlog.Debug().Msgf("Retrieving device status by network device (%s)", networkDeviceID)

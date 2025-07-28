@@ -340,3 +340,63 @@ func TestGetSummary(t *testing.T) {
 	assert.Equal(t, summary.GetDownDevices(), int32(1))
 	assert.Equal(t, summary.GetDevicesUnhealthy(), int32(1))
 }
+
+func TestSwapDeviceList(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), monitoring_testing.DefaultTestTimeout)
+	t.Cleanup(cancel)
+
+	// creating endpoints
+	ep1 := server.CreateEndpoint(host1, port1, apiv1.Protocol_PROTOCOL_NETCONF)
+	ep2 := server.CreateEndpoint(host2, port2, apiv1.Protocol_PROTOCOL_NETCONF)
+	// creating AddDevice requests
+	req1 := server.CreateAddDeviceRequest(apiv1.Vendor_VENDOR_UBIQUITI, "XYZ", []*apiv1.Endpoint{ep1})
+	req2 := server.CreateAddDeviceRequest(apiv1.Vendor_VENDOR_UBIQUITI, "XYZ", []*apiv1.Endpoint{ep2})
+
+	// sending request to the server
+	res1, err := grpcClient.AddDevice(ctx, req1)
+	require.NoError(t, err)
+	require.NotNil(t, res1)
+	assert.True(t, res1.GetAdded())
+	assert.Empty(t, res1.GetDetails())
+
+	// checking that DB has created new Network Device resource
+	nd1, err := db.GetNetworkDeviceByEndpoint(ctx, client, ep1.GetHost(), ep1.GetPort())
+	require.NoError(t, err)
+	require.NotNil(t, nd1)
+
+	// sending another request to the server
+	res2, err := grpcClient.AddDevice(ctx, req2)
+	require.NoError(t, err)
+	require.NotNil(t, res2)
+	assert.True(t, res2.GetAdded())
+	assert.Empty(t, res2.GetDetails())
+
+	// checking that DB has created new Network Device resource
+	nd2, err := db.GetNetworkDeviceByEndpoint(ctx, client, ep2.GetHost(), ep2.GetPort())
+	require.NoError(t, err)
+	require.NotNil(t, nd2)
+
+	// performing swap with only one device in the list
+	protoND1 := server.ConvertNetworkDeviceResourceToNetworkDeviceProto(nd1)
+	resp, err := grpcClient.SwapDeviceList(ctx, &apiv1.UpdateDeviceListRequest{
+		Devices: []*apiv1.NetworkDevice{protoND1},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Len(t, resp.GetDevices(), 1)
+
+	// checking that DB still has first network device resource
+	nd1, err = db.GetNetworkDeviceByEndpoint(ctx, client, ep1.GetHost(), ep1.GetPort())
+	require.NoError(t, err)
+	require.NotNil(t, nd1)
+	t.Cleanup(func() {
+		// removing network device
+		err = db.DeleteNetworkDeviceByID(ctx, client, nd1.ID)
+		assert.NoError(t, err)
+	})
+
+	// checking that second network device does not exist in the DB anymore
+	nd2, err = db.GetNetworkDeviceByEndpoint(ctx, client, ep2.GetHost(), ep2.GetPort())
+	require.Error(t, err)
+	require.Nil(t, nd2)
+}

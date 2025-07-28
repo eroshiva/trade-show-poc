@@ -210,11 +210,15 @@ func CompareNetworkDeviceResources(nd1, nd2 *ent.NetworkDevice) bool {
 
 // ConvertEntDeviceStatusToProtoDeviceStatus converts ENT Device Status to Proto Device Status notation.
 func ConvertEntDeviceStatusToProtoDeviceStatus(ds *ent.DeviceStatus) *apiv1.DeviceStatus {
-	return &apiv1.DeviceStatus{
+	protoDS := &apiv1.DeviceStatus{
 		Id:       ds.ID,
 		Status:   ConvertEntStatusToProtoStatus(ds.Status),
 		LastSeen: ds.LastSeen,
 	}
+	if ds.Edges.NetworkDevice != nil {
+		protoDS.NetworkDevice = ConvertNetworkDeviceResourceToNetworkDeviceProto(ds.Edges.NetworkDevice)
+	}
+	return protoDS
 }
 
 // ConvertEntStatusToProtoStatus converts ENT status to Proto status notation.
