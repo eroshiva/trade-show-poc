@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package simulator.v1;
+
+import "api/v1/monitoring.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/eroshiva/trade-show-poc/api/v1/simulator;simulatorv1";
+
+// MockDeviceService simulates a real network device.
+service MockDeviceService {
+  rpc GetStatus(google.protobuf.Empty) returns (api.v1.DeviceStatus) {}
+  rpc GetHWVersion(google.protobuf.Empty) returns (GetVersionResponse) {}
+  rpc GetSWVersion(google.protobuf.Empty) returns (api.v1.Version) {}
+  rpc GetFWVersion(google.protobuf.Empty) returns (api.v1.Version) {}
+}
+
+message GetVersionResponse {
+  string version = 1;
+}

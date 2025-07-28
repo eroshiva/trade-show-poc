@@ -3,6 +3,7 @@ export CGO_ENABLED=1
 export GOPRIVATE=github.com/eroshiva
 
 POC_NAME := monitoring
+POC_SIMULATOR_NAME := nd-simulator
 POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.3.0
@@ -36,6 +37,10 @@ buf-generate: clean-vendor buf-install buf-update ## Generates Golang-driven bin
 	mkdir -p internal/ent/schema
 	buf generate --exclude-path api/v1/ent --path api/v1/monitoring.proto
 
+buf-generate-simulator-api: clean-vendor buf-install buf-update ## Generates Golang-driven bindings out of Protobuf for Network Device Simulator
+	mkdir -p internal/ent/schema
+	buf generate --path pkg/mocks/simulator.proto
+
 buf-update: ## Updates the buf dependencies
 	buf dep update
 
@@ -48,10 +53,13 @@ buf-breaking: ## Checks Protobuf schema on breaking changes
 generate: buf-generate ## Generates all necessary code bindings
 	go generate ./internal/ent
 
-build: go-tidy build-monitoring ## Builds all code
+build: go-tidy build-monitoring build-simulator ## Builds all code
 
 build-monitoring: ## Build the Go binary for network device monitoring service
 	go build -mod=vendor -o build/_output/${POC_NAME} ./cmd/monitoring.go
+
+build-simulator: ## Build the Go binary for network device simulator
+	go build -mod=vendor -o build/_output/${POC_SIMULATOR_NAME} ./cmd/simulator/simulator.go
 
 deps: buf-install go-linters-install atlas-install ## Installs developer prerequisites for this project
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
@@ -114,11 +122,18 @@ run: go-tidy build-monitoring db-start ## Runs compiled network device monitorin
 	sleep 5;
 	./build/_output/${POC_NAME}
 
+run-simulator: go-tidy ## Runs Network Device Simulator with default values
+	go run cmd/simulator/simulator.go
+
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
-image: ## Builds a Docker image for API Gateway
+image: ## Builds a Docker image for Network Device monitoring service
 	docker build . -f build/Dockerfile \
 		-t ${DOCKER_REPOSITORY}/${POC_NAME}:${POC_VERSION}
+
+image-simulator: ## Builds a Docker image for Network Device simulator
+	docker build . -f build/simulator/Dockerfile \
+		-t ${DOCKER_REPOSITORY}/${POC_SIMULATOR_NAME}:${POC_VERSION}
 
 docker-run: image bring-up-db ## Runs compiled binary in a Docker container
 	docker run --net=host --rm ${DOCKER_REPOSITORY}/${POC_NAME}:${POC_VERSION}

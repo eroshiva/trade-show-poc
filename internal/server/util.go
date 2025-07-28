@@ -230,3 +230,17 @@ func ConvertEntStatusToProtoStatus(status devicestatus.Status) apiv1.Status {
 		return apiv1.Status_STATUS_UNSPECIFIED
 	}
 }
+
+// ConvertProtoStatusToEntStatus converts Proto status to Ent status notation.
+func ConvertProtoStatusToEntStatus(status apiv1.Status) devicestatus.Status {
+	switch status {
+	case apiv1.Status_STATUS_DEVICE_UP:
+		return devicestatus.StatusSTATUS_DEVICE_UP
+	case apiv1.Status_STATUS_DEVICE_DOWN:
+		return devicestatus.StatusSTATUS_DEVICE_DOWN
+	case apiv1.Status_STATUS_DEVICE_UNHEALTHY:
+		return devicestatus.StatusSTATUS_DEVICE_UNHEALTHY
+	default:
+		return devicestatus.StatusSTATUS_UNSPECIFIED
+	}
+}

@@ -18,8 +18,9 @@ import (
 
 // DefaultTestTimeout defines default test timeout for a testing package
 const (
-	DefaultTestTimeout   = time.Second * 1
-	defaultServerAddress = "localhost:50051"
+	DefaultTestTimeout           = time.Second * 1
+	defaultGRPCTestServerAddress = "localhost:50051"
+	defaultHTTPTestServerAddress = "localhost:50052"
 )
 
 // Setup function sets up testing environment. Currently, only uploading schema to the DB.
@@ -28,7 +29,15 @@ func Setup() (*ent.Client, error) {
 }
 
 // SetupFull function sets up testing environment.It uploads schema to the DB and starts gRPC and HTTP reverse proxy servers.
-func SetupFull() (*ent.Client, apiv1.DeviceMonitoringServiceClient, *sync.WaitGroup, chan bool, chan bool, error) {
+func SetupFull(grpcServerAddress, httpServerAddress string) (*ent.Client, apiv1.DeviceMonitoringServiceClient, *sync.WaitGroup, chan bool, chan bool, error) {
+	if grpcServerAddress == "" {
+		grpcServerAddress = defaultGRPCTestServerAddress
+	}
+
+	if httpServerAddress == "" {
+		httpServerAddress = defaultHTTPTestServerAddress
+	}
+
 	client, err := db.RunSchemaMigration()
 	if err != nil {
 		return nil, nil, nil, nil, nil, err
@@ -42,7 +51,7 @@ func SetupFull() (*ent.Client, apiv1.DeviceMonitoringServiceClient, *sync.WaitGr
 	wg.Add(1)
 	go func() {
 		wg.Add(1) //nolint:staticcheck
-		server.StartServer(client, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		server.StartServer(grpcServerAddress, httpServerAddress, client, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
 		wg.Done()
 	}()
 	// Waiting until both servers are up and running
@@ -50,7 +59,7 @@ func SetupFull() (*ent.Client, apiv1.DeviceMonitoringServiceClient, *sync.WaitGr
 	<-reverseProxyReadyChan
 
 	// creating gRPC testing client
-	conn, err := grpc.NewClient(defaultServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(grpcServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, nil, nil, nil, err
 	}

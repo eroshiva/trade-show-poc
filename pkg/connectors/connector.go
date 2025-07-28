@@ -11,7 +11,10 @@ import (
 	"github.com/eroshiva/trade-show-poc/internal/ent"
 	"github.com/eroshiva/trade-show-poc/internal/ent/devicestatus"
 	"github.com/eroshiva/trade-show-poc/internal/ent/endpoint"
+	simulatorv1 "github.com/eroshiva/trade-show-poc/pkg/mocks"
 	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const componentName = "connector"
@@ -49,4 +52,32 @@ func NewConnector(ep *ent.Endpoint) (Connector, error) {
 		zlog.Warn().Err(err).Msgf("Protocol %s is not supported", ep.Protocol)
 		return nil, err
 	}
+}
+
+// establishGRPCConnection established gRPC connection with provided endpoint. It returns Network Device
+// Simulator client interface for communicating with Device Simulator.
+func establishGRPCConnection(ep *ent.Endpoint) (simulatorv1.MockDeviceServiceClient, *grpc.ClientConn, error) {
+	serverAddress := CraftServerAddressFromEndpoint(ep)
+	// creating the gRPC-Gateway reverse proxy.
+	conn, err := grpc.NewClient(
+		serverAddress, // The address of the gRPC server
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to dial to gRPC server %s", serverAddress)
+		return nil, nil, err
+	}
+
+	return simulatorv1.NewMockDeviceServiceClient(conn), conn, nil
+}
+
+// CraftServerAddressFromEndpoint returns string containing server address in the form host:port, e.g., localhost:50051,
+// to which connection should be established.
+func CraftServerAddressFromEndpoint(ep *ent.Endpoint) string {
+	return CraftServerAddress(ep.Host, ep.Port)
+}
+
+// CraftServerAddress crafts server address from provided host and port.
+func CraftServerAddress(host, port string) string {
+	return fmt.Sprintf("%s:%s", host, port)
 }

@@ -36,8 +36,10 @@ in the data schema, namely:
 - Controller itself can retrieve and update only network device HW, SW, FW, and device status.
 
 
+
 ## Disclaimer
 This section gives an honest opinion on the development process, in particular on the use of AI tools.
+
 
 ### Use of AI tools
 AI tools were not used for any code generation neither code completion nor for coding instead of me. Somehow,
@@ -47,9 +49,15 @@ Gemini 2.5 Pro was used to make initial research in best practices for handling:
     - Research indicated the existence of the grpc-gateway plugin, which is able to autogenerate rever HTTP
       proxy out of Protobuf definition of the schema.
 - SQL coexistance with Go code.
-    - Research in tooling - rather misleading, unhelpful, and time-consuming.
+    - Research in tooling — rather misleading, unhelpful, and time-consuming.
     - I had to stick with my original idea to use `protoc-gen-ent` and `ent` framework for PostgreSQL interaction with
       microservice, which provided a central place for managing everything - API and SQL-driven schema within a single Protobuf.
 
 I also found some recommendations about different tool usage confusing and misleading rather than helpful.
 It's always better to follow tool's documentation rather than asking AI for a tutorial.
+
+
+### Silly, nasty bugs
+This project has been evolving rapidly fast, under the short time constraints. There might be some little tricky corner 
+cases that I didn't take into account. Overall, the general workflow should be safe from violations. In case you found a bug,
+feel free to submit an issue with a detailed description. 

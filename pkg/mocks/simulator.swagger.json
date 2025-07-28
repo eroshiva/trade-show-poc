@@ -1,0 +1,194 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "pkg/mocks/simulator.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "MockDeviceService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "apiv1Status": {
+      "type": "string",
+      "enum": [
+        "STATUS_UNSPECIFIED",
+        "STATUS_DEVICE_DOWN",
+        "STATUS_DEVICE_UNHEALTHY",
+        "STATUS_DEVICE_UP"
+      ],
+      "default": "STATUS_UNSPECIFIED",
+      "description": "Status defines Finite State Machine (FSM) for network device monitoring.\n\n - STATUS_UNSPECIFIED: This is to comply with Protobuf best practices.\n - STATUS_DEVICE_DOWN: Corresponds to Network device is in down (or not reachable state).\n - STATUS_DEVICE_UNHEALTHY: Corresponds to the Network device in unhealthy state (as defined internally by the device).\n - STATUS_DEVICE_UP: Corresponds to the Network device in healthy state (i.e., up and running, operating as expected)."
+    },
+    "googlerpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "v1DeviceStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of the device status resource internally assigned by the controller."
+        },
+        "status": {
+          "$ref": "#/definitions/apiv1Status",
+          "description": "Current status of the Network device."
+        },
+        "lastSeen": {
+          "type": "string",
+          "description": "A timestamp when the device was last seen in the UP or unhealthy state.\n\noriginally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that."
+        },
+        "networkDevice": {
+          "$ref": "#/definitions/v1NetworkDevice"
+        }
+      },
+      "description": "DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state."
+    },
+    "v1Endpoint": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of the device status resource internally assigned by the controller."
+        },
+        "host": {
+          "type": "string",
+          "description": "Host address in CIDR form of IP or FQDN, if applicable."
+        },
+        "port": {
+          "type": "string",
+          "description": "Port number, where device health point is reachable."
+        },
+        "protocol": {
+          "$ref": "#/definitions/v1Protocol",
+          "description": "Supported by the network device protocol for communicating over this endpoint."
+        },
+        "networkDevice": {
+          "$ref": "#/definitions/v1NetworkDevice"
+        }
+      },
+      "description": "Endpoint defines an endpoint structure."
+    },
+    "v1GetVersionResponse": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "v1NetworkDevice": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID is a device ID assigned internally by the Monitoring service. it is internal to the system.\nLater, by this ID, it is possible to retrieve any information about the device."
+        },
+        "vendor": {
+          "$ref": "#/definitions/v1Vendor",
+          "description": "Network device vendor."
+        },
+        "model": {
+          "type": "string",
+          "description": "Network device model."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Endpoint"
+          },
+          "description": "Network device endpoint. Device may contain several network endpoints (e.g., support of different protocols)."
+        },
+        "hwVersion": {
+          "type": "string",
+          "description": "HW version (i.e., HW revision, different from model version).\n\nthis is to not require this field to be set, when User creates this resour"
+        },
+        "swVersion": {
+          "$ref": "#/definitions/v1Version",
+          "description": "SW version (i.e., SW revision)."
+        },
+        "fwVersion": {
+          "$ref": "#/definitions/v1Version",
+          "description": "FW version (i.e., FW revision)."
+        }
+      },
+      "title": "NetworkDevice message defines Network device data structure,"
+    },
+    "v1Protocol": {
+      "type": "string",
+      "enum": [
+        "PROTOCOL_UNSPECIFIED",
+        "PROTOCOL_SNMP",
+        "PROTOCOL_NETCONF",
+        "PROTOCOL_RESTCONF",
+        "PROTOCOL_OPEN_V_SWITCH"
+      ],
+      "default": "PROTOCOL_UNSPECIFIED",
+      "description": "- PROTOCOL_UNSPECIFIED: This is to comply with Protobuf best practices.\n - PROTOCOL_SNMP: Corresponds to the SNMP protocol.\n - PROTOCOL_NETCONF: Corresponds to the NETCONF protocol.\n - PROTOCOL_RESTCONF: Corresponds to the RESTCONF protocol.\n - PROTOCOL_OPEN_V_SWITCH: Corresponds to the Open vSwitch protocol.",
+      "title": "Protocol enum defines the supported protocols by monitoring service"
+    },
+    "v1Vendor": {
+      "type": "string",
+      "enum": [
+        "VENDOR_UNSPECIFIED",
+        "VENDOR_UBIQUITI",
+        "VENDOR_CISCO",
+        "VENDOR_JUNIPER"
+      ],
+      "default": "VENDOR_UNSPECIFIED",
+      "description": "Vendor enum defines Network Device vendors, which are supported by the system.\n\n - VENDOR_UNSPECIFIED: This is to comply with Protobuf best practices.\n - VENDOR_UBIQUITI: Ubiquiti,\n - VENDOR_CISCO: Cisco.\n - VENDOR_JUNIPER: Juniper Networks."
+    },
+    "v1Version": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID of the device status resource internally assigned by the controller."
+        },
+        "version": {
+          "type": "string",
+          "description": "SW/FW Version number."
+        },
+        "checksum": {
+          "type": "string",
+          "description": "Checksum of the current revision."
+        }
+      },
+      "description": "Version message is a generic message for reporting a version."
+    }
+  }
+}

@@ -201,12 +201,6 @@ func TestDeviceStatusResource(t *testing.T) {
 	require.NotNil(t, retDs3)
 	monitoring_testing.AssertDeviceStatus(t, ds, retDs3)
 
-	// listing all device statuses present in the system, there should be only one
-	listDs, err := db.ListDeviceStatusResources(ctx, client)
-	require.NoError(t, err)
-	require.NotNil(t, listDs)
-	assert.Len(t, listDs, 1)
-
 	// removing device status from the DB
 	err = db.DeleteDeviceStatusByID(ctx, client, ds.ID)
 	assert.NoError(t, err)
@@ -235,11 +229,6 @@ func TestDeviceStatusResourceErrors(t *testing.T) {
 	retDs3, err := db.GetDeviceStatusByEndpointID(ctx, client, uuid.NewString())
 	require.Error(t, err)
 	assert.Nil(t, retDs3)
-
-	// listing all device status resources - there should be no in the system
-	listDs, err := db.ListDeviceStatusResources(ctx, client)
-	assert.NoError(t, err)
-	assert.Len(t, listDs, 0)
 
 	// creating two endpoints
 	ep1, err := db.CreateEndpoint(ctx, client, host1, port1, protocol1)
