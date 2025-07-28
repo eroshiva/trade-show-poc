@@ -58,7 +58,7 @@ func NewConnector(ep *ent.Endpoint) (Connector, error) {
 // Simulator client interface for communicating with Device Simulator.
 func establishGRPCConnection(ep *ent.Endpoint) (simulatorv1.MockDeviceServiceClient, *grpc.ClientConn, error) {
 	serverAddress := CraftServerAddressFromEndpoint(ep)
-	// creating the gRPC-Gateway reverse proxy.
+	// creating the gRPC client
 	conn, err := grpc.NewClient(
 		serverAddress, // The address of the gRPC server
 		grpc.WithTransportCredentials(insecure.NewCredentials()),

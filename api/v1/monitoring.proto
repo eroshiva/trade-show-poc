@@ -17,6 +17,15 @@ service DeviceMonitoringService {
       body: "*"
     };
   }
+  // SwapDeviceList allows to swap list of the devices that are currently being monitored. All devices that are not
+  //  in the list will be removed from the system. Response contains full list of monitored network devices
+  //  reflecting recent changes.
+  rpc SwapDeviceList(SwapDeviceListRequest) returns (SwapDeviceListResponse) {
+    option (google.api.http) = {
+      post: "/v1/monitoring/devices/swap"
+      body: "*"
+    };
+  }
   // GetDeviceList allows to retrieve a list of all currently monitored network devices.
   rpc GetDeviceList(google.protobuf.Empty) returns (GetDeviceListResponse) {
     option (google.api.http) = {
@@ -43,6 +52,12 @@ service DeviceMonitoringService {
   rpc GetDeviceStatus(GetDeviceStatusRequest) returns (GetDeviceStatusResponse) {
     option (google.api.http) = {
       get: "/v1/monitoring/devices/{id}/status"
+    };
+  }
+  // GetAllDeviceStatuses allows to retrieve all statuses from all network devices.
+  rpc GetAllDeviceStatuses(google.protobuf.Empty) returns (GetAllDeviceStatusesResponse) {
+    option (google.api.http) = {
+      get: "/v1/monitoring/statuses"
     };
   }
   // GetSummary allows to retrieve summary of network device monitoring.
@@ -112,6 +127,21 @@ message GetDeviceStatusResponse {
   Endpoint endpoint = 2;
   // Status of the device
   DeviceStatus status = 3;
+}
+
+// GetAllDeviceStatusesResponse carries summary of all network device statuses.
+message GetAllDeviceStatusesResponse {
+  repeated DeviceStatus statuses = 1;
+}
+
+// SwapDeviceListRequest contains a list of the devices (including theirs' details) to be updated.
+message SwapDeviceListRequest {
+  repeated NetworkDevice devices = 1;
+}
+
+// SwapDeviceListResponse contains full list of the network devices within the system, once update has been performed.
+message SwapDeviceListResponse {
+  repeated NetworkDevice devices = 1;
 }
 
 // UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated.

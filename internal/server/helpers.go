@@ -60,6 +60,13 @@ func CreateUpdateDeviceListRequest(nds []*apiv1.NetworkDevice) *apiv1.UpdateDevi
 	}
 }
 
+// CreateSwapDeviceListRequest is a helper wrapper function that creates SwapDeviceListRequest message.
+func CreateSwapDeviceListRequest(nds []*apiv1.NetworkDevice) *apiv1.SwapDeviceListRequest {
+	return &apiv1.SwapDeviceListRequest{
+		Devices: nds,
+	}
+}
+
 // CreateGetDeviceStatusRequest is a helper wrapper that creates a GetDeviceStatusRequest message.
 func CreateGetDeviceStatusRequest(id string, ep *apiv1.Endpoint) *apiv1.GetDeviceStatusRequest {
 	return &apiv1.GetDeviceStatusRequest{

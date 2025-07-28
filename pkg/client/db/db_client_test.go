@@ -71,15 +71,15 @@ func TestVersionResource(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	// retrieving all version resources and making sure there is only two of them
-	vs, err := db.ListVersions(ctx, client)
-	assert.NoError(t, err)
-	assert.Len(t, vs, 2)
-
 	// retrieving back resource and comparing it to the original one
 	retV, err := db.GetVersionByID(ctx, client, v.ID)
 	assert.NoError(t, err)
 	monitoring_testing.AssertEqualVersion(t, v, retV)
+
+	// retrieving back resource and comparing it to the original one
+	retV2, err := db.GetVersionByID(ctx, client, v2.ID)
+	assert.NoError(t, err)
+	monitoring_testing.AssertEqualVersion(t, v2, retV2)
 
 	// updating version
 	v.Version = version + "-new"
@@ -92,10 +92,15 @@ func TestVersionResource(t *testing.T) {
 	err = db.DeleteVersionByID(ctx, client, v.ID)
 	assert.NoError(t, err)
 
-	// retrieving all version resources and making sure there is only one
-	vs, err = db.ListVersions(ctx, client)
+	// retrieving back first version resource - should fail, version resource is gone
+	retV, err = db.GetVersionByID(ctx, client, v.ID)
+	require.Error(t, err)
+	require.Nil(t, retV)
+
+	// retrieving back second version resource and comparing it to the original one
+	retV2, err = db.GetVersionByID(ctx, client, v2.ID)
 	assert.NoError(t, err)
-	assert.Len(t, vs, 1)
+	monitoring_testing.AssertEqualVersion(t, v2, retV2)
 }
 
 func TestVersionResourceErrors(t *testing.T) {
@@ -128,10 +133,10 @@ func TestVersionResourceErrors(t *testing.T) {
 	// failing delete
 	_ = db.DeleteVersionByID(ctx, client, uuid.NewString())
 
-	// retrieving all version resources and making sure there is only one (initial one)
-	vs, err := db.ListVersions(ctx, client)
+	// retrieving initial version resource and making sure this is exactly the one that's been created at the beginning
+	retV, err := db.GetVersionByID(ctx, client, v.ID)
 	assert.NoError(t, err)
-	assert.Len(t, vs, 1)
+	monitoring_testing.AssertEqualVersion(t, v, retV)
 }
 
 func TestDeviceStatusResource(t *testing.T) {

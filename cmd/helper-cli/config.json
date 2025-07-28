@@ -1,0 +1,46 @@
+[
+  {
+    "vendor": "UBIQUITI",
+    "model": "XYZ",
+    "endpoints": [
+      {
+        "host": "localhost",
+        "port": "50151",
+        "protocol": "NETCONF"
+      }
+    ]
+  },
+  {
+    "vendor": "UBIQUITI",
+    "model": "XYZ-nextgen",
+    "endpoints": [
+      {
+        "host": "localhost",
+        "port": "50152",
+        "protocol": "RESTCONF"
+      }
+    ]
+  },
+  {
+    "vendor": "CISCO",
+    "model": "zyx",
+    "endpoints": [
+      {
+        "host": "localhost",
+        "port": "50153",
+        "protocol": "SNMP"
+      }
+    ]
+  },
+  {
+    "vendor": "JUNIPER",
+    "model": "xxx",
+    "endpoints": [
+      {
+        "host": "localhost",
+        "port": "50154",
+        "protocol": "OVS"
+      }
+    ]
+  }
+]

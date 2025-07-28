@@ -19,7 +19,7 @@ import (
 
 const (
 	component     = "component"
-	componentName = "main"
+	componentName = "device-monitoring-main"
 )
 
 var zlog = zerolog.New(zerolog.ConsoleWriter{

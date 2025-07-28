@@ -34,6 +34,7 @@ ABAC access control to the resources should be implemented to better restrict ac
 in the data schema, namely:
 - User can update only network device model, vendor, and endpoints.
 - Controller itself can retrieve and update only network device HW, SW, FW, and device status.
+- More sanity checks on the input data must be added at the API (gRPC server) side and at the DB client side.
 
 
 
