@@ -428,7 +428,7 @@ func DeleteEndpointByID(ctx context.Context, client *ent.Client, id string) erro
 }
 
 // CreateDeviceStatus creates a device status resource for the specific network device.
-func CreateDeviceStatus(ctx context.Context, client *ent.Client, status devicestatus.Status, lastSeen string, nd *ent.NetworkDevice) (*ent.DeviceStatus, error) {
+func CreateDeviceStatus(ctx context.Context, client *ent.Client, status devicestatus.Status, lastSeen string, cal int32, nd *ent.NetworkDevice) (*ent.DeviceStatus, error) {
 	// input parameters sanity
 	if nd == nil {
 		err := fmt.Errorf("network device resource should be specified")
@@ -448,6 +448,7 @@ func CreateDeviceStatus(ctx context.Context, client *ent.Client, status devicest
 		SetID(id).
 		SetStatus(status).
 		SetLastSeen(lastSeen).
+		SetConsequentialFailedConnectivityAttempts(cal).
 		SetNetworkDevice(nd).
 		Save(ctx)
 	if err != nil {
@@ -531,7 +532,7 @@ func ListDeviceStatusResources(ctx context.Context, client *ent.Client) ([]*ent.
 
 // UpdateDeviceStatusByNetworkDeviceID updates device status for the network device with provided ID. If device status for this
 // network device does not exist, it creates one.
-func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client, networkDeviceID string, status devicestatus.Status, lastSeen string) (*ent.DeviceStatus, error) {
+func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client, networkDeviceID string, status devicestatus.Status, lastSeen string, cal int32) (*ent.DeviceStatus, error) {
 	zlog.Debug().Msgf("Updating device status resource by network device (%s)", networkDeviceID)
 	ds, err := GetDeviceStatusByNetworkDeviceID(ctx, client, networkDeviceID)
 	if err != nil {
@@ -545,7 +546,7 @@ func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client
 			return nil, err
 		}
 		// creating device status
-		ds, err := CreateDeviceStatus(ctx, client, status, lastSeen, nd)
+		ds, err := CreateDeviceStatus(ctx, client, status, lastSeen, cal, nd)
 		if err != nil {
 			return nil, err
 		}
@@ -560,7 +561,12 @@ func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client
 		ds.LastSeen = lastSeen
 	}
 	// updating device status in the DB.
-	numAfDsNodes, err := client.DeviceStatus.Update().Where(devicestatus.ID(ds.ID)).SetStatus(ds.Status).SetLastSeen(ds.LastSeen).Save(ctx)
+	numAfDsNodes, err := client.DeviceStatus.Update().
+		Where(devicestatus.ID(ds.ID)).
+		SetStatus(ds.Status).
+		SetLastSeen(ds.LastSeen).
+		SetConsequentialFailedConnectivityAttempts(cal).
+		Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update device status for network device (%s)", networkDeviceID)
 		return nil, err
@@ -577,7 +583,7 @@ func UpdateDeviceStatusByNetworkDeviceID(ctx context.Context, client *ent.Client
 
 // UpdateDeviceStatusByEndpointID updates device status for the network device with existing endpoint with provided ID. If device status for this
 // endpoint and network device does not exist, it creates one.
-func UpdateDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, endpointID string, status devicestatus.Status, lastSeen string) (*ent.DeviceStatus, error) {
+func UpdateDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, endpointID string, status devicestatus.Status, lastSeen string, cal int32) (*ent.DeviceStatus, error) {
 	zlog.Debug().Msgf("Updating device status resource by endpoint (%s)", endpointID)
 	ds, err := GetDeviceStatusByEndpointID(ctx, client, endpointID)
 	if err != nil {
@@ -596,7 +602,7 @@ func UpdateDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, end
 			return nil, err
 		}
 		// creating device status
-		ds, err := CreateDeviceStatus(ctx, client, status, lastSeen, nd)
+		ds, err := CreateDeviceStatus(ctx, client, status, lastSeen, cal, nd)
 		if err != nil {
 			return nil, err
 		}
@@ -610,7 +616,12 @@ func UpdateDeviceStatusByEndpointID(ctx context.Context, client *ent.Client, end
 		ds.LastSeen = lastSeen
 	}
 
-	numAfDsNodes, err := client.DeviceStatus.Update().Where(devicestatus.ID(ds.ID)).SetStatus(ds.Status).SetLastSeen(ds.LastSeen).Save(ctx)
+	numAfDsNodes, err := client.DeviceStatus.Update().
+		Where(devicestatus.ID(ds.ID)).
+		SetStatus(ds.Status).
+		SetLastSeen(ds.LastSeen).
+		SetConsequentialFailedConnectivityAttempts(cal).
+		Save(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to update device status for endpoint (%s)", endpointID)
 		return nil, err

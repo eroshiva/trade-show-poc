@@ -25,6 +25,10 @@ const (
 	defaultControlLoopPerioud = 30 * time.Second
 	// EnvControlLoopPeriod defines a control loop period in seconds.
 	EnvControlLoopPeriod = "CONTROL_LOOP_PERIOD" // in seconds.
+
+	defaultConnectivityAbsenceLimit = 3
+	// EnvConnectivityAbsenceLimit specifies threshold for consequential fails in communication with the device.
+	EnvConnectivityAbsenceLimit = "CONNECTIVITY_ABSENCE_LIMIT"
 )
 
 var zlog = zerolog.New(zerolog.ConsoleWriter{
@@ -37,17 +41,33 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 
 // Manager structure holds the dependencies for main control loop.
 type Manager struct {
-	dbClient          *ent.Client
-	checksumGenerator checksum.Generator
-	closeChan         chan bool
+	dbClient                     *ent.Client
+	checksumGenerator            checksum.Generator
+	closeChan                    chan bool
+	connectivityAbsenceThreshold int32
 }
 
 // NewManager function creates Manager structure.
 func NewManager(dbClient *ent.Client, checksumGen checksum.Generator) *Manager {
+	// read env variable, where Control Loop Period is specified
+	cal := defaultConnectivityAbsenceLimit
+	calStr := os.Getenv(EnvConnectivityAbsenceLimit)
+	if calStr == "" {
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default avalue: %d",
+			EnvConnectivityAbsenceLimit, defaultConnectivityAbsenceLimit)
+	} else {
+		// control loop tick is specified
+		convertedCal, err := strconv.Atoi(calStr)
+		if err != nil {
+			zlog.Fatal().Err(err).Msgf("Failed to convert \"%s\" variable to number", EnvConnectivityAbsenceLimit)
+		}
+		cal = convertedCal
+	}
 	return &Manager{
-		dbClient:          dbClient,
-		checksumGenerator: checksumGen,
-		closeChan:         make(chan bool),
+		dbClient:                     dbClient,
+		checksumGenerator:            checksumGen,
+		closeChan:                    make(chan bool),
+		connectivityAbsenceThreshold: int32(cal),
 	}
 }
 
@@ -64,13 +84,13 @@ func (m *Manager) StartManager() {
 	// read env variable, where Control Loop Period is specified
 	envControlLoopTick := os.Getenv(EnvControlLoopPeriod)
 	if envControlLoopTick == "" {
-		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default value: %s",
 			EnvControlLoopPeriod, defaultControlLoopPerioud)
 	} else {
 		// control loop tick is specified
 		duration, err := strconv.Atoi(envControlLoopTick)
 		if err != nil {
-			zlog.Fatal().Err(err).Msgf("Failed to convert \"%s\"variable to number", EnvControlLoopPeriod)
+			zlog.Fatal().Err(err).Msgf("Failed to convert \"%s\" variable to number", EnvControlLoopPeriod)
 		}
 		controlLoopTick = time.Duration(duration) * time.Second
 	}
@@ -137,12 +157,23 @@ func (m *Manager) PerformControlLoopRoutine(controlLoopTick time.Duration) {
 // processNetworkDevice runs routine to get network device status, SW, FW, and HW versions from the device and update them in the DB.
 func (m *Manager) processNetworkDevice(ctx context.Context, networkDevice *ent.NetworkDevice) {
 	zlog.Debug().Msgf("Processing network device (%s)", networkDevice.ID)
+
+	status := devicestatus.StatusSTATUS_DEVICE_DOWN
+	// get consequential number of failed attempts
+	var cal int32
+	dbDS, err := db.GetDeviceStatusByNetworkDeviceID(ctx, m.dbClient, networkDevice.ID)
+	if err != nil {
+		zlog.Debug().Err(err).Msgf("Failed to get device status for network device (%s) - looks like it doesn't exist in the system (yet)", networkDevice.ID)
+	} else {
+		cal = dbDS.ConsequentialFailedConnectivityAttempts
+		status = dbDS.Status
+	}
 	// iterating over endpoints and checking if any of them is alive.
-	// it is enough to find one alive Endpoint.
+	// it is enough to find one alive Endpoint and retrieve data from it
 	hwV := ""
 	swV := &ent.Version{}
 	fwV := &ent.Version{}
-	status := devicestatus.StatusSTATUS_DEVICE_DOWN
+
 	aliveConnectionFound := false
 	for _, ep := range networkDevice.Edges.Endpoints {
 		// obtain connection based on the protocol.
@@ -161,6 +192,7 @@ func (m *Manager) processNetworkDevice(ctx context.Context, networkDevice *ent.N
 		// device status was retrieved, break the loop and perform an update.
 		aliveConnectionFound = true
 		status = s // assuming that any live connection is different from down
+		cal = 0    // successful attempt is registered, zeroing counter back
 
 		// checking HW version
 		hwV, _ = connector.GetHWVersion(ctx)
@@ -186,13 +218,20 @@ func (m *Manager) processNetworkDevice(ctx context.Context, networkDevice *ent.N
 	if !aliveConnectionFound {
 		// no alive endpoint was found, updating device status to down state and resetting timestamp.
 		lastSeen = ""
+		cal++ // increasing counter that indicates that number of consequential attempts has increased
 	}
+	// performing check if device was not communicating more than specified number of times in a row
+	if cal >= m.connectivityAbsenceThreshold { // counter starts from 0.
+		// threshold is reached, reporting that network device is down
+		status = devicestatus.StatusSTATUS_DEVICE_DOWN
+	}
+
 	// alive connection was found and status was fetched (and already fixed, updating device status
-	_, _ = db.UpdateDeviceStatusByNetworkDeviceID(ctx, m.dbClient, networkDevice.ID, status, lastSeen)
+	_, _ = db.UpdateDeviceStatusByNetworkDeviceID(ctx, m.dbClient, networkDevice.ID, status, lastSeen, cal)
 	// error is already logged in in the internal function
 
 	// conducting checksum verifications
-	err := m.verifyChecksum(swV)
+	err = m.verifyChecksum(swV)
 	if err != nil {
 		// resetting SW version, do not updating it in the DB
 		swV = &ent.Version{}

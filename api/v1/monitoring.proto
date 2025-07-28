@@ -234,6 +234,11 @@ message DeviceStatus {
   // A timestamp when the device was last seen in the UP or unhealthy state.
   string last_seen = 3 [(ent.field) = {optional: true}];// originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
 
+  // This variable specifies a number of consequential failed attempts to establish connectivity.
+  // Once this number reaches the limit (specified within monitoring service main control loop),
+  // network device is considered to be in down state.
+  int32 consequential_failed_connectivity_attempts = 4;
+
   NetworkDevice network_device = 10 [(ent.edge) = {unique: true}];
 }
 

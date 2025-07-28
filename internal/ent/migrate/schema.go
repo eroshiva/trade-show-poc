@@ -13,6 +13,7 @@ var (
 		{Name: "id", Type: field.TypeString},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"STATUS_UNSPECIFIED", "STATUS_DEVICE_DOWN", "STATUS_DEVICE_UNHEALTHY", "STATUS_DEVICE_UP"}},
 		{Name: "last_seen", Type: field.TypeString, Nullable: true},
+		{Name: "consequential_failed_connectivity_attempts", Type: field.TypeInt32},
 		{Name: "device_status_network_device", Type: field.TypeString, Nullable: true},
 	}
 	// DeviceStatusTable holds the schema information for the "device_status" table.
@@ -23,7 +24,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "device_status_network_devices_network_device",
-				Columns:    []*schema.Column{DeviceStatusColumns[3]},
+				Columns:    []*schema.Column{DeviceStatusColumns[4]},
 				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

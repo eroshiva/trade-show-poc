@@ -215,7 +215,7 @@ func TestGetDeviceStatus(t *testing.T) {
 
 	// creating device status
 	timestamp := time.Now().String()
-	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, timestamp, nd)
+	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, timestamp, 0, nd)
 	require.NoError(t, err)
 	require.NotNil(t, ds)
 	t.Cleanup(func() {
@@ -261,7 +261,7 @@ func TestGetSummary(t *testing.T) {
 
 	// creating device status
 	timestamp1 := time.Now().String()
-	ds1, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, timestamp1, nd1)
+	ds1, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, timestamp1, 0, nd1)
 	require.NoError(t, err)
 	require.NotNil(t, ds1)
 	t.Cleanup(func() {
@@ -291,7 +291,7 @@ func TestGetSummary(t *testing.T) {
 
 	// creating device status
 	timestamp2 := time.Now().String()
-	ds2, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_DOWN, timestamp2, nd2)
+	ds2, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_DOWN, timestamp2, 0, nd2)
 	require.NoError(t, err)
 	require.NotNil(t, ds2)
 	t.Cleanup(func() {
@@ -321,7 +321,7 @@ func TestGetSummary(t *testing.T) {
 
 	// creating device status
 	timestamp3 := time.Now().String()
-	ds3, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UNHEALTHY, timestamp3, nd3)
+	ds3, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UNHEALTHY, timestamp3, 0, nd3)
 	require.NoError(t, err)
 	require.NotNil(t, ds3)
 	t.Cleanup(func() {

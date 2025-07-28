@@ -21,6 +21,8 @@ type DeviceStatus struct {
 	Status devicestatus.Status `json:"status,omitempty"`
 	// LastSeen holds the value of the "last_seen" field.
 	LastSeen string `json:"last_seen,omitempty"`
+	// ConsequentialFailedConnectivityAttempts holds the value of the "consequential_failed_connectivity_attempts" field.
+	ConsequentialFailedConnectivityAttempts int32 `json:"consequential_failed_connectivity_attempts,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DeviceStatusQuery when eager-loading is set.
 	Edges                        DeviceStatusEdges `json:"edges"`
@@ -53,6 +55,8 @@ func (*DeviceStatus) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case devicestatus.FieldConsequentialFailedConnectivityAttempts:
+			values[i] = new(sql.NullInt64)
 		case devicestatus.FieldID, devicestatus.FieldStatus, devicestatus.FieldLastSeen:
 			values[i] = new(sql.NullString)
 		case devicestatus.ForeignKeys[0]: // device_status_network_device
@@ -89,6 +93,12 @@ func (ds *DeviceStatus) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field last_seen", values[i])
 			} else if value.Valid {
 				ds.LastSeen = value.String
+			}
+		case devicestatus.FieldConsequentialFailedConnectivityAttempts:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field consequential_failed_connectivity_attempts", values[i])
+			} else if value.Valid {
+				ds.ConsequentialFailedConnectivityAttempts = int32(value.Int64)
 			}
 		case devicestatus.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -143,6 +153,9 @@ func (ds *DeviceStatus) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_seen=")
 	builder.WriteString(ds.LastSeen)
+	builder.WriteString(", ")
+	builder.WriteString("consequential_failed_connectivity_attempts=")
+	builder.WriteString(fmt.Sprintf("%v", ds.ConsequentialFailedConnectivityAttempts))
 	builder.WriteByte(')')
 	return builder.String()
 }

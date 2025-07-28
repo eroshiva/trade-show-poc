@@ -70,7 +70,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestMainControlLoop(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*monitoring_testing.DefaultTestTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*monitoring_testing.DefaultTestTimeout)
 	t.Cleanup(cancel)
 
 	ds1 := simulatorv1.NewDeviceSimulator()
@@ -235,16 +235,53 @@ func TestMainControlLoop(t *testing.T) {
 
 	// now, changing environmental value, that is responsible for promoting Device State value to Network Device Simulator.
 	t.Setenv(simulatorv1.EnvDeviceStatus, simulatorv1.DeviceStatusDOWN)
-	// all device simulators, since they share the same environment, should report devices in down state
+	// All device simulators, since they share the same environment, should report devices in down state
+	// and return error on GetStatus operation. Counter tracking consequential connectivity absence should start increasing.
+	// Right now, for the next 3 rounds, devices will remain in the same state, i.e., UP. Only on the 4th round
+	// they will be reported in the DOWN state.
 
 	// running another iteration of control loop
 	sbManager.PerformControlLoopRoutine(testControlLoopPeriod)
-
 	// waiting until all goroutines would finish
 	time.Sleep(testControlLoopPeriod + delta)
 
-	// checking that all devices are in DOWN state
-	// first device should be with down status
+	// repeating one more time
+	sbManager.PerformControlLoopRoutine(testControlLoopPeriod)
+	time.Sleep(testControlLoopPeriod + delta)
+
+	// Checking that all devices are still in the UP state.
+	// first device should be with up status
+	retDS1, err = grpcClient.GetDeviceStatus(ctx, dsReq1)
+	require.NoError(t, err)
+	require.NotNil(t, retDS1)
+	assert.Equal(t, retDS1.GetStatus().GetStatus().String(), apiv1.Status_STATUS_DEVICE_UP.String())
+
+	// second device should be with up status
+	retDS2, err = grpcClient.GetDeviceStatus(ctx, dsReq2)
+	require.NoError(t, err)
+	require.NotNil(t, retDS2)
+	assert.Equal(t, retDS2.GetStatus().GetStatus().String(), apiv1.Status_STATUS_DEVICE_UP.String())
+
+	// third device should be with up status
+	retDS3, err = grpcClient.GetDeviceStatus(ctx, dsReq3)
+	require.NoError(t, err)
+	require.NotNil(t, retDS3)
+	assert.Equal(t, retDS3.GetStatus().GetStatus().String(), apiv1.Status_STATUS_DEVICE_UP.String())
+
+	// fourth device should be with up status as well
+	retDS4, err = grpcClient.GetDeviceStatus(ctx, dsReq4)
+	require.NoError(t, err)
+	require.NotNil(t, retDS4)
+	assert.Equal(t, retDS4.GetStatus().GetStatus().String(), apiv1.Status_STATUS_DEVICE_UP.String())
+
+	// running another iteration of control loop
+	sbManager.PerformControlLoopRoutine(testControlLoopPeriod)
+	// waiting until all goroutines would finish
+	time.Sleep(testControlLoopPeriod + delta)
+
+	// Now, when threshold has passed, devices should be reported in DOWN state.
+	// Checking that all devices are in DOWN state
+	// First device should be with down status
 	retDS1, err = grpcClient.GetDeviceStatus(ctx, dsReq1)
 	require.NoError(t, err)
 	require.NotNil(t, retDS1)

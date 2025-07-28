@@ -62,6 +62,27 @@ func (dsu *DeviceStatusUpdate) ClearLastSeen() *DeviceStatusUpdate {
 	return dsu
 }
 
+// SetConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field.
+func (dsu *DeviceStatusUpdate) SetConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdate {
+	dsu.mutation.ResetConsequentialFailedConnectivityAttempts()
+	dsu.mutation.SetConsequentialFailedConnectivityAttempts(i)
+	return dsu
+}
+
+// SetNillableConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field if the given value is not nil.
+func (dsu *DeviceStatusUpdate) SetNillableConsequentialFailedConnectivityAttempts(i *int32) *DeviceStatusUpdate {
+	if i != nil {
+		dsu.SetConsequentialFailedConnectivityAttempts(*i)
+	}
+	return dsu
+}
+
+// AddConsequentialFailedConnectivityAttempts adds i to the "consequential_failed_connectivity_attempts" field.
+func (dsu *DeviceStatusUpdate) AddConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdate {
+	dsu.mutation.AddConsequentialFailedConnectivityAttempts(i)
+	return dsu
+}
+
 // SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by ID.
 func (dsu *DeviceStatusUpdate) SetNetworkDeviceID(id string) *DeviceStatusUpdate {
 	dsu.mutation.SetNetworkDeviceID(id)
@@ -150,6 +171,12 @@ func (dsu *DeviceStatusUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if dsu.mutation.LastSeenCleared() {
 		_spec.ClearField(devicestatus.FieldLastSeen, field.TypeString)
 	}
+	if value, ok := dsu.mutation.ConsequentialFailedConnectivityAttempts(); ok {
+		_spec.SetField(devicestatus.FieldConsequentialFailedConnectivityAttempts, field.TypeInt32, value)
+	}
+	if value, ok := dsu.mutation.AddedConsequentialFailedConnectivityAttempts(); ok {
+		_spec.AddField(devicestatus.FieldConsequentialFailedConnectivityAttempts, field.TypeInt32, value)
+	}
 	if dsu.mutation.NetworkDeviceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -230,6 +257,27 @@ func (dsuo *DeviceStatusUpdateOne) SetNillableLastSeen(s *string) *DeviceStatusU
 // ClearLastSeen clears the value of the "last_seen" field.
 func (dsuo *DeviceStatusUpdateOne) ClearLastSeen() *DeviceStatusUpdateOne {
 	dsuo.mutation.ClearLastSeen()
+	return dsuo
+}
+
+// SetConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field.
+func (dsuo *DeviceStatusUpdateOne) SetConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdateOne {
+	dsuo.mutation.ResetConsequentialFailedConnectivityAttempts()
+	dsuo.mutation.SetConsequentialFailedConnectivityAttempts(i)
+	return dsuo
+}
+
+// SetNillableConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field if the given value is not nil.
+func (dsuo *DeviceStatusUpdateOne) SetNillableConsequentialFailedConnectivityAttempts(i *int32) *DeviceStatusUpdateOne {
+	if i != nil {
+		dsuo.SetConsequentialFailedConnectivityAttempts(*i)
+	}
+	return dsuo
+}
+
+// AddConsequentialFailedConnectivityAttempts adds i to the "consequential_failed_connectivity_attempts" field.
+func (dsuo *DeviceStatusUpdateOne) AddConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdateOne {
+	dsuo.mutation.AddConsequentialFailedConnectivityAttempts(i)
 	return dsuo
 }
 
@@ -350,6 +398,12 @@ func (dsuo *DeviceStatusUpdateOne) sqlSave(ctx context.Context) (_node *DeviceSt
 	}
 	if dsuo.mutation.LastSeenCleared() {
 		_spec.ClearField(devicestatus.FieldLastSeen, field.TypeString)
+	}
+	if value, ok := dsuo.mutation.ConsequentialFailedConnectivityAttempts(); ok {
+		_spec.SetField(devicestatus.FieldConsequentialFailedConnectivityAttempts, field.TypeInt32, value)
+	}
+	if value, ok := dsuo.mutation.AddedConsequentialFailedConnectivityAttempts(); ok {
+		_spec.AddField(devicestatus.FieldConsequentialFailedConnectivityAttempts, field.TypeInt32, value)
 	}
 	if dsuo.mutation.NetworkDeviceCleared() {
 		edge := &sqlgraph.EdgeSpec{

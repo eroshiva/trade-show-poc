@@ -24,9 +24,17 @@ solution.
 ## Solution
 This section describes a provided solution.
 
+For the devices on sites with bad connectivity, a threshold (in `CONNECTIVITY_ABSENCE_LIMIT`) is defined. For example,
+if network device was unreachable (e.g., failed to establish connection or failed to retrieve information from the device)
+**consequently** for `CONNECTIVITY_ABSENCE_LIMIT` times, then network device is considered to be in down state.
+This is managed within main control loop.
+
 
 ## Testing
 This section describes testing procedure.
+
+For more information on how external checksum generator was embedded to the monitoring service, please refer to 
+[this](pkg/checksum/README.md) README.
 
 
 ## What can be done better
@@ -47,12 +55,17 @@ AI tools were not used for any code generation neither code completion nor for c
 Gemini 2.5 Pro was used to make initial research in best practices for handling:
 - REST and gRPC API simultaneously.
     - Previous idea was to have two API Gateways - gRPC and REST one, but too much work.
-    - Research indicated the existence of the grpc-gateway plugin, which is able to autogenerate rever HTTP
+    - Research indicated the existence of the `grpc-gateway` plugin, which is able to autogenerate rever HTTP
       proxy out of Protobuf definition of the schema.
 - SQL coexistance with Go code.
     - Research in tooling — rather misleading, unhelpful, and time-consuming.
     - I had to stick with my original idea to use `protoc-gen-ent` and `ent` framework for PostgreSQL interaction with
       microservice, which provided a central place for managing everything - API and SQL-driven schema within a single Protobuf.
+- [Network Device simulator](pkg/mocks/README.md) advising.
+  - Initially proposed some weird ideas that I did not understand. Main issue I had is that they were not relying on 
+  actual connectivity. In the end, I've decided to stick to the current approach in 
+  [Network Device simulator](pkg/mocks/README.md) that
+  leverages solely of gRPC connectivity (for various protocols) for the sake of simple testability.
 
 I also found some recommendations about different tool usage confusing and misleading rather than helpful.
 It's always better to follow tool's documentation rather than asking AI for a tutorial.
