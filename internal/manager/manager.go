@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/eroshiva/trade-show-poc/internal/ent"
@@ -22,7 +23,8 @@ const (
 	componentName = "control-loop"
 
 	defaultControlLoopPerioud = 30 * time.Second
-	envControlLoopPeriod      = "CONTROL_LOOP_PERIOD" // in seconds.
+	// EnvControlLoopPeriod defines a control loop period in seconds.
+	EnvControlLoopPeriod = "CONTROL_LOOP_PERIOD" // in seconds.
 )
 
 var zlog = zerolog.New(zerolog.ConsoleWriter{
@@ -37,26 +39,36 @@ var zlog = zerolog.New(zerolog.ConsoleWriter{
 type Manager struct {
 	dbClient          *ent.Client
 	checksumGenerator checksum.Generator
+	closeChan         chan bool
+}
+
+// NewManager function creates Manager structure.
+func NewManager(dbClient *ent.Client, checksumGen checksum.Generator) *Manager {
+	return &Manager{
+		dbClient:          dbClient,
+		checksumGenerator: checksumGen,
+		closeChan:         make(chan bool, 1),
+	}
+}
+
+// StopManager sends signal to stop main control loop.
+func (m *Manager) StopManager() {
+	m.closeChan <- true
 }
 
 // StartManager function starts main control loop that periodically fetches data from the network devices.
-func StartManager(dbClient *ent.Client, checksumGen checksum.Generator, termChan chan bool) {
-	m := &Manager{
-		dbClient:          dbClient,
-		checksumGenerator: checksumGen,
-	}
-
+func (m *Manager) StartManager() {
 	controlLoopTick := defaultControlLoopPerioud
 	// read env variable, where Control Loop Period is specified
-	envControlLoopTick := os.Getenv(envControlLoopPeriod)
+	envControlLoopTick := os.Getenv(EnvControlLoopPeriod)
 	if envControlLoopTick == "" {
 		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
-			envControlLoopPeriod, defaultControlLoopPerioud)
+			EnvControlLoopPeriod, defaultControlLoopPerioud)
 	} else {
 		// control loop tick is specified
 		duration, err := strconv.Atoi(envControlLoopTick)
 		if err != nil {
-			zlog.Fatal().Err(err).Msgf("Failed to convert \"%s\"variable to number", envControlLoopPeriod)
+			zlog.Fatal().Err(err).Msgf("Failed to convert \"%s\"variable to number", EnvControlLoopPeriod)
 		}
 		controlLoopTick = time.Duration(duration) * time.Second
 	}
@@ -70,8 +82,8 @@ func StartManager(dbClient *ent.Client, checksumGen checksum.Generator, termChan
 		select {
 		case <-ticker.C:
 			// performing control loop routine
-			m.performControlLoopRoutine(controlLoopTick)
-		case <-termChan:
+			m.PerformControlLoopRoutine(controlLoopTick)
+		case <-m.closeChan:
 			// shutting down this routine
 			zlog.Info().Msgf("Stopping main control loop")
 			return
@@ -79,8 +91,8 @@ func StartManager(dbClient *ent.Client, checksumGen checksum.Generator, termChan
 	}
 }
 
-// performControlLoopRoutine runs main control loop routine, i.e., fetches all devices and updates theirs status.
-func (m *Manager) performControlLoopRoutine(controlLoopTick time.Duration) {
+// PerformControlLoopRoutine runs main control loop routine, i.e., fetches all devices and updates theirs status.
+func (m *Manager) PerformControlLoopRoutine(controlLoopTick time.Duration) {
 	zlog.Info().Msgf("Executing main control loop routine")
 	ctx, cancel := context.WithTimeout(context.Background(), controlLoopTick)
 	defer cancel()
@@ -100,10 +112,16 @@ func (m *Manager) performControlLoopRoutine(controlLoopTick time.Duration) {
 	}
 
 	// updating network devices concurrently
+	wg := &sync.WaitGroup{}
 	for _, nd := range ndList {
-		go m.processNetworkDevice(ctx, nd)
+		wg.Add(1)
+		go func() {
+			m.processNetworkDevice(ctx, nd)
+			wg.Done()
+		}()
 	}
-	// finished iteration
+	// waiting for all goroutines to finish their iteration (otherwise context gets cancelled before network device processing will be done)
+	wg.Wait()
 }
 
 // processNetworkDevice runs routine to get network device status, SW, FW, and HW versions from the device and update them in the DB.

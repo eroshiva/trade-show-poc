@@ -34,7 +34,6 @@ func main() {
 	// channels to handle termination and capture signals
 	termChan := make(chan bool)
 	reverseProxyTermChan := make(chan bool)
-	managerTermChan := make(chan bool)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
@@ -46,6 +45,12 @@ func main() {
 		zlog.Fatal().Err(err).Msg("Failed to instantiate connection with PostgreSQL DB")
 	}
 
+	checksumGen := checksum.NewMockGenerator() // right now, invoking mock generator for smooth testing
+	// creating SB handler
+	sbManager := manager.NewManager(dbClient, checksumGen)
+	// starting SB handler (updates device status and other monitoring information)
+	sbManager.StartManager()
+
 	// creating waitgroup so main will wait for servers to exit cleanly
 	wg := &sync.WaitGroup{}
 
@@ -54,8 +59,9 @@ func main() {
 		<-sigChan
 		close(termChan)
 		close(reverseProxyTermChan)
-		close(managerTermChan)
 
+		// gracefully stopping SB handler
+		sbManager.StopManager()
 		// gracefully closing client at the very end of execution
 		_ = db.GracefullyCloseDBClient(dbClient)
 		wg.Done()
@@ -68,10 +74,6 @@ func main() {
 		server.StartServer(server.GetGRPCServerAddress(), server.GetHTTPServerAddress(), dbClient, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
 		wg.Done()
 	}()
-
-	checksumGen := checksum.NewMockGenerator() // right now, invoking mock generator for smooth testing
-	// starting SB handler (updates device status and other monitoring information)
-	manager.StartManager(dbClient, checksumGen, managerTermChan)
 
 	wg.Wait()
 }
