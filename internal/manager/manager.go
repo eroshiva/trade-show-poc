@@ -47,13 +47,14 @@ func NewManager(dbClient *ent.Client, checksumGen checksum.Generator) *Manager {
 	return &Manager{
 		dbClient:          dbClient,
 		checksumGenerator: checksumGen,
-		closeChan:         make(chan bool, 1),
+		closeChan:         make(chan bool),
 	}
 }
 
 // StopManager sends signal to stop main control loop.
 func (m *Manager) StopManager() {
-	m.closeChan <- true
+	close(m.closeChan)
+	zlog.Info().Msg("Stopping manager...")
 }
 
 // StartManager function starts main control loop that periodically fetches data from the network devices.
@@ -77,6 +78,8 @@ func (m *Manager) StartManager() {
 	ticker := time.NewTicker(controlLoopTick)
 
 	zlog.Info().Msgf("Starting periodical (%s seconds) execution of main control loop", controlLoopTick)
+	// performing control loop routine at the very beginning
+	m.PerformControlLoopRoutine(controlLoopTick)
 	// starting infinite control loop
 	for {
 		select {
