@@ -118,6 +118,9 @@ run: go-tidy build-monitoring db-start ## Runs compiled network device monitorin
 	sleep 5;
 	./build/_output/${POC_NAME}
 
+run-simulator: go-tidy ## Runs Network Device Simulator with default values
+	go run cmd/simulator/simulator.go
+
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
 image: ## Builds a Docker image for API Gateway
