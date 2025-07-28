@@ -131,6 +131,24 @@ run-cli-add-device: go-tidy ## Runs helper CLI tool and adds one device to the m
 run-cli-add-devices: go-tidy ## Runs helper CLI tool and adds bunch of the devices specified in the config.json
 	go run cmd/helper-cli/helper-cli.go --addDevices
 
+run-cli-delete-device: go-tidy ## Runs helper CLI tool and deletes device by specified resource ID
+	go run cmd/helper-cli/helper-cli.go --deleteDevice --deleteDeviceID=${DEVICE_ID}
+
+run-cli-delete-all-devices: go-tidy ## Runs helper CLI tool and deletes all of the devices present in the monitoring service
+	go run cmd/helper-cli/helper-cli.go --deleteAllDevices
+
+run-cli-get-status: go-tidy ## Runs helper CLI tool and retrieves device status by specified resource ID
+	go run cmd/helper-cli/helper-cli.go --getStatus --deviceID=${DEVICE_ID}
+
+run-cli-get-all-statuses: go-tidy ## Runs helper CLI tool and retrieves all statuses for all network devices
+	go run cmd/helper-cli/helper-cli.go --getAllStatuses
+
+run-cli-update-devices: go-tidy ## Runs helper CLI tool and updates all network devices specified in the config.json
+	go run cmd/helper-cli/helper-cli.go --updateDevices
+
+run-cli-swap-devices: go-tidy ## Runs helper CLI tool and swaps all network devices in the controller with specified in the config.json
+	go run cmd/helper-cli/helper-cli.go --swapDevices
+
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
 image: ## Builds a Docker image for Network Device monitoring service

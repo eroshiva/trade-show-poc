@@ -24,7 +24,7 @@ const (
 	componentName = "helper-cli"
 
 	defaultTimeout = 1 * time.Second
-	configFileName = "config.yaml"
+	configFileName = "./cmd/helper-cli/config.json"
 	defaultEPHost  = "localhost"
 	defaultEPPort  = "50151"
 
@@ -67,7 +67,7 @@ var (
 
 	// deleting all devices
 	deleteAllDevicesFlag = "deleteAllDevices"
-	deleteAllDevice      = flag.Bool(deleteAllDevicesFlag, false, "Deletes all network devices from the controller")
+	deleteAllDevices     = flag.Bool(deleteAllDevicesFlag, false, "Deletes all network devices from the controller")
 
 	// getting status of a specific device
 	getStatusFlag      = "getStatus"
@@ -95,7 +95,7 @@ func main() {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
-		zlog.Fatal().Err(err).Msgf("Failed to dial to gRPC server %s", grpcServerAddress)
+		zlog.Fatal().Err(err).Msgf("Failed to dial to gRPC server %s", *grpcServerAddress)
 	}
 	defer func() {
 		err = conn.Close()
@@ -116,6 +116,48 @@ func main() {
 		err = addNetworkDevices(grpcClient)
 		if err != nil {
 			zlog.Error().Err(err).Msgf("Failed to add network devices to the controller")
+		}
+	}
+
+	if *deleteDevice {
+		err = deleteNetworkDevice(grpcClient, *deleteDeviceID)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to delete network device from the controller")
+		}
+	}
+
+	if *deleteAllDevices {
+		err = deleteAllNetworkDevices(grpcClient)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to delete all network devices from the controller")
+		}
+	}
+
+	if *getStatus {
+		err = getDeviceStatus(grpcClient, *deviceID)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to get device status")
+		}
+	}
+
+	if *getAllStatuses {
+		err = getAllNDStatuses(grpcClient)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to get all network device statuses")
+		}
+	}
+
+	if *updateDevices {
+		err = updateNetworkDevices(grpcClient)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to update network devices in the controller")
+		}
+	}
+
+	if *swapDevices {
+		err = swapNetworkDevices(grpcClient)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to swap network devices in the controller")
 		}
 	}
 }
@@ -235,4 +277,127 @@ func convertVendor(vendor string) apiv1.Vendor {
 	default:
 		return apiv1.Vendor_VENDOR_UNSPECIFIED
 	}
+}
+
+func deleteNetworkDevice(grpcClient apiv1.DeviceMonitoringServiceClient, id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	_, err := grpcClient.DeleteDevice(ctx, server.CreateDeleteDeviceRequest(id))
+	return err
+}
+
+func deleteAllNetworkDevices(grpcClient apiv1.DeviceMonitoringServiceClient) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	// retrieving list of network devices
+	ndList, err := grpcClient.GetDeviceList(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	var cumulativeErr error
+	for _, nd := range ndList.GetDevices() {
+		err = deleteNetworkDevice(grpcClient, nd.GetId())
+		if err != nil {
+			cumulativeErr = errors.Join(cumulativeErr, err)
+		}
+	}
+
+	return cumulativeErr
+}
+
+func getDeviceStatus(grpcClient apiv1.DeviceMonitoringServiceClient, id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	ndList, err := grpcClient.GetDeviceList(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	eps := make([]*apiv1.Endpoint, 0)
+	for _, nd := range ndList.GetDevices() {
+		if nd.GetId() == id {
+			// device match is found, saving endpoint
+			eps = nd.GetEndpoints()
+		}
+	}
+	if len(eps) == 0 {
+		err = fmt.Errorf("failed to find endpoints for the network device (%s)", id)
+		return err
+	}
+
+	// taking only first endpoint
+	ds, err := grpcClient.GetDeviceStatus(ctx, server.CreateGetDeviceStatusRequest(id, eps[0]))
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msgf("Retrieved device status for network device (%s): %s at %s", id, ds.GetStatus().GetStatus(), ds.GetStatus().GetLastSeen())
+	return nil
+}
+
+func getAllNDStatuses(grpcClient apiv1.DeviceMonitoringServiceClient) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	ndList, err := grpcClient.GetDeviceList(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	var cumulativeErr error
+	for _, nd := range ndList.GetDevices() {
+		if len(nd.GetEndpoints()) == 0 {
+			err = fmt.Errorf("failed to find endpoints for the network device (%s)", nd.GetId())
+			cumulativeErr = errors.Join(cumulativeErr, err)
+			continue
+		}
+		ds, err := grpcClient.GetDeviceStatus(ctx, server.CreateGetDeviceStatusRequest(nd.GetId(), nd.GetEndpoints()[0]))
+		if err != nil {
+			cumulativeErr = errors.Join(cumulativeErr, err)
+			continue
+		}
+		zlog.Info().Msgf("Retrieved device status for network device (%s): %s at %s", nd.GetId(), ds.GetStatus().GetStatus(), ds.GetStatus().GetLastSeen())
+	}
+	return cumulativeErr
+}
+
+func updateNetworkDevices(grpcClient apiv1.DeviceMonitoringServiceClient) error {
+	// unmarshalling JSON file to Golang struct
+	devices, err := parseJSON()
+	if err != nil {
+		return err
+	}
+	nds := convertGolangStructsToProtoStructs(devices)
+
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	_, err = grpcClient.UpdateDeviceList(ctx, server.CreateUpdateDeviceListRequest(nds))
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msg("Network devices were updated")
+	return nil
+}
+
+func swapNetworkDevices(grpcClient apiv1.DeviceMonitoringServiceClient) error {
+	// unmarshalling JSON file to Golang struct
+	devices, err := parseJSON()
+	if err != nil {
+		return err
+	}
+	nds := convertGolangStructsToProtoStructs(devices)
+
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	_, err = grpcClient.SwapDeviceList(ctx, server.CreateUpdateDeviceListRequest(nds))
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msg("Network devices were swapped")
+	return nil
 }

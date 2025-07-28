@@ -265,6 +265,13 @@ func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (
 func (srv *server) DeleteDevice(ctx context.Context, req *apiv1.DeleteDeviceRequest) (*apiv1.DeleteDeviceResponse, error) {
 	zlog.Info().Msgf("Removing network device (%s)", req.GetId())
 
+	// sanity check for input parameters
+	if req.GetId() == "" {
+		err := fmt.Errorf("ID is not specified")
+		zlog.Error().Err(err).Msg("Failed to delete network device")
+		return nil, err
+	}
+
 	resp := &apiv1.DeleteDeviceResponse{
 		Id:      req.GetId(),
 		Deleted: false,
