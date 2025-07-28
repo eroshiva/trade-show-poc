@@ -394,7 +394,7 @@ func swapNetworkDevices(grpcClient apiv1.DeviceMonitoringServiceClient) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	_, err = grpcClient.SwapDeviceList(ctx, server.CreateUpdateDeviceListRequest(nds))
+	_, err = grpcClient.SwapDeviceList(ctx, server.CreateSwapDeviceListRequest(nds))
 	if err != nil {
 		return err
 	}

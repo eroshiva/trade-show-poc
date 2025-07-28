@@ -378,7 +378,7 @@ func TestSwapDeviceList(t *testing.T) {
 
 	// performing swap with only one device in the list
 	protoND1 := server.ConvertNetworkDeviceResourceToNetworkDeviceProto(nd1)
-	resp, err := grpcClient.SwapDeviceList(ctx, &apiv1.UpdateDeviceListRequest{
+	resp, err := grpcClient.SwapDeviceList(ctx, &apiv1.SwapDeviceListRequest{
 		Devices: []*apiv1.NetworkDevice{protoND1},
 	})
 	require.NoError(t, err)

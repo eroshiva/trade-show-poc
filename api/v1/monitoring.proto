@@ -20,7 +20,7 @@ service DeviceMonitoringService {
   // SwapDeviceList allows to swap list of the devices that are currently being monitored. All devices that are not
   //  in the list will be removed from the system. Response contains full list of monitored network devices
   //  reflecting recent changes.
-  rpc SwapDeviceList(UpdateDeviceListRequest) returns (UpdateDeviceListResponse) {
+  rpc SwapDeviceList(SwapDeviceListRequest) returns (SwapDeviceListResponse) {
     option (google.api.http) = {
       post: "/v1/monitoring/devices/swap"
       body: "*"
@@ -55,7 +55,7 @@ service DeviceMonitoringService {
     };
   }
   // GetAllDeviceStatuses allows to retrieve all statuses from all network devices.
-  rpc GetAllDeviceStatuses(google.protobuf.Empty) returns (GetDeviceStatusesResponse) {
+  rpc GetAllDeviceStatuses(google.protobuf.Empty) returns (GetAllDeviceStatusesResponse) {
     option (google.api.http) = {
       get: "/v1/monitoring/statuses"
     };
@@ -129,9 +129,19 @@ message GetDeviceStatusResponse {
   DeviceStatus status = 3;
 }
 
-// GetDeviceStatusesResponse carries summary of all network device statuses.
-message GetDeviceStatusesResponse {
+// GetAllDeviceStatusesResponse carries summary of all network device statuses.
+message GetAllDeviceStatusesResponse {
   repeated DeviceStatus statuses = 1;
+}
+
+// SwapDeviceListRequest contains a list of the devices (including theirs' details) to be updated.
+message SwapDeviceListRequest {
+  repeated NetworkDevice devices = 1;
+}
+
+// SwapDeviceListResponse contains full list of the network devices within the system, once update has been performed.
+message SwapDeviceListResponse {
+  repeated NetworkDevice devices = 1;
 }
 
 // UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated.

@@ -65,7 +65,7 @@ func local_request_DeviceMonitoringService_UpdateDeviceList_0(ctx context.Contex
 
 func request_DeviceMonitoringService_SwapDeviceList_0(ctx context.Context, marshaler runtime.Marshaler, client DeviceMonitoringServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateDeviceListRequest
+		protoReq SwapDeviceListRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
@@ -80,7 +80,7 @@ func request_DeviceMonitoringService_SwapDeviceList_0(ctx context.Context, marsh
 
 func local_request_DeviceMonitoringService_SwapDeviceList_0(ctx context.Context, marshaler runtime.Marshaler, server DeviceMonitoringServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq UpdateDeviceListRequest
+		protoReq SwapDeviceListRequest
 		metadata runtime.ServerMetadata
 	)
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {

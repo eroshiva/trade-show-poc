@@ -423,7 +423,7 @@ func getStatistics(stats *apiv1.GetSummaryResponse, ds *apiv1.DeviceStatus) *api
 	return stats
 }
 
-func (srv *server) SwapDeviceList(ctx context.Context, req *apiv1.UpdateDeviceListRequest) (*apiv1.UpdateDeviceListResponse, error) {
+func (srv *server) SwapDeviceList(ctx context.Context, req *apiv1.SwapDeviceListRequest) (*apiv1.SwapDeviceListResponse, error) {
 	zlog.Info().Msgf("Performing swap of the network devices in the controller")
 
 	// performing initial sanity check
@@ -478,12 +478,12 @@ func (srv *server) SwapDeviceList(ctx context.Context, req *apiv1.UpdateDeviceLi
 		zlog.Error().Err(err).Msgf("Device swap has failed")
 		return nil, err
 	}
-	return &apiv1.UpdateDeviceListResponse{
+	return &apiv1.SwapDeviceListResponse{
 		Devices: addedDevices,
 	}, nil
 }
 
-func (srv *server) GetAllDeviceStatuses(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetDeviceStatusesResponse, error) {
+func (srv *server) GetAllDeviceStatuses(ctx context.Context, _ *emptypb.Empty) (*apiv1.GetAllDeviceStatusesResponse, error) {
 	zlog.Info().Msgf("Retrieving all network device statuses")
 
 	// listing all device statuses
@@ -498,7 +498,7 @@ func (srv *server) GetAllDeviceStatuses(ctx context.Context, _ *emptypb.Empty) (
 		protoStatus := ConvertEntDeviceStatusToProtoDeviceStatus(ds)
 		retList = append(retList, protoStatus)
 	}
-	return &apiv1.GetDeviceStatusesResponse{
+	return &apiv1.GetAllDeviceStatusesResponse{
 		Statuses: retList,
 	}, nil
 }

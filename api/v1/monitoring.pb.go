@@ -610,28 +610,28 @@ func (x *GetDeviceStatusResponse) GetStatus() *DeviceStatus {
 	return nil
 }
 
-// GetDeviceStatusesResponse carries summary of all network device statuses.
-type GetDeviceStatusesResponse struct {
+// GetAllDeviceStatusesResponse carries summary of all network device statuses.
+type GetAllDeviceStatusesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Statuses      []*DeviceStatus        `protobuf:"bytes,1,rep,name=statuses,proto3" json:"statuses,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetDeviceStatusesResponse) Reset() {
-	*x = GetDeviceStatusesResponse{}
+func (x *GetAllDeviceStatusesResponse) Reset() {
+	*x = GetAllDeviceStatusesResponse{}
 	mi := &file_api_v1_monitoring_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetDeviceStatusesResponse) String() string {
+func (x *GetAllDeviceStatusesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetDeviceStatusesResponse) ProtoMessage() {}
+func (*GetAllDeviceStatusesResponse) ProtoMessage() {}
 
-func (x *GetDeviceStatusesResponse) ProtoReflect() protoreflect.Message {
+func (x *GetAllDeviceStatusesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_api_v1_monitoring_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -643,14 +643,104 @@ func (x *GetDeviceStatusesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetDeviceStatusesResponse.ProtoReflect.Descriptor instead.
-func (*GetDeviceStatusesResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetAllDeviceStatusesResponse.ProtoReflect.Descriptor instead.
+func (*GetAllDeviceStatusesResponse) Descriptor() ([]byte, []int) {
 	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *GetDeviceStatusesResponse) GetStatuses() []*DeviceStatus {
+func (x *GetAllDeviceStatusesResponse) GetStatuses() []*DeviceStatus {
 	if x != nil {
 		return x.Statuses
+	}
+	return nil
+}
+
+// SwapDeviceListRequest contains a list of the devices (including theirs' details) to be updated.
+type SwapDeviceListRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Devices       []*NetworkDevice       `protobuf:"bytes,1,rep,name=devices,proto3" json:"devices,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SwapDeviceListRequest) Reset() {
+	*x = SwapDeviceListRequest{}
+	mi := &file_api_v1_monitoring_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SwapDeviceListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SwapDeviceListRequest) ProtoMessage() {}
+
+func (x *SwapDeviceListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_monitoring_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SwapDeviceListRequest.ProtoReflect.Descriptor instead.
+func (*SwapDeviceListRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *SwapDeviceListRequest) GetDevices() []*NetworkDevice {
+	if x != nil {
+		return x.Devices
+	}
+	return nil
+}
+
+// SwapDeviceListResponse contains full list of the network devices within the system, once update has been performed.
+type SwapDeviceListResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Devices       []*NetworkDevice       `protobuf:"bytes,1,rep,name=devices,proto3" json:"devices,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SwapDeviceListResponse) Reset() {
+	*x = SwapDeviceListResponse{}
+	mi := &file_api_v1_monitoring_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SwapDeviceListResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SwapDeviceListResponse) ProtoMessage() {}
+
+func (x *SwapDeviceListResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_monitoring_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SwapDeviceListResponse.ProtoReflect.Descriptor instead.
+func (*SwapDeviceListResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *SwapDeviceListResponse) GetDevices() []*NetworkDevice {
+	if x != nil {
+		return x.Devices
 	}
 	return nil
 }
@@ -665,7 +755,7 @@ type UpdateDeviceListRequest struct {
 
 func (x *UpdateDeviceListRequest) Reset() {
 	*x = UpdateDeviceListRequest{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[8]
+	mi := &file_api_v1_monitoring_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -677,7 +767,7 @@ func (x *UpdateDeviceListRequest) String() string {
 func (*UpdateDeviceListRequest) ProtoMessage() {}
 
 func (x *UpdateDeviceListRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[8]
+	mi := &file_api_v1_monitoring_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -690,7 +780,7 @@ func (x *UpdateDeviceListRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDeviceListRequest.ProtoReflect.Descriptor instead.
 func (*UpdateDeviceListRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{8}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateDeviceListRequest) GetDevices() []*NetworkDevice {
@@ -710,7 +800,7 @@ type UpdateDeviceListResponse struct {
 
 func (x *UpdateDeviceListResponse) Reset() {
 	*x = UpdateDeviceListResponse{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[9]
+	mi := &file_api_v1_monitoring_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -722,7 +812,7 @@ func (x *UpdateDeviceListResponse) String() string {
 func (*UpdateDeviceListResponse) ProtoMessage() {}
 
 func (x *UpdateDeviceListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[9]
+	mi := &file_api_v1_monitoring_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -735,7 +825,7 @@ func (x *UpdateDeviceListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDeviceListResponse.ProtoReflect.Descriptor instead.
 func (*UpdateDeviceListResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{9}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateDeviceListResponse) GetDevices() []*NetworkDevice {
@@ -755,7 +845,7 @@ type GetDeviceListResponse struct {
 
 func (x *GetDeviceListResponse) Reset() {
 	*x = GetDeviceListResponse{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[10]
+	mi := &file_api_v1_monitoring_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -767,7 +857,7 @@ func (x *GetDeviceListResponse) String() string {
 func (*GetDeviceListResponse) ProtoMessage() {}
 
 func (x *GetDeviceListResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[10]
+	mi := &file_api_v1_monitoring_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -780,7 +870,7 @@ func (x *GetDeviceListResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDeviceListResponse.ProtoReflect.Descriptor instead.
 func (*GetDeviceListResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{10}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetDeviceListResponse) GetDevices() []*NetworkDevice {
@@ -814,7 +904,7 @@ type NetworkDevice struct {
 
 func (x *NetworkDevice) Reset() {
 	*x = NetworkDevice{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[11]
+	mi := &file_api_v1_monitoring_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +916,7 @@ func (x *NetworkDevice) String() string {
 func (*NetworkDevice) ProtoMessage() {}
 
 func (x *NetworkDevice) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[11]
+	mi := &file_api_v1_monitoring_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -839,7 +929,7 @@ func (x *NetworkDevice) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkDevice.ProtoReflect.Descriptor instead.
 func (*NetworkDevice) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{11}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *NetworkDevice) GetId() string {
@@ -907,7 +997,7 @@ type DeviceStatus struct {
 
 func (x *DeviceStatus) Reset() {
 	*x = DeviceStatus{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[12]
+	mi := &file_api_v1_monitoring_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -919,7 +1009,7 @@ func (x *DeviceStatus) String() string {
 func (*DeviceStatus) ProtoMessage() {}
 
 func (x *DeviceStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[12]
+	mi := &file_api_v1_monitoring_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -932,7 +1022,7 @@ func (x *DeviceStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviceStatus.ProtoReflect.Descriptor instead.
 func (*DeviceStatus) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{12}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *DeviceStatus) GetId() string {
@@ -981,7 +1071,7 @@ type Endpoint struct {
 
 func (x *Endpoint) Reset() {
 	*x = Endpoint{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[13]
+	mi := &file_api_v1_monitoring_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -993,7 +1083,7 @@ func (x *Endpoint) String() string {
 func (*Endpoint) ProtoMessage() {}
 
 func (x *Endpoint) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[13]
+	mi := &file_api_v1_monitoring_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1006,7 +1096,7 @@ func (x *Endpoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Endpoint.ProtoReflect.Descriptor instead.
 func (*Endpoint) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{13}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Endpoint) GetId() string {
@@ -1059,7 +1149,7 @@ type Version struct {
 
 func (x *Version) Reset() {
 	*x = Version{}
-	mi := &file_api_v1_monitoring_proto_msgTypes[14]
+	mi := &file_api_v1_monitoring_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1071,7 +1161,7 @@ func (x *Version) String() string {
 func (*Version) ProtoMessage() {}
 
 func (x *Version) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_monitoring_proto_msgTypes[14]
+	mi := &file_api_v1_monitoring_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1084,7 +1174,7 @@ func (x *Version) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Version.ProtoReflect.Descriptor instead.
 func (*Version) Descriptor() ([]byte, []int) {
-	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{14}
+	return file_api_v1_monitoring_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Version) GetId() string {
@@ -1141,9 +1231,13 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\x17GetDeviceStatusResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12,\n" +
 	"\bendpoint\x18\x02 \x01(\v2\x10.api.v1.EndpointR\bendpoint\x12,\n" +
-	"\x06status\x18\x03 \x01(\v2\x14.api.v1.DeviceStatusR\x06status\"M\n" +
-	"\x19GetDeviceStatusesResponse\x120\n" +
-	"\bstatuses\x18\x01 \x03(\v2\x14.api.v1.DeviceStatusR\bstatuses\"J\n" +
+	"\x06status\x18\x03 \x01(\v2\x14.api.v1.DeviceStatusR\x06status\"P\n" +
+	"\x1cGetAllDeviceStatusesResponse\x120\n" +
+	"\bstatuses\x18\x01 \x03(\v2\x14.api.v1.DeviceStatusR\bstatuses\"H\n" +
+	"\x15SwapDeviceListRequest\x12/\n" +
+	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"I\n" +
+	"\x16SwapDeviceListResponse\x12/\n" +
+	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"J\n" +
 	"\x17UpdateDeviceListRequest\x12/\n" +
 	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"K\n" +
 	"\x18UpdateDeviceListResponse\x12/\n" +
@@ -1194,15 +1288,15 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\rPROTOCOL_SNMP\x10\x01\x12\x14\n" +
 	"\x10PROTOCOL_NETCONF\x10\x02\x12\x15\n" +
 	"\x11PROTOCOL_RESTCONF\x10\x03\x12\x1a\n" +
-	"\x16PROTOCOL_OPEN_V_SWITCH\x10\x042\xa6\a\n" +
+	"\x16PROTOCOL_OPEN_V_SWITCH\x10\x042\xa5\a\n" +
 	"\x17DeviceMonitoringService\x12x\n" +
-	"\x10UpdateDeviceList\x12\x1f.api.v1.UpdateDeviceListRequest\x1a .api.v1.UpdateDeviceListResponse\"!\x82\xd3\xe4\x93\x02\x1b:\x01*2\x16/v1/monitoring/devices\x12{\n" +
-	"\x0eSwapDeviceList\x12\x1f.api.v1.UpdateDeviceListRequest\x1a .api.v1.UpdateDeviceListResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/monitoring/devices/swap\x12f\n" +
+	"\x10UpdateDeviceList\x12\x1f.api.v1.UpdateDeviceListRequest\x1a .api.v1.UpdateDeviceListResponse\"!\x82\xd3\xe4\x93\x02\x1b:\x01*2\x16/v1/monitoring/devices\x12w\n" +
+	"\x0eSwapDeviceList\x12\x1d.api.v1.SwapDeviceListRequest\x1a\x1e.api.v1.SwapDeviceListResponse\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/monitoring/devices/swap\x12f\n" +
 	"\rGetDeviceList\x12\x16.google.protobuf.Empty\x1a\x1d.api.v1.GetDeviceListResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/monitoring/devices\x12c\n" +
 	"\tAddDevice\x12\x18.api.v1.AddDeviceRequest\x1a\x19.api.v1.AddDeviceResponse\"!\x82\xd3\xe4\x93\x02\x1b:\x01*\"\x16/v1/monitoring/devices\x12q\n" +
 	"\fDeleteDevice\x12\x1b.api.v1.DeleteDeviceRequest\x1a\x1c.api.v1.DeleteDeviceResponse\"&\x82\xd3\xe4\x93\x02 :\x01**\x1b/v1/monitoring/devices/{id}\x12~\n" +
-	"\x0fGetDeviceStatus\x12\x1e.api.v1.GetDeviceStatusRequest\x1a\x1f.api.v1.GetDeviceStatusResponse\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/monitoring/devices/{id}/status\x12r\n" +
-	"\x14GetAllDeviceStatuses\x12\x16.google.protobuf.Empty\x1a!.api.v1.GetDeviceStatusesResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/monitoring/statuses\x12`\n" +
+	"\x0fGetDeviceStatus\x12\x1e.api.v1.GetDeviceStatusRequest\x1a\x1f.api.v1.GetDeviceStatusResponse\"*\x82\xd3\xe4\x93\x02$\x12\"/v1/monitoring/devices/{id}/status\x12u\n" +
+	"\x14GetAllDeviceStatuses\x12\x16.google.protobuf.Empty\x1a$.api.v1.GetAllDeviceStatusesResponse\"\x1f\x82\xd3\xe4\x93\x02\x19\x12\x17/v1/monitoring/statuses\x12`\n" +
 	"\n" +
 	"GetSummary\x12\x16.google.protobuf.Empty\x1a\x1a.api.v1.GetSummaryResponse\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/monitoring/summaryB<Z:github.com/eroshiva/trade-show-poc/api/v1/monitoring;apiv1b\x06proto3"
 
@@ -1219,67 +1313,71 @@ func file_api_v1_monitoring_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v1_monitoring_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_api_v1_monitoring_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_api_v1_monitoring_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_api_v1_monitoring_proto_goTypes = []any{
-	(Vendor)(0),                       // 0: api.v1.Vendor
-	(Status)(0),                       // 1: api.v1.Status
-	(Protocol)(0),                     // 2: api.v1.Protocol
-	(*GetSummaryResponse)(nil),        // 3: api.v1.GetSummaryResponse
-	(*AddDeviceRequest)(nil),          // 4: api.v1.AddDeviceRequest
-	(*AddDeviceResponse)(nil),         // 5: api.v1.AddDeviceResponse
-	(*DeleteDeviceRequest)(nil),       // 6: api.v1.DeleteDeviceRequest
-	(*DeleteDeviceResponse)(nil),      // 7: api.v1.DeleteDeviceResponse
-	(*GetDeviceStatusRequest)(nil),    // 8: api.v1.GetDeviceStatusRequest
-	(*GetDeviceStatusResponse)(nil),   // 9: api.v1.GetDeviceStatusResponse
-	(*GetDeviceStatusesResponse)(nil), // 10: api.v1.GetDeviceStatusesResponse
-	(*UpdateDeviceListRequest)(nil),   // 11: api.v1.UpdateDeviceListRequest
-	(*UpdateDeviceListResponse)(nil),  // 12: api.v1.UpdateDeviceListResponse
-	(*GetDeviceListResponse)(nil),     // 13: api.v1.GetDeviceListResponse
-	(*NetworkDevice)(nil),             // 14: api.v1.NetworkDevice
-	(*DeviceStatus)(nil),              // 15: api.v1.DeviceStatus
-	(*Endpoint)(nil),                  // 16: api.v1.Endpoint
-	(*Version)(nil),                   // 17: api.v1.Version
-	(*emptypb.Empty)(nil),             // 18: google.protobuf.Empty
+	(Vendor)(0),                          // 0: api.v1.Vendor
+	(Status)(0),                          // 1: api.v1.Status
+	(Protocol)(0),                        // 2: api.v1.Protocol
+	(*GetSummaryResponse)(nil),           // 3: api.v1.GetSummaryResponse
+	(*AddDeviceRequest)(nil),             // 4: api.v1.AddDeviceRequest
+	(*AddDeviceResponse)(nil),            // 5: api.v1.AddDeviceResponse
+	(*DeleteDeviceRequest)(nil),          // 6: api.v1.DeleteDeviceRequest
+	(*DeleteDeviceResponse)(nil),         // 7: api.v1.DeleteDeviceResponse
+	(*GetDeviceStatusRequest)(nil),       // 8: api.v1.GetDeviceStatusRequest
+	(*GetDeviceStatusResponse)(nil),      // 9: api.v1.GetDeviceStatusResponse
+	(*GetAllDeviceStatusesResponse)(nil), // 10: api.v1.GetAllDeviceStatusesResponse
+	(*SwapDeviceListRequest)(nil),        // 11: api.v1.SwapDeviceListRequest
+	(*SwapDeviceListResponse)(nil),       // 12: api.v1.SwapDeviceListResponse
+	(*UpdateDeviceListRequest)(nil),      // 13: api.v1.UpdateDeviceListRequest
+	(*UpdateDeviceListResponse)(nil),     // 14: api.v1.UpdateDeviceListResponse
+	(*GetDeviceListResponse)(nil),        // 15: api.v1.GetDeviceListResponse
+	(*NetworkDevice)(nil),                // 16: api.v1.NetworkDevice
+	(*DeviceStatus)(nil),                 // 17: api.v1.DeviceStatus
+	(*Endpoint)(nil),                     // 18: api.v1.Endpoint
+	(*Version)(nil),                      // 19: api.v1.Version
+	(*emptypb.Empty)(nil),                // 20: google.protobuf.Empty
 }
 var file_api_v1_monitoring_proto_depIdxs = []int32{
-	14, // 0: api.v1.AddDeviceRequest.device:type_name -> api.v1.NetworkDevice
-	14, // 1: api.v1.AddDeviceResponse.device:type_name -> api.v1.NetworkDevice
-	16, // 2: api.v1.GetDeviceStatusRequest.endpoint:type_name -> api.v1.Endpoint
-	16, // 3: api.v1.GetDeviceStatusResponse.endpoint:type_name -> api.v1.Endpoint
-	15, // 4: api.v1.GetDeviceStatusResponse.status:type_name -> api.v1.DeviceStatus
-	15, // 5: api.v1.GetDeviceStatusesResponse.statuses:type_name -> api.v1.DeviceStatus
-	14, // 6: api.v1.UpdateDeviceListRequest.devices:type_name -> api.v1.NetworkDevice
-	14, // 7: api.v1.UpdateDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
-	14, // 8: api.v1.GetDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
-	0,  // 9: api.v1.NetworkDevice.vendor:type_name -> api.v1.Vendor
-	16, // 10: api.v1.NetworkDevice.endpoints:type_name -> api.v1.Endpoint
-	17, // 11: api.v1.NetworkDevice.sw_version:type_name -> api.v1.Version
-	17, // 12: api.v1.NetworkDevice.fw_version:type_name -> api.v1.Version
-	1,  // 13: api.v1.DeviceStatus.status:type_name -> api.v1.Status
-	14, // 14: api.v1.DeviceStatus.network_device:type_name -> api.v1.NetworkDevice
-	2,  // 15: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
-	14, // 16: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
-	11, // 17: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
-	11, // 18: api.v1.DeviceMonitoringService.SwapDeviceList:input_type -> api.v1.UpdateDeviceListRequest
-	18, // 19: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
-	4,  // 20: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
-	6,  // 21: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
-	8,  // 22: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
-	18, // 23: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:input_type -> google.protobuf.Empty
-	18, // 24: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
-	12, // 25: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
-	12, // 26: api.v1.DeviceMonitoringService.SwapDeviceList:output_type -> api.v1.UpdateDeviceListResponse
-	13, // 27: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
-	5,  // 28: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse
-	7,  // 29: api.v1.DeviceMonitoringService.DeleteDevice:output_type -> api.v1.DeleteDeviceResponse
-	9,  // 30: api.v1.DeviceMonitoringService.GetDeviceStatus:output_type -> api.v1.GetDeviceStatusResponse
-	10, // 31: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:output_type -> api.v1.GetDeviceStatusesResponse
-	3,  // 32: api.v1.DeviceMonitoringService.GetSummary:output_type -> api.v1.GetSummaryResponse
-	25, // [25:33] is the sub-list for method output_type
-	17, // [17:25] is the sub-list for method input_type
-	17, // [17:17] is the sub-list for extension type_name
-	17, // [17:17] is the sub-list for extension extendee
-	0,  // [0:17] is the sub-list for field type_name
+	16, // 0: api.v1.AddDeviceRequest.device:type_name -> api.v1.NetworkDevice
+	16, // 1: api.v1.AddDeviceResponse.device:type_name -> api.v1.NetworkDevice
+	18, // 2: api.v1.GetDeviceStatusRequest.endpoint:type_name -> api.v1.Endpoint
+	18, // 3: api.v1.GetDeviceStatusResponse.endpoint:type_name -> api.v1.Endpoint
+	17, // 4: api.v1.GetDeviceStatusResponse.status:type_name -> api.v1.DeviceStatus
+	17, // 5: api.v1.GetAllDeviceStatusesResponse.statuses:type_name -> api.v1.DeviceStatus
+	16, // 6: api.v1.SwapDeviceListRequest.devices:type_name -> api.v1.NetworkDevice
+	16, // 7: api.v1.SwapDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
+	16, // 8: api.v1.UpdateDeviceListRequest.devices:type_name -> api.v1.NetworkDevice
+	16, // 9: api.v1.UpdateDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
+	16, // 10: api.v1.GetDeviceListResponse.devices:type_name -> api.v1.NetworkDevice
+	0,  // 11: api.v1.NetworkDevice.vendor:type_name -> api.v1.Vendor
+	18, // 12: api.v1.NetworkDevice.endpoints:type_name -> api.v1.Endpoint
+	19, // 13: api.v1.NetworkDevice.sw_version:type_name -> api.v1.Version
+	19, // 14: api.v1.NetworkDevice.fw_version:type_name -> api.v1.Version
+	1,  // 15: api.v1.DeviceStatus.status:type_name -> api.v1.Status
+	16, // 16: api.v1.DeviceStatus.network_device:type_name -> api.v1.NetworkDevice
+	2,  // 17: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
+	16, // 18: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
+	13, // 19: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
+	11, // 20: api.v1.DeviceMonitoringService.SwapDeviceList:input_type -> api.v1.SwapDeviceListRequest
+	20, // 21: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
+	4,  // 22: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
+	6,  // 23: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
+	8,  // 24: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
+	20, // 25: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:input_type -> google.protobuf.Empty
+	20, // 26: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
+	14, // 27: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
+	12, // 28: api.v1.DeviceMonitoringService.SwapDeviceList:output_type -> api.v1.SwapDeviceListResponse
+	15, // 29: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
+	5,  // 30: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse
+	7,  // 31: api.v1.DeviceMonitoringService.DeleteDevice:output_type -> api.v1.DeleteDeviceResponse
+	9,  // 32: api.v1.DeviceMonitoringService.GetDeviceStatus:output_type -> api.v1.GetDeviceStatusResponse
+	10, // 33: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:output_type -> api.v1.GetAllDeviceStatusesResponse
+	3,  // 34: api.v1.DeviceMonitoringService.GetSummary:output_type -> api.v1.GetSummaryResponse
+	27, // [27:35] is the sub-list for method output_type
+	19, // [19:27] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_monitoring_proto_init() }
@@ -1295,7 +1393,7 @@ func file_api_v1_monitoring_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_monitoring_proto_rawDesc), len(file_api_v1_monitoring_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

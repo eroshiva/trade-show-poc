@@ -111,7 +111,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1UpdateDeviceListResponse"
+              "$ref": "#/definitions/v1SwapDeviceListResponse"
             }
           },
           "default": {
@@ -124,11 +124,11 @@
         "parameters": [
           {
             "name": "body",
-            "description": "UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated.",
+            "description": "SwapDeviceListRequest contains a list of the devices (including theirs' details) to be updated.",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1UpdateDeviceListRequest"
+              "$ref": "#/definitions/v1SwapDeviceListRequest"
             }
           }
         ],
@@ -330,7 +330,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1GetDeviceStatusesResponse"
+              "$ref": "#/definitions/v1GetAllDeviceStatusesResponse"
             }
           },
           "default": {
@@ -504,6 +504,19 @@
       },
       "description": "Endpoint defines an endpoint structure."
     },
+    "v1GetAllDeviceStatusesResponse": {
+      "type": "object",
+      "properties": {
+        "statuses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1DeviceStatus"
+          }
+        }
+      },
+      "description": "GetAllDeviceStatusesResponse carries summary of all network device statuses."
+    },
     "v1GetDeviceListResponse": {
       "type": "object",
       "properties": {
@@ -534,19 +547,6 @@
         }
       },
       "description": "GetDeviceStatusResponse carries the result of the health check for the network device."
-    },
-    "v1GetDeviceStatusesResponse": {
-      "type": "object",
-      "properties": {
-        "statuses": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "$ref": "#/definitions/v1DeviceStatus"
-          }
-        }
-      },
-      "description": "GetDeviceStatusesResponse carries summary of all network device statuses."
     },
     "v1GetSummaryResponse": {
       "type": "object",
@@ -624,6 +624,32 @@
       "default": "PROTOCOL_UNSPECIFIED",
       "description": "- PROTOCOL_UNSPECIFIED: This is to comply with Protobuf best practices.\n - PROTOCOL_SNMP: Corresponds to the SNMP protocol.\n - PROTOCOL_NETCONF: Corresponds to the NETCONF protocol.\n - PROTOCOL_RESTCONF: Corresponds to the RESTCONF protocol.\n - PROTOCOL_OPEN_V_SWITCH: Corresponds to the Open vSwitch protocol.",
       "title": "Protocol enum defines the supported protocols by monitoring service"
+    },
+    "v1SwapDeviceListRequest": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
+        }
+      },
+      "description": "SwapDeviceListRequest contains a list of the devices (including theirs' details) to be updated."
+    },
+    "v1SwapDeviceListResponse": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
+        }
+      },
+      "description": "SwapDeviceListResponse contains full list of the network devices within the system, once update has been performed."
     },
     "v1UpdateDeviceListRequest": {
       "type": "object",
