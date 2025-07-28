@@ -194,9 +194,41 @@ func UpdateNetworkDeviceVersions(ctx context.Context, client *ent.Client, id, hw
 		nd.HwVersion = hw
 	}
 	if sw != nil {
+		// check that the Version resource already exists
+		retSW, err := GetVersionByVersionAndChecksum(ctx, client, sw.Version, sw.Checksum)
+		if err != nil {
+			// current SW Version resource does not exist, creating one
+			createdSW, err := CreateVersion(ctx, client, sw.Version, sw.Checksum)
+			if err != nil {
+				// failed to create SW Version resource
+				return nil, err
+			}
+			// SW Version resource created, saving correct resource ID
+			sw.ID = createdSW.ID
+		}
+		if retSW != nil {
+			// handling the case when SW Version resource was found, saving correct resource ID
+			sw.ID = retSW.ID
+		}
 		nd.Edges.SwVersion = sw
 	}
 	if fw != nil {
+		// check that the Version resource already exists
+		retFW, err := GetVersionByVersionAndChecksum(ctx, client, fw.Version, fw.Checksum)
+		if err != nil {
+			// current FW Version resource does not exist, creating one
+			createdFW, err := CreateVersion(ctx, client, fw.Version, fw.Checksum)
+			if err != nil {
+				// failed to create FW Version resource
+				return nil, err
+			}
+			// FW Version resource created, saving correct resource ID
+			fw.ID = createdFW.ID
+		}
+		if retFW != nil {
+			// handling the case when FW Version resource was found, saving correct resource ID
+			fw.ID = retFW.ID
+		}
 		nd.Edges.FwVersion = fw
 	}
 
@@ -627,6 +659,18 @@ func GetVersionByID(ctx context.Context, client *ent.Client, id string) (*ent.Ve
 	v, err := client.Version.Query().Where(version.ID(id)).Only(ctx)
 	if err != nil {
 		zlog.Error().Err(err).Msgf("Failed to get version resource (%s)", id)
+		return nil, err
+	}
+
+	return v, nil
+}
+
+// GetVersionByVersionAndChecksum retrieves version resource by provided version and checksum.
+func GetVersionByVersionAndChecksum(ctx context.Context, client *ent.Client, vrs, checksum string) (*ent.Version, error) {
+	zlog.Debug().Msgf("Retrieving version resource (%s:%s)", vrs, checksum)
+	v, err := client.Version.Query().Where(version.Version(vrs), version.Checksum(checksum)).Only(ctx)
+	if err != nil {
+		zlog.Error().Err(err).Msgf("Failed to get version resource (%s:%s)", vrs, checksum)
 		return nil, err
 	}
 
