@@ -103,6 +103,40 @@
         ]
       }
     },
+    "/v1/monitoring/devices/swap": {
+      "post": {
+        "summary": "SwapDeviceList allows to swap list of the devices that are currently being monitored. All devices that are not\n in the list will be removed from the system. Response contains full list of monitored network devices\n reflecting recent changes.",
+        "operationId": "DeviceMonitoringService_SwapDeviceList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1UpdateDeviceListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "description": "UpdateDeviceListRequest contains a list of the devices (including theirs' details) to be updated.",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1UpdateDeviceListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      }
+    },
     "/v1/monitoring/devices/{id}": {
       "delete": {
         "summary": "DeleteDevice allows to remove network device from the monitoring service.\nIn order to do so, you should remember ID assigned internally by the monitoring system.",
@@ -283,6 +317,29 @@
             "type": "string"
           }
         ],
+        "tags": [
+          "DeviceMonitoringService"
+        ]
+      }
+    },
+    "/v1/monitoring/statuses": {
+      "get": {
+        "summary": "GetAllDeviceStatuses allows to retrieve all statuses from all network devices.",
+        "operationId": "DeviceMonitoringService_GetAllDeviceStatuses",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetDeviceStatusesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
         "tags": [
           "DeviceMonitoringService"
         ]
@@ -477,6 +534,19 @@
         }
       },
       "description": "GetDeviceStatusResponse carries the result of the health check for the network device."
+    },
+    "v1GetDeviceStatusesResponse": {
+      "type": "object",
+      "properties": {
+        "statuses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1DeviceStatus"
+          }
+        }
+      },
+      "description": "GetDeviceStatusesResponse carries summary of all network device statuses."
     },
     "v1GetSummaryResponse": {
       "type": "object",

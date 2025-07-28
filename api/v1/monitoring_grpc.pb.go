@@ -20,12 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DeviceMonitoringService_UpdateDeviceList_FullMethodName = "/api.v1.DeviceMonitoringService/UpdateDeviceList"
-	DeviceMonitoringService_GetDeviceList_FullMethodName    = "/api.v1.DeviceMonitoringService/GetDeviceList"
-	DeviceMonitoringService_AddDevice_FullMethodName        = "/api.v1.DeviceMonitoringService/AddDevice"
-	DeviceMonitoringService_DeleteDevice_FullMethodName     = "/api.v1.DeviceMonitoringService/DeleteDevice"
-	DeviceMonitoringService_GetDeviceStatus_FullMethodName  = "/api.v1.DeviceMonitoringService/GetDeviceStatus"
-	DeviceMonitoringService_GetSummary_FullMethodName       = "/api.v1.DeviceMonitoringService/GetSummary"
+	DeviceMonitoringService_UpdateDeviceList_FullMethodName     = "/api.v1.DeviceMonitoringService/UpdateDeviceList"
+	DeviceMonitoringService_SwapDeviceList_FullMethodName       = "/api.v1.DeviceMonitoringService/SwapDeviceList"
+	DeviceMonitoringService_GetDeviceList_FullMethodName        = "/api.v1.DeviceMonitoringService/GetDeviceList"
+	DeviceMonitoringService_AddDevice_FullMethodName            = "/api.v1.DeviceMonitoringService/AddDevice"
+	DeviceMonitoringService_DeleteDevice_FullMethodName         = "/api.v1.DeviceMonitoringService/DeleteDevice"
+	DeviceMonitoringService_GetDeviceStatus_FullMethodName      = "/api.v1.DeviceMonitoringService/GetDeviceStatus"
+	DeviceMonitoringService_GetAllDeviceStatuses_FullMethodName = "/api.v1.DeviceMonitoringService/GetAllDeviceStatuses"
+	DeviceMonitoringService_GetSummary_FullMethodName           = "/api.v1.DeviceMonitoringService/GetSummary"
 )
 
 // DeviceMonitoringServiceClient is the client API for DeviceMonitoringService service.
@@ -35,6 +37,11 @@ type DeviceMonitoringServiceClient interface {
 	// UpdateDeviceList allows to update list of the devices that are currently monitored in a PATCH fashion.
 	// Response contains full list of monitored network devices reflecting recent changes.
 	UpdateDeviceList(ctx context.Context, in *UpdateDeviceListRequest, opts ...grpc.CallOption) (*UpdateDeviceListResponse, error)
+	// SwapDeviceList allows to swap list of the devices that are currently being monitored. All devices that are not
+	//
+	//	in the list will be removed from the system. Response contains full list of monitored network devices
+	//	reflecting recent changes.
+	SwapDeviceList(ctx context.Context, in *UpdateDeviceListRequest, opts ...grpc.CallOption) (*UpdateDeviceListResponse, error)
 	// GetDeviceList allows to retrieve a list of all currently monitored network devices.
 	GetDeviceList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetDeviceListResponse, error)
 	// AddDevice allows to add a network device that would be monitored.
@@ -45,6 +52,8 @@ type DeviceMonitoringServiceClient interface {
 	DeleteDevice(ctx context.Context, in *DeleteDeviceRequest, opts ...grpc.CallOption) (*DeleteDeviceResponse, error)
 	// GetDeviceStatus allows to retrieve network device status in real time.
 	GetDeviceStatus(ctx context.Context, in *GetDeviceStatusRequest, opts ...grpc.CallOption) (*GetDeviceStatusResponse, error)
+	// GetAllDeviceStatuses allows to retrieve all statuses from all network devices.
+	GetAllDeviceStatuses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetDeviceStatusesResponse, error)
 	// GetSummary allows to retrieve summary of network device monitoring.
 	GetSummary(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSummaryResponse, error)
 }
@@ -60,6 +69,15 @@ func NewDeviceMonitoringServiceClient(cc grpc.ClientConnInterface) DeviceMonitor
 func (c *deviceMonitoringServiceClient) UpdateDeviceList(ctx context.Context, in *UpdateDeviceListRequest, opts ...grpc.CallOption) (*UpdateDeviceListResponse, error) {
 	out := new(UpdateDeviceListResponse)
 	err := c.cc.Invoke(ctx, DeviceMonitoringService_UpdateDeviceList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *deviceMonitoringServiceClient) SwapDeviceList(ctx context.Context, in *UpdateDeviceListRequest, opts ...grpc.CallOption) (*UpdateDeviceListResponse, error) {
+	out := new(UpdateDeviceListResponse)
+	err := c.cc.Invoke(ctx, DeviceMonitoringService_SwapDeviceList_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +120,15 @@ func (c *deviceMonitoringServiceClient) GetDeviceStatus(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *deviceMonitoringServiceClient) GetAllDeviceStatuses(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetDeviceStatusesResponse, error) {
+	out := new(GetDeviceStatusesResponse)
+	err := c.cc.Invoke(ctx, DeviceMonitoringService_GetAllDeviceStatuses_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *deviceMonitoringServiceClient) GetSummary(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSummaryResponse, error) {
 	out := new(GetSummaryResponse)
 	err := c.cc.Invoke(ctx, DeviceMonitoringService_GetSummary_FullMethodName, in, out, opts...)
@@ -118,6 +145,11 @@ type DeviceMonitoringServiceServer interface {
 	// UpdateDeviceList allows to update list of the devices that are currently monitored in a PATCH fashion.
 	// Response contains full list of monitored network devices reflecting recent changes.
 	UpdateDeviceList(context.Context, *UpdateDeviceListRequest) (*UpdateDeviceListResponse, error)
+	// SwapDeviceList allows to swap list of the devices that are currently being monitored. All devices that are not
+	//
+	//	in the list will be removed from the system. Response contains full list of monitored network devices
+	//	reflecting recent changes.
+	SwapDeviceList(context.Context, *UpdateDeviceListRequest) (*UpdateDeviceListResponse, error)
 	// GetDeviceList allows to retrieve a list of all currently monitored network devices.
 	GetDeviceList(context.Context, *emptypb.Empty) (*GetDeviceListResponse, error)
 	// AddDevice allows to add a network device that would be monitored.
@@ -128,6 +160,8 @@ type DeviceMonitoringServiceServer interface {
 	DeleteDevice(context.Context, *DeleteDeviceRequest) (*DeleteDeviceResponse, error)
 	// GetDeviceStatus allows to retrieve network device status in real time.
 	GetDeviceStatus(context.Context, *GetDeviceStatusRequest) (*GetDeviceStatusResponse, error)
+	// GetAllDeviceStatuses allows to retrieve all statuses from all network devices.
+	GetAllDeviceStatuses(context.Context, *emptypb.Empty) (*GetDeviceStatusesResponse, error)
 	// GetSummary allows to retrieve summary of network device monitoring.
 	GetSummary(context.Context, *emptypb.Empty) (*GetSummaryResponse, error)
 }
@@ -138,6 +172,9 @@ type UnimplementedDeviceMonitoringServiceServer struct {
 
 func (UnimplementedDeviceMonitoringServiceServer) UpdateDeviceList(context.Context, *UpdateDeviceListRequest) (*UpdateDeviceListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDeviceList not implemented")
+}
+func (UnimplementedDeviceMonitoringServiceServer) SwapDeviceList(context.Context, *UpdateDeviceListRequest) (*UpdateDeviceListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapDeviceList not implemented")
 }
 func (UnimplementedDeviceMonitoringServiceServer) GetDeviceList(context.Context, *emptypb.Empty) (*GetDeviceListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceList not implemented")
@@ -150,6 +187,9 @@ func (UnimplementedDeviceMonitoringServiceServer) DeleteDevice(context.Context, 
 }
 func (UnimplementedDeviceMonitoringServiceServer) GetDeviceStatus(context.Context, *GetDeviceStatusRequest) (*GetDeviceStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeviceStatus not implemented")
+}
+func (UnimplementedDeviceMonitoringServiceServer) GetAllDeviceStatuses(context.Context, *emptypb.Empty) (*GetDeviceStatusesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllDeviceStatuses not implemented")
 }
 func (UnimplementedDeviceMonitoringServiceServer) GetSummary(context.Context, *emptypb.Empty) (*GetSummaryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSummary not implemented")
@@ -180,6 +220,24 @@ func _DeviceMonitoringService_UpdateDeviceList_Handler(srv interface{}, ctx cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DeviceMonitoringServiceServer).UpdateDeviceList(ctx, req.(*UpdateDeviceListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DeviceMonitoringService_SwapDeviceList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateDeviceListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceMonitoringServiceServer).SwapDeviceList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeviceMonitoringService_SwapDeviceList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceMonitoringServiceServer).SwapDeviceList(ctx, req.(*UpdateDeviceListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -256,6 +314,24 @@ func _DeviceMonitoringService_GetDeviceStatus_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DeviceMonitoringService_GetAllDeviceStatuses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DeviceMonitoringServiceServer).GetAllDeviceStatuses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DeviceMonitoringService_GetAllDeviceStatuses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DeviceMonitoringServiceServer).GetAllDeviceStatuses(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DeviceMonitoringService_GetSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
@@ -286,6 +362,10 @@ var DeviceMonitoringService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DeviceMonitoringService_UpdateDeviceList_Handler,
 		},
 		{
+			MethodName: "SwapDeviceList",
+			Handler:    _DeviceMonitoringService_SwapDeviceList_Handler,
+		},
+		{
 			MethodName: "GetDeviceList",
 			Handler:    _DeviceMonitoringService_GetDeviceList_Handler,
 		},
@@ -300,6 +380,10 @@ var DeviceMonitoringService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDeviceStatus",
 			Handler:    _DeviceMonitoringService_GetDeviceStatus_Handler,
+		},
+		{
+			MethodName: "GetAllDeviceStatuses",
+			Handler:    _DeviceMonitoringService_GetAllDeviceStatuses_Handler,
 		},
 		{
 			MethodName: "GetSummary",
