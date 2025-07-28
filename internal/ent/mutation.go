@@ -35,19 +35,19 @@ const (
 // DeviceStatusMutation represents an operation that mutates the DeviceStatus nodes in the graph.
 type DeviceStatusMutation struct {
 	config
-	op                                         Op
-	typ                                        string
-	id                                         *string
-	status                                     *devicestatus.Status
-	last_seen                                  *string
-	consequentialFailedConnectivityAttempts    *int32
-	addconsequentialFailedConnectivityAttempts *int32
-	clearedFields                              map[string]struct{}
-	network_device                             *string
-	clearednetwork_device                      bool
-	done                                       bool
-	oldValue                                   func(context.Context) (*DeviceStatus, error)
-	predicates                                 []predicate.DeviceStatus
+	op                                            Op
+	typ                                           string
+	id                                            *string
+	status                                        *devicestatus.Status
+	last_seen                                     *string
+	consequential_failed_connectivity_attempts    *int32
+	addconsequential_failed_connectivity_attempts *int32
+	clearedFields                                 map[string]struct{}
+	network_device                                *string
+	clearednetwork_device                         bool
+	done                                          bool
+	oldValue                                      func(context.Context) (*DeviceStatus, error)
+	predicates                                    []predicate.DeviceStatus
 }
 
 var _ ent.Mutation = (*DeviceStatusMutation)(nil)
@@ -239,22 +239,22 @@ func (m *DeviceStatusMutation) ResetLastSeen() {
 	delete(m.clearedFields, devicestatus.FieldLastSeen)
 }
 
-// SetConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field.
+// SetConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field.
 func (m *DeviceStatusMutation) SetConsequentialFailedConnectivityAttempts(i int32) {
-	m.consequentialFailedConnectivityAttempts = &i
-	m.addconsequentialFailedConnectivityAttempts = nil
+	m.consequential_failed_connectivity_attempts = &i
+	m.addconsequential_failed_connectivity_attempts = nil
 }
 
-// ConsequentialFailedConnectivityAttempts returns the value of the "consequentialFailedConnectivityAttempts" field in the mutation.
+// ConsequentialFailedConnectivityAttempts returns the value of the "consequential_failed_connectivity_attempts" field in the mutation.
 func (m *DeviceStatusMutation) ConsequentialFailedConnectivityAttempts() (r int32, exists bool) {
-	v := m.consequentialFailedConnectivityAttempts
+	v := m.consequential_failed_connectivity_attempts
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldConsequentialFailedConnectivityAttempts returns the old "consequentialFailedConnectivityAttempts" field's value of the DeviceStatus entity.
+// OldConsequentialFailedConnectivityAttempts returns the old "consequential_failed_connectivity_attempts" field's value of the DeviceStatus entity.
 // If the DeviceStatus object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *DeviceStatusMutation) OldConsequentialFailedConnectivityAttempts(ctx context.Context) (v int32, err error) {
@@ -271,28 +271,28 @@ func (m *DeviceStatusMutation) OldConsequentialFailedConnectivityAttempts(ctx co
 	return oldValue.ConsequentialFailedConnectivityAttempts, nil
 }
 
-// AddConsequentialFailedConnectivityAttempts adds i to the "consequentialFailedConnectivityAttempts" field.
+// AddConsequentialFailedConnectivityAttempts adds i to the "consequential_failed_connectivity_attempts" field.
 func (m *DeviceStatusMutation) AddConsequentialFailedConnectivityAttempts(i int32) {
-	if m.addconsequentialFailedConnectivityAttempts != nil {
-		*m.addconsequentialFailedConnectivityAttempts += i
+	if m.addconsequential_failed_connectivity_attempts != nil {
+		*m.addconsequential_failed_connectivity_attempts += i
 	} else {
-		m.addconsequentialFailedConnectivityAttempts = &i
+		m.addconsequential_failed_connectivity_attempts = &i
 	}
 }
 
-// AddedConsequentialFailedConnectivityAttempts returns the value that was added to the "consequentialFailedConnectivityAttempts" field in this mutation.
+// AddedConsequentialFailedConnectivityAttempts returns the value that was added to the "consequential_failed_connectivity_attempts" field in this mutation.
 func (m *DeviceStatusMutation) AddedConsequentialFailedConnectivityAttempts() (r int32, exists bool) {
-	v := m.addconsequentialFailedConnectivityAttempts
+	v := m.addconsequential_failed_connectivity_attempts
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// ResetConsequentialFailedConnectivityAttempts resets all changes to the "consequentialFailedConnectivityAttempts" field.
+// ResetConsequentialFailedConnectivityAttempts resets all changes to the "consequential_failed_connectivity_attempts" field.
 func (m *DeviceStatusMutation) ResetConsequentialFailedConnectivityAttempts() {
-	m.consequentialFailedConnectivityAttempts = nil
-	m.addconsequentialFailedConnectivityAttempts = nil
+	m.consequential_failed_connectivity_attempts = nil
+	m.addconsequential_failed_connectivity_attempts = nil
 }
 
 // SetNetworkDeviceID sets the "network_device" edge to the NetworkDevice entity by id.
@@ -375,7 +375,7 @@ func (m *DeviceStatusMutation) Fields() []string {
 	if m.last_seen != nil {
 		fields = append(fields, devicestatus.FieldLastSeen)
 	}
-	if m.consequentialFailedConnectivityAttempts != nil {
+	if m.consequential_failed_connectivity_attempts != nil {
 		fields = append(fields, devicestatus.FieldConsequentialFailedConnectivityAttempts)
 	}
 	return fields
@@ -445,7 +445,7 @@ func (m *DeviceStatusMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *DeviceStatusMutation) AddedFields() []string {
 	var fields []string
-	if m.addconsequentialFailedConnectivityAttempts != nil {
+	if m.addconsequential_failed_connectivity_attempts != nil {
 		fields = append(fields, devicestatus.FieldConsequentialFailedConnectivityAttempts)
 	}
 	return fields

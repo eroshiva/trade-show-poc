@@ -68,7 +68,7 @@ func LastSeen(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldEQ(FieldLastSeen, v))
 }
 
-// ConsequentialFailedConnectivityAttempts applies equality check predicate on the "consequentialFailedConnectivityAttempts" field. It's identical to ConsequentialFailedConnectivityAttemptsEQ.
+// ConsequentialFailedConnectivityAttempts applies equality check predicate on the "consequential_failed_connectivity_attempts" field. It's identical to ConsequentialFailedConnectivityAttemptsEQ.
 func ConsequentialFailedConnectivityAttempts(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldEQ(FieldConsequentialFailedConnectivityAttempts, v))
 }
@@ -168,42 +168,42 @@ func LastSeenContainsFold(v string) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldContainsFold(FieldLastSeen, v))
 }
 
-// ConsequentialFailedConnectivityAttemptsEQ applies the EQ predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsEQ applies the EQ predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsEQ(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldEQ(FieldConsequentialFailedConnectivityAttempts, v))
 }
 
-// ConsequentialFailedConnectivityAttemptsNEQ applies the NEQ predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsNEQ applies the NEQ predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsNEQ(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldNEQ(FieldConsequentialFailedConnectivityAttempts, v))
 }
 
-// ConsequentialFailedConnectivityAttemptsIn applies the In predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsIn applies the In predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsIn(vs ...int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldIn(FieldConsequentialFailedConnectivityAttempts, vs...))
 }
 
-// ConsequentialFailedConnectivityAttemptsNotIn applies the NotIn predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsNotIn applies the NotIn predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsNotIn(vs ...int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldNotIn(FieldConsequentialFailedConnectivityAttempts, vs...))
 }
 
-// ConsequentialFailedConnectivityAttemptsGT applies the GT predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsGT applies the GT predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsGT(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldGT(FieldConsequentialFailedConnectivityAttempts, v))
 }
 
-// ConsequentialFailedConnectivityAttemptsGTE applies the GTE predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsGTE applies the GTE predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsGTE(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldGTE(FieldConsequentialFailedConnectivityAttempts, v))
 }
 
-// ConsequentialFailedConnectivityAttemptsLT applies the LT predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsLT applies the LT predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsLT(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldLT(FieldConsequentialFailedConnectivityAttempts, v))
 }
 
-// ConsequentialFailedConnectivityAttemptsLTE applies the LTE predicate on the "consequentialFailedConnectivityAttempts" field.
+// ConsequentialFailedConnectivityAttemptsLTE applies the LTE predicate on the "consequential_failed_connectivity_attempts" field.
 func ConsequentialFailedConnectivityAttemptsLTE(v int32) predicate.DeviceStatus {
 	return predicate.DeviceStatus(sql.FieldLTE(FieldConsequentialFailedConnectivityAttempts, v))
 }

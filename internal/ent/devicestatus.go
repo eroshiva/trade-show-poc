@@ -21,8 +21,8 @@ type DeviceStatus struct {
 	Status devicestatus.Status `json:"status,omitempty"`
 	// LastSeen holds the value of the "last_seen" field.
 	LastSeen string `json:"last_seen,omitempty"`
-	// ConsequentialFailedConnectivityAttempts holds the value of the "consequentialFailedConnectivityAttempts" field.
-	ConsequentialFailedConnectivityAttempts int32 `json:"consequentialFailedConnectivityAttempts,omitempty"`
+	// ConsequentialFailedConnectivityAttempts holds the value of the "consequential_failed_connectivity_attempts" field.
+	ConsequentialFailedConnectivityAttempts int32 `json:"consequential_failed_connectivity_attempts,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DeviceStatusQuery when eager-loading is set.
 	Edges                        DeviceStatusEdges `json:"edges"`
@@ -96,7 +96,7 @@ func (ds *DeviceStatus) assignValues(columns []string, values []any) error {
 			}
 		case devicestatus.FieldConsequentialFailedConnectivityAttempts:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field consequentialFailedConnectivityAttempts", values[i])
+				return fmt.Errorf("unexpected type %T for field consequential_failed_connectivity_attempts", values[i])
 			} else if value.Valid {
 				ds.ConsequentialFailedConnectivityAttempts = int32(value.Int64)
 			}
@@ -154,7 +154,7 @@ func (ds *DeviceStatus) String() string {
 	builder.WriteString("last_seen=")
 	builder.WriteString(ds.LastSeen)
 	builder.WriteString(", ")
-	builder.WriteString("consequentialFailedConnectivityAttempts=")
+	builder.WriteString("consequential_failed_connectivity_attempts=")
 	builder.WriteString(fmt.Sprintf("%v", ds.ConsequentialFailedConnectivityAttempts))
 	builder.WriteByte(')')
 	return builder.String()

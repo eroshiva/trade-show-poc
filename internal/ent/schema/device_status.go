@@ -14,7 +14,7 @@ type DeviceStatus struct {
 }
 
 func (DeviceStatus) Fields() []ent.Field {
-	return []ent.Field{field.String("id"), field.Enum("status").Values("STATUS_UNSPECIFIED", "STATUS_DEVICE_DOWN", "STATUS_DEVICE_UNHEALTHY", "STATUS_DEVICE_UP"), field.String("last_seen").Optional(), field.Int32("consequentialFailedConnectivityAttempts")}
+	return []ent.Field{field.String("id"), field.Enum("status").Values("STATUS_UNSPECIFIED", "STATUS_DEVICE_DOWN", "STATUS_DEVICE_UNHEALTHY", "STATUS_DEVICE_UP"), field.String("last_seen").Optional(), field.Int32("consequential_failed_connectivity_attempts")}
 }
 func (DeviceStatus) Edges() []ent.Edge {
 	return []ent.Edge{edge.To("network_device", NetworkDevice.Type).Unique()}

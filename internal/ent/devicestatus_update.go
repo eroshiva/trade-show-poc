@@ -62,14 +62,14 @@ func (dsu *DeviceStatusUpdate) ClearLastSeen() *DeviceStatusUpdate {
 	return dsu
 }
 
-// SetConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field.
+// SetConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field.
 func (dsu *DeviceStatusUpdate) SetConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdate {
 	dsu.mutation.ResetConsequentialFailedConnectivityAttempts()
 	dsu.mutation.SetConsequentialFailedConnectivityAttempts(i)
 	return dsu
 }
 
-// SetNillableConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field if the given value is not nil.
+// SetNillableConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field if the given value is not nil.
 func (dsu *DeviceStatusUpdate) SetNillableConsequentialFailedConnectivityAttempts(i *int32) *DeviceStatusUpdate {
 	if i != nil {
 		dsu.SetConsequentialFailedConnectivityAttempts(*i)
@@ -77,7 +77,7 @@ func (dsu *DeviceStatusUpdate) SetNillableConsequentialFailedConnectivityAttempt
 	return dsu
 }
 
-// AddConsequentialFailedConnectivityAttempts adds i to the "consequentialFailedConnectivityAttempts" field.
+// AddConsequentialFailedConnectivityAttempts adds i to the "consequential_failed_connectivity_attempts" field.
 func (dsu *DeviceStatusUpdate) AddConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdate {
 	dsu.mutation.AddConsequentialFailedConnectivityAttempts(i)
 	return dsu
@@ -260,14 +260,14 @@ func (dsuo *DeviceStatusUpdateOne) ClearLastSeen() *DeviceStatusUpdateOne {
 	return dsuo
 }
 
-// SetConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field.
+// SetConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field.
 func (dsuo *DeviceStatusUpdateOne) SetConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdateOne {
 	dsuo.mutation.ResetConsequentialFailedConnectivityAttempts()
 	dsuo.mutation.SetConsequentialFailedConnectivityAttempts(i)
 	return dsuo
 }
 
-// SetNillableConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field if the given value is not nil.
+// SetNillableConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field if the given value is not nil.
 func (dsuo *DeviceStatusUpdateOne) SetNillableConsequentialFailedConnectivityAttempts(i *int32) *DeviceStatusUpdateOne {
 	if i != nil {
 		dsuo.SetConsequentialFailedConnectivityAttempts(*i)
@@ -275,7 +275,7 @@ func (dsuo *DeviceStatusUpdateOne) SetNillableConsequentialFailedConnectivityAtt
 	return dsuo
 }
 
-// AddConsequentialFailedConnectivityAttempts adds i to the "consequentialFailedConnectivityAttempts" field.
+// AddConsequentialFailedConnectivityAttempts adds i to the "consequential_failed_connectivity_attempts" field.
 func (dsuo *DeviceStatusUpdateOne) AddConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusUpdateOne {
 	dsuo.mutation.AddConsequentialFailedConnectivityAttempts(i)
 	return dsuo

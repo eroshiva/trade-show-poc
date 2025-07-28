@@ -170,7 +170,7 @@ func TestDeviceStatusResource(t *testing.T) {
 	})
 
 	// creating device status
-	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, time.Now().String(), nd)
+	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, time.Now().String(), 0, nd)
 	require.NoError(t, err)
 	require.NotNil(t, ds)
 
@@ -182,7 +182,7 @@ func TestDeviceStatusResource(t *testing.T) {
 	// updating network device status
 	ds.Status = devicestatus.StatusSTATUS_DEVICE_UNHEALTHY
 	ds.LastSeen = time.Now().String()
-	updDs, err := db.UpdateDeviceStatusByNetworkDeviceID(ctx, client, nd.ID, ds.Status, ds.LastSeen)
+	updDs, err := db.UpdateDeviceStatusByNetworkDeviceID(ctx, client, nd.ID, ds.Status, ds.LastSeen, 0)
 	require.NoError(t, err)
 	require.NotNil(t, updDs)
 	monitoring_testing.AssertDeviceStatus(t, ds, updDs)
@@ -195,7 +195,7 @@ func TestDeviceStatusResource(t *testing.T) {
 
 	// updating network device status again
 	ds.Status = devicestatus.StatusSTATUS_DEVICE_DOWN
-	updDs2, err := db.UpdateDeviceStatusByEndpointID(ctx, client, ep2.ID, ds.Status, "")
+	updDs2, err := db.UpdateDeviceStatusByEndpointID(ctx, client, ep2.ID, ds.Status, "", 0)
 	require.NoError(t, err)
 	require.NotNil(t, updDs2)
 	monitoring_testing.AssertDeviceStatus(t, ds, updDs2)
@@ -216,7 +216,7 @@ func TestDeviceStatusResourceErrors(t *testing.T) {
 	t.Cleanup(cancel)
 
 	// fail - creating device status with no network device
-	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, time.Now().String(), nil)
+	ds, err := db.CreateDeviceStatus(ctx, client, devicestatus.StatusSTATUS_DEVICE_UP, time.Now().String(), 0, nil)
 	require.Error(t, err)
 	require.Nil(t, ds)
 
@@ -262,19 +262,19 @@ func TestDeviceStatusResourceErrors(t *testing.T) {
 	})
 
 	// fail - creating device status with no status
-	ds2, err := db.CreateDeviceStatus(ctx, client, "", time.Now().String(), nd)
+	ds2, err := db.CreateDeviceStatus(ctx, client, "", time.Now().String(), 0, nd)
 	require.Error(t, err)
 	require.Nil(t, ds2)
 
 	// fail - updating network device status by fake network device ID
 	status := devicestatus.StatusSTATUS_DEVICE_UP
 	lastSeen := time.Now().String()
-	updDs, err := db.UpdateDeviceStatusByNetworkDeviceID(ctx, client, uuid.NewString(), status, lastSeen)
+	updDs, err := db.UpdateDeviceStatusByNetworkDeviceID(ctx, client, uuid.NewString(), status, lastSeen, 0)
 	assert.Error(t, err)
 	assert.Nil(t, updDs)
 
 	// success - creating network device status on update
-	updDs, err = db.UpdateDeviceStatusByNetworkDeviceID(ctx, client, nd.ID, status, lastSeen)
+	updDs, err = db.UpdateDeviceStatusByNetworkDeviceID(ctx, client, nd.ID, status, lastSeen, 0)
 	require.NoError(t, err)
 	require.NotNil(t, updDs)
 
@@ -285,12 +285,12 @@ func TestDeviceStatusResourceErrors(t *testing.T) {
 	// fail - updating network device status by fake endpoint ID
 	status = devicestatus.StatusSTATUS_DEVICE_UNHEALTHY
 	lastSeen = time.Now().String()
-	updDs, err = db.UpdateDeviceStatusByEndpointID(ctx, client, uuid.NewString(), status, lastSeen)
+	updDs, err = db.UpdateDeviceStatusByEndpointID(ctx, client, uuid.NewString(), status, lastSeen, 0)
 	assert.Error(t, err)
 	assert.Nil(t, updDs)
 
 	// success - creating network device status on update
-	updDs, err = db.UpdateDeviceStatusByEndpointID(ctx, client, ep2.ID, status, lastSeen)
+	updDs, err = db.UpdateDeviceStatusByEndpointID(ctx, client, ep2.ID, status, lastSeen, 0)
 	require.NoError(t, err)
 	require.NotNil(t, updDs)
 

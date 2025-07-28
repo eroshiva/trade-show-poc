@@ -237,7 +237,7 @@ message DeviceStatus {
   // This variable specifies a number of consequential failed attempts to establish connectivity.
   // Once this number reaches the limit (specified within monitoring service main control loop),
   // network device is considered to be in down state.
-  int32 consequentialFailedConnectivityAttempts = 4;
+  int32 consequential_failed_connectivity_attempts = 4;
 
   NetworkDevice network_device = 10 [(ent.edge) = {unique: true}];
 }

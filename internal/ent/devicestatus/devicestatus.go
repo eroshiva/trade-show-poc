@@ -18,7 +18,7 @@ const (
 	FieldStatus = "status"
 	// FieldLastSeen holds the string denoting the last_seen field in the database.
 	FieldLastSeen = "last_seen"
-	// FieldConsequentialFailedConnectivityAttempts holds the string denoting the consequentialfailedconnectivityattempts field in the database.
+	// FieldConsequentialFailedConnectivityAttempts holds the string denoting the consequential_failed_connectivity_attempts field in the database.
 	FieldConsequentialFailedConnectivityAttempts = "consequential_failed_connectivity_attempts"
 	// EdgeNetworkDevice holds the string denoting the network_device edge name in mutations.
 	EdgeNetworkDevice = "network_device"
@@ -105,7 +105,7 @@ func ByLastSeen(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastSeen, opts...).ToFunc()
 }
 
-// ByConsequentialFailedConnectivityAttempts orders the results by the consequentialFailedConnectivityAttempts field.
+// ByConsequentialFailedConnectivityAttempts orders the results by the consequential_failed_connectivity_attempts field.
 func ByConsequentialFailedConnectivityAttempts(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldConsequentialFailedConnectivityAttempts, opts...).ToFunc()
 }

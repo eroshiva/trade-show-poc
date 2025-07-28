@@ -40,7 +40,7 @@ func (dsc *DeviceStatusCreate) SetNillableLastSeen(s *string) *DeviceStatusCreat
 	return dsc
 }
 
-// SetConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field.
+// SetConsequentialFailedConnectivityAttempts sets the "consequential_failed_connectivity_attempts" field.
 func (dsc *DeviceStatusCreate) SetConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusCreate {
 	dsc.mutation.SetConsequentialFailedConnectivityAttempts(i)
 	return dsc
@@ -114,7 +114,7 @@ func (dsc *DeviceStatusCreate) check() error {
 		}
 	}
 	if _, ok := dsc.mutation.ConsequentialFailedConnectivityAttempts(); !ok {
-		return &ValidationError{Name: "consequentialFailedConnectivityAttempts", err: errors.New(`ent: missing required field "DeviceStatus.consequentialFailedConnectivityAttempts"`)}
+		return &ValidationError{Name: "consequential_failed_connectivity_attempts", err: errors.New(`ent: missing required field "DeviceStatus.consequential_failed_connectivity_attempts"`)}
 	}
 	return nil
 }
