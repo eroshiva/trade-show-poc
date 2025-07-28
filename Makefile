@@ -125,6 +125,12 @@ run: go-tidy build-monitoring db-start ## Runs compiled network device monitorin
 run-simulator: go-tidy ## Runs Network Device Simulator with default values
 	go run cmd/simulator/simulator.go
 
+run-cli-add-device: go-tidy ## Runs helper CLI tool and adds one device to the monitoring service
+	go run cmd/helper-cli/helper-cli.go --addDevice
+
+run-cli-add-devices: go-tidy ## Runs helper CLI tool and adds bunch of the devices specified in the config.json
+	go run cmd/helper-cli/helper-cli.go --addDevices
+
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
 image: ## Builds a Docker image for Network Device monitoring service
