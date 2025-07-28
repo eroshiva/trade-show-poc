@@ -10,11 +10,11 @@ option go_package = "github.com/eroshiva/trade-show-poc/api/v1/simulator;simulat
 // MockDeviceService simulates a real network device.
 service MockDeviceService {
   rpc GetStatus(google.protobuf.Empty) returns (api.v1.DeviceStatus) {}
-  rpc GetHWModel(google.protobuf.Empty) returns (GetHWModelResponse) {}
+  rpc GetHWVersion(google.protobuf.Empty) returns (GetVersionResponse) {}
   rpc GetSWVersion(google.protobuf.Empty) returns (api.v1.Version) {}
   rpc GetFWVersion(google.protobuf.Empty) returns (api.v1.Version) {}
 }
 
-message GetHWModelResponse {
+message GetVersionResponse {
   string version = 1;
 }

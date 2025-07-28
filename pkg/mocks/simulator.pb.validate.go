@@ -35,22 +35,22 @@ var (
 	_ = sort.Sort
 )
 
-// Validate checks the field values on GetHWModelResponse with the rules
+// Validate checks the field values on GetVersionResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *GetHWModelResponse) Validate() error {
+func (m *GetVersionResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on GetHWModelResponse with the rules
+// ValidateAll checks the field values on GetVersionResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// GetHWModelResponseMultiError, or nil if none found.
-func (m *GetHWModelResponse) ValidateAll() error {
+// GetVersionResponseMultiError, or nil if none found.
+func (m *GetVersionResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *GetHWModelResponse) validate(all bool) error {
+func (m *GetVersionResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -60,19 +60,19 @@ func (m *GetHWModelResponse) validate(all bool) error {
 	// no validation rules for Version
 
 	if len(errors) > 0 {
-		return GetHWModelResponseMultiError(errors)
+		return GetVersionResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// GetHWModelResponseMultiError is an error wrapping multiple validation errors
-// returned by GetHWModelResponse.ValidateAll() if the designated constraints
+// GetVersionResponseMultiError is an error wrapping multiple validation errors
+// returned by GetVersionResponse.ValidateAll() if the designated constraints
 // aren't met.
-type GetHWModelResponseMultiError []error
+type GetVersionResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m GetHWModelResponseMultiError) Error() string {
+func (m GetVersionResponseMultiError) Error() string {
 	msgs := make([]string, 0, len(m))
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -81,11 +81,11 @@ func (m GetHWModelResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m GetHWModelResponseMultiError) AllErrors() []error { return m }
+func (m GetVersionResponseMultiError) AllErrors() []error { return m }
 
-// GetHWModelResponseValidationError is the validation error returned by
-// GetHWModelResponse.Validate if the designated constraints aren't met.
-type GetHWModelResponseValidationError struct {
+// GetVersionResponseValidationError is the validation error returned by
+// GetVersionResponse.Validate if the designated constraints aren't met.
+type GetVersionResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -93,24 +93,24 @@ type GetHWModelResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e GetHWModelResponseValidationError) Field() string { return e.field }
+func (e GetVersionResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e GetHWModelResponseValidationError) Reason() string { return e.reason }
+func (e GetVersionResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e GetHWModelResponseValidationError) Cause() error { return e.cause }
+func (e GetVersionResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e GetHWModelResponseValidationError) Key() bool { return e.key }
+func (e GetVersionResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e GetHWModelResponseValidationError) ErrorName() string {
-	return "GetHWModelResponseValidationError"
+func (e GetVersionResponseValidationError) ErrorName() string {
+	return "GetVersionResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e GetHWModelResponseValidationError) Error() string {
+func (e GetVersionResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -122,14 +122,14 @@ func (e GetHWModelResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sGetHWModelResponse.%s: %s%s",
+		"invalid %sGetVersionResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = GetHWModelResponseValidationError{}
+var _ error = GetVersionResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -137,4 +137,4 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = GetHWModelResponseValidationError{}
+} = GetVersionResponseValidationError{}
