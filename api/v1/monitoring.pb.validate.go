@@ -1965,6 +1965,8 @@ func (m *DeviceStatus) validate(all bool) error {
 
 	// no validation rules for LastSeen
 
+	// no validation rules for ConsequentialFailedConnectivityAttempts
+
 	if all {
 		switch v := interface{}(m.GetNetworkDevice()).(type) {
 		case interface{ ValidateAll() error }:

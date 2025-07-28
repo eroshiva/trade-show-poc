@@ -24,6 +24,11 @@ solution.
 ## Solution
 This section describes a provided solution.
 
+For the devices on sites with bad connectivity, a threshold (in `CONNECTIVITY_ABSENCE_LIMIT`) is defined. For example,
+if network device was unreachable (e.g., failed to establish connection or failed to retrieve information from the device)
+**consequently** for `CONNECTIVITY_ABSENCE_LIMIT` times, then network device is considered to be in down state.
+This is managed within main control loop.
+
 
 ## Testing
 This section describes testing procedure.
@@ -50,7 +55,7 @@ AI tools were not used for any code generation neither code completion nor for c
 Gemini 2.5 Pro was used to make initial research in best practices for handling:
 - REST and gRPC API simultaneously.
     - Previous idea was to have two API Gateways - gRPC and REST one, but too much work.
-    - Research indicated the existence of the grpc-gateway plugin, which is able to autogenerate rever HTTP
+    - Research indicated the existence of the `grpc-gateway` plugin, which is able to autogenerate rever HTTP
       proxy out of Protobuf definition of the schema.
 - SQL coexistance with Go code.
     - Research in tooling — rather misleading, unhelpful, and time-consuming.

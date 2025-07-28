@@ -989,10 +989,14 @@ type DeviceStatus struct {
 	// Current status of the Network device.
 	Status Status `protobuf:"varint,2,opt,name=status,proto3,enum=api.v1.Status" json:"status,omitempty"`
 	// A timestamp when the device was last seen in the UP or unhealthy state.
-	LastSeen      string         `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"` // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
-	NetworkDevice *NetworkDevice `protobuf:"bytes,10,opt,name=network_device,json=networkDevice,proto3" json:"network_device,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	LastSeen string `protobuf:"bytes,3,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"` // originally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that.
+	// This variable specifies a number of consequential failed attempts to establish connectivity.
+	// Once this number reaches the limit (specified within monitoring service main control loop),
+	// network device is considered to be in down state.
+	ConsequentialFailedConnectivityAttempts int32          `protobuf:"varint,4,opt,name=consequentialFailedConnectivityAttempts,proto3" json:"consequentialFailedConnectivityAttempts,omitempty"`
+	NetworkDevice                           *NetworkDevice `protobuf:"bytes,10,opt,name=network_device,json=networkDevice,proto3" json:"network_device,omitempty"`
+	unknownFields                           protoimpl.UnknownFields
+	sizeCache                               protoimpl.SizeCache
 }
 
 func (x *DeviceStatus) Reset() {
@@ -1044,6 +1048,13 @@ func (x *DeviceStatus) GetLastSeen() string {
 		return x.LastSeen
 	}
 	return ""
+}
+
+func (x *DeviceStatus) GetConsequentialFailedConnectivityAttempts() int32 {
+	if x != nil {
+		return x.ConsequentialFailedConnectivityAttempts
+	}
+	return 0
 }
 
 func (x *DeviceStatus) GetNetworkDevice() *NetworkDevice {
@@ -1255,11 +1266,12 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\n" +
 	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tswVersion\x126\n" +
 	"\n" +
-	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"\xb9\x01\n" +
+	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"\x93\x02\n" +
 	"\fDeviceStatus\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12#\n" +
-	"\tlast_seen\x18\x03 \x01(\tB\x06\xba\xa6I\x02\b\x01R\blastSeen\x12D\n" +
+	"\tlast_seen\x18\x03 \x01(\tB\x06\xba\xa6I\x02\b\x01R\blastSeen\x12X\n" +
+	"'consequentialFailedConnectivityAttempts\x18\x04 \x01(\x05R'consequentialFailedConnectivityAttempts\x12D\n" +
 	"\x0enetwork_device\x18\n" +
 	" \x01(\v2\x15.api.v1.NetworkDeviceB\x06¦I\x02\b\x01R\rnetworkDevice:\x06\xba\xa6I\x02\b\x01\"\xc9\x01\n" +
 	"\bEndpoint\x12\x0e\n" +

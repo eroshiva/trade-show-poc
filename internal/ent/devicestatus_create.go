@@ -40,6 +40,12 @@ func (dsc *DeviceStatusCreate) SetNillableLastSeen(s *string) *DeviceStatusCreat
 	return dsc
 }
 
+// SetConsequentialFailedConnectivityAttempts sets the "consequentialFailedConnectivityAttempts" field.
+func (dsc *DeviceStatusCreate) SetConsequentialFailedConnectivityAttempts(i int32) *DeviceStatusCreate {
+	dsc.mutation.SetConsequentialFailedConnectivityAttempts(i)
+	return dsc
+}
+
 // SetID sets the "id" field.
 func (dsc *DeviceStatusCreate) SetID(s string) *DeviceStatusCreate {
 	dsc.mutation.SetID(s)
@@ -107,6 +113,9 @@ func (dsc *DeviceStatusCreate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "DeviceStatus.status": %w`, err)}
 		}
 	}
+	if _, ok := dsc.mutation.ConsequentialFailedConnectivityAttempts(); !ok {
+		return &ValidationError{Name: "consequentialFailedConnectivityAttempts", err: errors.New(`ent: missing required field "DeviceStatus.consequentialFailedConnectivityAttempts"`)}
+	}
 	return nil
 }
 
@@ -149,6 +158,10 @@ func (dsc *DeviceStatusCreate) createSpec() (*DeviceStatus, *sqlgraph.CreateSpec
 	if value, ok := dsc.mutation.LastSeen(); ok {
 		_spec.SetField(devicestatus.FieldLastSeen, field.TypeString, value)
 		_node.LastSeen = value
+	}
+	if value, ok := dsc.mutation.ConsequentialFailedConnectivityAttempts(); ok {
+		_spec.SetField(devicestatus.FieldConsequentialFailedConnectivityAttempts, field.TypeInt32, value)
+		_node.ConsequentialFailedConnectivityAttempts = value
 	}
 	if nodes := dsc.mutation.NetworkDeviceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

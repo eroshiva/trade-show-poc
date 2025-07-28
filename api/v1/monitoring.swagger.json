@@ -473,6 +473,11 @@
           "type": "string",
           "description": "A timestamp when the device was last seen in the UP or unhealthy state.\n\noriginally supposed to be 'google.protobuf.Timestamp', but ent generation made problems for that."
         },
+        "consequentialFailedConnectivityAttempts": {
+          "type": "integer",
+          "format": "int32",
+          "description": "This variable specifies a number of consequential failed attempts to establish connectivity.\nOnce this number reaches the limit (specified within monitoring service main control loop),\nnetwork device is considered to be in down state."
+        },
         "networkDevice": {
           "$ref": "#/definitions/v1NetworkDevice"
         }

@@ -25,6 +25,10 @@ const (
 	defaultControlLoopPerioud = 30 * time.Second
 	// EnvControlLoopPeriod defines a control loop period in seconds.
 	EnvControlLoopPeriod = "CONTROL_LOOP_PERIOD" // in seconds.
+
+	defaultConnectivityAbsenceLimit = 3
+	// EnvConnectivityAbsenceLimit specifies threshold for consequential fails in communication with the device.
+	EnvConnectivityAbsenceLimit = "CONNECTIVITY_ABSENCE_LIMIT"
 )
 
 var zlog = zerolog.New(zerolog.ConsoleWriter{
