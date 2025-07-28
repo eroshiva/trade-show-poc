@@ -3,6 +3,7 @@ export CGO_ENABLED=1
 export GOPRIVATE=github.com/eroshiva
 
 POC_NAME := monitoring
+POC_SIMULATOR_NAME := nd-simulator
 POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.3.0
@@ -56,6 +57,9 @@ build: go-tidy build-monitoring ## Builds all code
 
 build-monitoring: ## Build the Go binary for network device monitoring service
 	go build -mod=vendor -o build/_output/${POC_NAME} ./cmd/monitoring.go
+
+build-simulator: ## Build the Go binary for network device simulator
+	go build -mod=vendor -o build/_output/${POC_SIMULATOR_NAME} ./cmd/simulator/simulator.go
 
 deps: buf-install go-linters-install atlas-install ## Installs developer prerequisites for this project
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
@@ -123,9 +127,13 @@ run-simulator: go-tidy ## Runs Network Device Simulator with default values
 
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
-image: ## Builds a Docker image for API Gateway
+image: ## Builds a Docker image for Network Device monitoring service
 	docker build . -f build/Dockerfile \
 		-t ${DOCKER_REPOSITORY}/${POC_NAME}:${POC_VERSION}
+
+image-simulator: ## Builds a Docker image for Network Device simulator
+	docker build . -f build/simulator/Dockerfile \
+		-t ${DOCKER_REPOSITORY}/${POC_SIMULATOR_NAME}:${POC_VERSION}
 
 docker-run: image bring-up-db ## Runs compiled binary in a Docker container
 	docker run --net=host --rm ${DOCKER_REPOSITORY}/${POC_NAME}:${POC_VERSION}
