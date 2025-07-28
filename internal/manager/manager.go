@@ -59,6 +59,7 @@ func (m *Manager) StopManager() {
 
 // StartManager function starts main control loop that periodically fetches data from the network devices.
 func (m *Manager) StartManager() {
+	zlog.Info().Msg("Starting manager...")
 	controlLoopTick := defaultControlLoopPerioud
 	// read env variable, where Control Loop Period is specified
 	envControlLoopTick := os.Getenv(EnvControlLoopPeriod)
@@ -74,12 +75,18 @@ func (m *Manager) StartManager() {
 		controlLoopTick = time.Duration(duration) * time.Second
 	}
 
+	// executing control loop
+	go m.controlLoop(controlLoopTick)
+}
+
+func (m *Manager) controlLoop(controlLoopTick time.Duration) {
+	zlog.Info().Msgf("Starting periodical (%s seconds) execution of main control loop", controlLoopTick)
 	// creating ticker
 	ticker := time.NewTicker(controlLoopTick)
 
-	zlog.Info().Msgf("Starting periodical (%s seconds) execution of main control loop", controlLoopTick)
 	// performing control loop routine at the very beginning
 	m.PerformControlLoopRoutine(controlLoopTick)
+
 	// starting infinite control loop
 	for {
 		select {
@@ -88,7 +95,7 @@ func (m *Manager) StartManager() {
 			m.PerformControlLoopRoutine(controlLoopTick)
 		case <-m.closeChan:
 			// shutting down this routine
-			zlog.Info().Msgf("Stopping main control loop")
+			zlog.Debug().Msgf("Stopping main control loop")
 			return
 		}
 	}
@@ -96,7 +103,7 @@ func (m *Manager) StartManager() {
 
 // PerformControlLoopRoutine runs main control loop routine, i.e., fetches all devices and updates theirs status.
 func (m *Manager) PerformControlLoopRoutine(controlLoopTick time.Duration) {
-	zlog.Info().Msgf("Executing main control loop routine")
+	zlog.Debug().Msgf("Executing main control loop routine")
 	ctx, cancel := context.WithTimeout(context.Background(), controlLoopTick)
 	defer cancel()
 
