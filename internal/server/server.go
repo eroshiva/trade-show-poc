@@ -60,13 +60,13 @@ func getServerOptions(_ *Options) ([]grpc.ServerOption, error) {
 	return optionsList, nil
 }
 
-func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptions []grpc.ServerOption,
+func serve(grpcAddress, httpAddress string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptions []grpc.ServerOption,
 	termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool,
 ) {
 	grpcReadyChan := make(chan bool, 1)
-	lis, err := net.Listen(tcpNetwork, address)
+	lis, err := net.Listen(tcpNetwork, grpcAddress)
 	if err != nil {
-		zlog.Fatal().Err(err).Msgf("Failed to listen on %s", address)
+		zlog.Fatal().Err(err).Msgf("Failed to listen on %s", grpcAddress)
 	}
 
 	// Create a new gRPC server instance.
@@ -97,7 +97,7 @@ func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptio
 	wg.Add(1)
 	go func() {
 		wg.Add(1) //nolint:staticcheck
-		startReverseProxy(address, wg, grpcReadyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		startReverseProxy(grpcAddress, httpAddress, wg, grpcReadyChan, reverseProxyReadyChan, reverseProxyTermChan)
 		wg.Done()
 	}()
 
@@ -112,18 +112,10 @@ func serve(address string, dbClient *ent.Client, wg *sync.WaitGroup, serverOptio
 }
 
 // startReverseProxy starts the gRPC reverse proxy server which is connected to the HTTP handler.
-func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, grocReadyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool) {
+func startReverseProxy(grpcServerAddress, httpServerAddress string, wg *sync.WaitGroup, grocReadyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool) {
 	// waiting for the gRPC server to start first
 	<-grocReadyChan
 	zlog.Info().Msg("Starting reverse HTTP proxy")
-
-	// read env variable, where HTTP server is running
-	httpServerAddress := os.Getenv(envHTTPServerAddress)
-	if httpServerAddress == "" {
-		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
-			envHTTPServerAddress, defaultHTTPServerAddress)
-		httpServerAddress = defaultHTTPServerAddress
-	}
 
 	// creating the gRPC-Gateway reverse proxy.
 	conn, err := grpc.NewClient(
@@ -170,16 +162,33 @@ func startReverseProxy(grpcServerAddress string, wg *sync.WaitGroup, grocReadyCh
 	wg.Done()
 }
 
-// StartServer function configures and brings up gRPC server.
-func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool) {
-	zlog.Info().Msgf("Starting gRPC server...")
+// GetGRPCServerAddress function reads environmental variable and returns a gRPC server address.
+func GetGRPCServerAddress() string {
 	// read env variable, where gRPC server is running
 	serverAddress := os.Getenv(envServerAddress)
 	if serverAddress == "" {
-		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default gRPC server address: %s",
 			envServerAddress, defaultServerAddress)
 		serverAddress = defaultServerAddress
 	}
+	return serverAddress
+}
+
+// GetHTTPServerAddress function reads environmental variable and returns an HTTP server address.
+func GetHTTPServerAddress() string {
+	// read env variable, where HTTP server is running
+	httpServerAddress := os.Getenv(envHTTPServerAddress)
+	if httpServerAddress == "" {
+		zlog.Warn().Msgf("Environment variable \"%s\" is not set, using default address: %s",
+			envHTTPServerAddress, defaultHTTPServerAddress)
+		httpServerAddress = defaultHTTPServerAddress
+	}
+	return httpServerAddress
+}
+
+// StartServer function configures and brings up gRPC server.
+func StartServer(gRPCServerAddress, httpServerAddress string, dbClient *ent.Client, wg *sync.WaitGroup, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan chan bool) {
+	zlog.Info().Msgf("Starting gRPC server...")
 
 	// get server options
 	serverOptions, err := getServerOptions(nil)
@@ -188,7 +197,7 @@ func StartServer(dbClient *ent.Client, wg *sync.WaitGroup, termChan, readyChan, 
 	}
 
 	// start server
-	serve(serverAddress, dbClient, wg, serverOptions, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
+	serve(gRPCServerAddress, httpServerAddress, dbClient, wg, serverOptions, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
 }
 
 func (srv *server) AddDevice(ctx context.Context, req *apiv1.AddDeviceRequest) (*apiv1.AddDeviceResponse, error) {

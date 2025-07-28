@@ -65,7 +65,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		wg.Add(1) //nolint:staticcheck
-		server.StartServer(dbClient, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
+		server.StartServer(server.GetGRPCServerAddress(), server.GetHTTPServerAddress(), dbClient, wg, termChan, readyChan, reverseProxyReadyChan, reverseProxyTermChan)
 		wg.Done()
 	}()
 

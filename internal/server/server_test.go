@@ -21,7 +21,7 @@ var grpcClient apiv1.DeviceMonitoringServiceClient
 
 func TestMain(m *testing.M) {
 	var err error
-	entClient, serverClient, wg, termChan, reverseProxyTermChan, err := monitoring_testing.SetupFull()
+	entClient, serverClient, wg, termChan, reverseProxyTermChan, err := monitoring_testing.SetupFull("", "")
 	if err != nil {
 		panic(err)
 	}
