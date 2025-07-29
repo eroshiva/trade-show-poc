@@ -1,0 +1,47 @@
+# Default values for network-device-simulator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# The image settings for your simulator container.
+image:
+  repository: eroshiva/nd-simulator
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  # For local development with kind, you might set this to "latest"
+  # or a specific version you've built.
+  tag: ""
+
+# The service for the simulator's gRPC endpoint.
+service:
+  port: 50051
+  type: ClusterIP # This is for the main service, not the headless one.
+
+# --- The sections below are not used by your StatefulSet but are kept for reference ---
+# You can remove them to simplify the file further.
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+#   memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

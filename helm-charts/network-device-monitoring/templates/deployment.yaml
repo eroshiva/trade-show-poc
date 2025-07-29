@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "network-device-monitoring.fullname" . }}
+  labels:
+    {{- include "network-device-monitoring.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "network-device-monitoring.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "network-device-monitoring.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "network-device-monitoring.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # This is to ensure network device monitoring service doesn't start until PostgreSQL DB is up and running.
+      initContainers:
+        - name: wait-for-postgres
+          # Use a postgres image because it has the 'pg_isready' tool
+          image: "postgres:15-alpine"
+          imagePullPolicy: "IfNotPresent"
+          # The command will loop until the database is ready to accept connections
+          command: [ 'sh', '-c', 'until pg_isready -h $(PGHOST) -p $(PGPORT) -U $(PGUSER); do echo "waiting for postgres"; sleep 2; done;' ]
+          # Pass the same database connection details to the init container
+          env:
+            - name: PGHOST
+              value: {{ tpl .Values.config.db_host . | quote }}
+            - name: PGPORT
+              value: {{ tpl .Values.config.db_port . | quote }}
+            - name: PGUSER
+              value: {{ tpl .Values.postgresql.auth.username . | quote }}
+            # Note: We don't need the password for pg_isready, just the user.
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: PGHOST
+              value: {{ tpl .Values.config.db_host . | quote }}
+            - name: PGPORT
+              value: {{ tpl .Values.config.db_port . | quote }}
+            - name: PGDATABASE
+              value: {{ tpl .Values.postgresql.auth.database . | quote }}
+            - name: PGSSLMODE
+              value: {{ tpl .Values.postgresql.auth.sslmode . | quote }}
+            - name: PGUSER
+              value: {{ tpl .Values.postgresql.auth.username . | quote }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  # The Bitnami chart automatically creates a secret with this predictable name
+                  name: "{{ tpl .Release.Name . }}-postgresql"
+                  key: postgres-password
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
