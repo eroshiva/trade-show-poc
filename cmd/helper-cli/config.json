@@ -4,7 +4,7 @@
     "model": "XYZ",
     "endpoints": [
       {
-        "host": "localhost",
+        "host": "device-simulator-0.device-simulator-svc.monitoring-system.svc.cluster.local",
         "port": "50151",
         "protocol": "NETCONF"
       }
@@ -15,8 +15,8 @@
     "model": "XYZ-nextgen",
     "endpoints": [
       {
-        "host": "localhost",
-        "port": "50152",
+        "host": "device-simulator-1.device-simulator-svc.monitoring-system.svc.cluster.local",
+        "port": "50151",
         "protocol": "RESTCONF"
       }
     ]
@@ -26,8 +26,8 @@
     "model": "zyx",
     "endpoints": [
       {
-        "host": "localhost",
-        "port": "50153",
+        "host": "device-simulator-2.device-simulator-svc.monitoring-system.svc.cluster.local",
+        "port": "50151",
         "protocol": "SNMP"
       }
     ]
@@ -37,8 +37,8 @@
     "model": "xxx",
     "endpoints": [
       {
-        "host": "localhost",
-        "port": "50154",
+        "host": "device-simulator-3.device-simulator-svc.monitoring-system.svc.cluster.local",
+        "port": "50151",
         "protocol": "OVS"
       }
     ]

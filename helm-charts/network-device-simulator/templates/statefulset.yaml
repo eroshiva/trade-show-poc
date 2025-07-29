@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
 spec:
   # This service must be created separately and be "headless"
   serviceName: "{{ .Release.Name }}-svc"
@@ -27,6 +29,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: DEVICE_SIMULATOR_GRPC_SERVER_ADDRESS
+              value: {{ .Values.config.serverAddress | quote }}
+            - name: DEVICE_SIMULATOR_DEVICE_STATUS
+              value: {{ .Values.config.deviceStatus | quote }}
           # The command to launch your single simulator binary
           command: ["/usr/local/bin/nd-simulator"]
 ---

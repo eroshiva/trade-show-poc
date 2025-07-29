@@ -25,7 +25,7 @@ const (
 
 	defaultTimeout = 1 * time.Second
 	configFileName = "./cmd/helper-cli/config.json"
-	defaultEPHost  = "localhost"
+	defaultEPHost  = "localhost" // in case of k8s deployment, should be something like device-simulator-0.device-simulator-svc.monitoring-system.svc.cluster.local
 	defaultEPPort  = "50151"
 
 	snmp     = "SNMP"

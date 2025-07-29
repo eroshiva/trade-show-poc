@@ -5,6 +5,12 @@ This is an assessment task for the Ubiquiti interview process.
 
 ## Development prerequisites
 To install development prerequisites, run `make deps`. It will install all necessary plugins for code generation.
+Consequently you can start the PoC by running `make poc`.
+> You need to have [`helm` installed](https://helm.sh/docs/intro/install/) in your local environment.
+
+Also, if you want to use a helper CLI utility, you can use `make run-cli-*` targets. Prior to that, enable port-forwarding
+with `kubectl`, otherwise, requests won't reach the target. You can do so by running following command:
+> kubectl -n monitoring-system port-forward <network-device-monitoring-POD-NAME> 50051:50051
 
 
 ## Running the demo

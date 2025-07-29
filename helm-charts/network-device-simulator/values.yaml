@@ -11,6 +11,10 @@ image:
   # or a specific version you've built.
   tag: ""
 
+config:
+  serverAddress: ":50151"
+  deviceStatus: "UP"
+
 # The service for the simulator's gRPC endpoint.
 service:
   port: 50051
