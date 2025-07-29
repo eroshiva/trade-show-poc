@@ -19,12 +19,12 @@ KUBE_NAMESPACE := monitoring-system
 
 # Postgres DB configuration and credentials for testing. This mimics the Aurora
 # production environment.
-export PGUSER=admin
 export PGHOST=localhost
-export PGDATABASE=postgres
 export PGPORT=5432
-export PGPASSWORD=pass
 export PGSSLMODE=disable
+export PGDATABASE=postgres
+export PGUSER=admin
+export PGPASSWORD=pass
 
 .PHONY: help
 help: # Credits to https://gist.github.com/prwhite/8168133 for this handy oneliner
@@ -182,8 +182,14 @@ delete-cluster: ## Removes KinD cluster
 kubectl-delete-namespace: ## Deletes namespace with kubectl
 	kubectl delete namespace ${KUBE_NAMESPACE}
 
-deploy-device-simulator: ## deploys Network Device simulator Helm charts
+deploy-device-simulator: ## Deploys Network Device simulator Helm charts
 	helm upgrade --install device-simulator ./helm-charts/network-device-simulator --namespace ${KUBE_NAMESPACE} --create-namespace
+
+deploy-device-monitoring: ## Deploys Network Device Monitoring service Helm charts
+	helm upgrade --install device-monitoring ./helm-charts/network-device-monitoring --namespace ${KUBE_NAMESPACE} --create-namespace
+
+update-device-monitoring-charts: ## Updates dependencies for a Network Device Monitoring service charts (i.e., pull PostgreSQL dependency)
+	helm dependency update ./helm-charts/network-device-monitoring
 
 go-tidy: ## Runs go mod related commands
 	go mod tidy
