@@ -158,6 +158,12 @@ run-cli-swap-devices: go-tidy ## Runs helper CLI tool and swaps all network devi
 run-cli-get-summary: go-tidy ## Runs helper CLI tool and retrieves a brief summary of all network devices present in the system
 	go run cmd/helper-cli/helper-cli.go --getSummary
 
+run-rest-get-summary: ## Runs CURL command and returns summary of network devices
+	curl -v http://localhost:50052/v1/monitoring/summary
+
+run-rest-get-devices: ## Runs CURL command and returns a list of network devices
+	curl -v http://localhost:50052/v1/monitoring/devices
+
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
 image: ## Builds a Docker image for Network Device monitoring service
