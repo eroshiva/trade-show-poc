@@ -191,6 +191,8 @@ deploy-device-monitoring: ## Deploys Network Device Monitoring service Helm char
 update-device-monitoring-charts: ## Updates dependencies for a Network Device Monitoring service charts (i.e., pull PostgreSQL dependency)
 	helm dependency update ./helm-charts/network-device-monitoring
 
+poc: deps create-cluster kind update-device-monitoring-charts deploy-device-monitoring deploy-device-simulator ## Runs PoC in Kubernetes cluster
+
 go-tidy: ## Runs go mod related commands
 	go mod tidy
 	go mod vendor
