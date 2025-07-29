@@ -1,18 +1,40 @@
 # Trade Show PoC
 This is an assessment task for the Ubiquiti interview process.
-[Here](./task_definition.md) is a task definition based on the PDF description with my comments.
+[Here](./task_definition.md) is a task breakdown with my comments based on the PDF description. 
+PDF itself is not shared within this repository.
 
 
 ## Development prerequisites
-To install development prerequisites, run `make deps`. It will install all necessary plugins for code generation.
-Consequently you can start the PoC by running `make poc`.
+This repository is orchestrated with `Makefile`. You need to make sure that you have installed `helm` in your system
+according to [official guidelines](https://helm.sh/docs/intro/install/) and that Golang and Docker are installed as well.
+Also, make sure that you are able to run `make` within a command line. The rest of the dependencies are installed as a 
+part of `make` targets.
+
+> Run `make` or `make help` to see the full list of supported `make` targets.
+
+To install development prerequisites, run `make deps`. It will install all necessary tools and plugins for code generation.
+After that you can start the PoC by running `make poc`.
 > You need to have [`helm` installed](https://helm.sh/docs/intro/install/) in your local environment.
 
-Also, if you want to use a helper CLI utility, you can use `make run-cli-*` targets. Prior to that, enable port-forwarding
-with `kubectl`, otherwise, requests won't reach the target. You can do so by running following command:
+
+## Running the demo
+`make poc` target will setup a local Kubernetes cluster with KinD and deploy helm charts located in this repository to 
+the cluster. You can also run `make poc-test` target, if you want to run helm tests (it is also a part of CI/CD).
+
+> If `make poc` succeeds and doesn't throw an error, you can start interacting with the monitoring system.
+
+There is a helper CLI utility that can be used to communicate with the `network-device-monitoring` service (see
+project description below). 
+Some handy wrappers with hardcoded data are created to make an easy onboarding and easy demonstration of system capabilities, 
+see `make run-cli-*` targets. 
+
+Before running cli commands (and any calls in general, please enable port-forwarding with `kubectl`. 
+If you don't do so, requests won't reach the target. You can enable port-forwarding by running the following command,
+which will forward port `50051`, where gRPC server of the `network-device-monitoring` service runs:
 > kubectl -n monitoring-system port-forward <network-device-monitoring-POD-NAME> 50051:50051
 
-In case you want to communicate over REST API, you need to enable port forwarding on port `50052`, e.g.:
+Alternatively, you can enable port-forwarding on port `50052`, where HTTP reverse proxy resides. It will convert to
+Protobuf and forward all your REST requests to the gRPC server. To enable port forwarding on port `50052` run:
 > kubectl -n monitoring-system port-forward <network-device-monitoring-POD-NAME> 50052:50052
 
 Consequently, you can use curl to test connectivity, e.g.:
@@ -20,25 +42,19 @@ Consequently, you can use curl to test connectivity, e.g.:
 > 
 > curl -v http://localhost:50052/v1/monitoring/devices
 
-`make` target doesn't contain any REST-related targets.
+`make` targets contains only two aforementioned requests.
 
+There is also a set of network device simulators deployed to the cluster to showcase the merits of the provided solution
+and, mainly, ability to interact with network devices with different protocols.
 
-## Running the demo
-To run the demo, simply run `make poc` command. It will create local Kubernetes cluster (with `kind`), build Golang code
-and Docker images, upload those images to Kubernetes cluster, and deploy the monitoring solution with `helm` charts.
-
-There is also a set of simulators to showcase the merits of the system and ability to interact with network devices with 
-different protocols.
-
-Additionally, a simple CLI tool was developed to enable interaction between gRPC and REST endpoints of the monitoring
-solution.
-
-> In the perfect world, where there is more time, I'd love to extend the solution with Grafana visualisation or other 
+> In the perfect world, where there is more time, I'd love to extend the solution with Grafana visualisation or other
 > similar solutions.
 
-
 ## Solution
-This section describes a provided solution.
+This section describes a provided solution. Following diagram represents relations within the components in the system.
+
+![Network Device Monitoring system](trade-show-poc.png "Network Device Monitoring system")
+
 
 For the devices on sites with bad connectivity, a threshold (in `CONNECTIVITY_ABSENCE_LIMIT`) is defined. For example,
 if network device was unreachable (e.g., failed to establish connection or failed to retrieve information from the device)
@@ -69,7 +85,7 @@ Other improvements include:
 - Introduce integration tests.
   - Perfectly, make them part of CI/CD.
 - Add deployment in Kubernetes (with helm charts) to CI/CD pipeline. 
-
+  - One more helm test is missing (for monitoring service). Test for device simulator exists.
 
 
 ## Disclaimer
@@ -92,6 +108,8 @@ Gemini 2.5 Pro was used to make initial research in best practices for handling:
   actual connectivity. In the end, I've decided to stick to the current approach in 
   [Network Device simulator](pkg/mocks/README.md) that
   leverages solely of gRPC connectivity (for various protocols) for the sake of simple testability.
+- Consulted little issues with deployment, e.g., what is a better deployment model for device simulator: 
+  `statefulset` or `deployment` with `replicasCount`, and few other small bugs (mostly FQDN-related).
 
 I also found some recommendations about different tool usage confusing and misleading rather than helpful.
 It's always better to follow tool's documentation rather than asking AI for a tutorial.
