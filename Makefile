@@ -153,6 +153,9 @@ run-cli-update-devices: go-tidy ## Runs helper CLI tool and updates all network 
 run-cli-swap-devices: go-tidy ## Runs helper CLI tool and swaps all network devices in the controller with specified in the config.json
 	go run cmd/helper-cli/helper-cli.go --swapDevices
 
+run-cli-get-summary: go-tidy ## Runs helper CLI tool and retrieves a brief summary of all network devices present in the system
+	go run cmd/helper-cli/helper-cli.go --getSummary
+
 bring-up-db: migration-apply ## Start DB and upload migrations to it
 
 image: ## Builds a Docker image for Network Device monitoring service
