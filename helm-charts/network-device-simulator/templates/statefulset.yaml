@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  # This service must be created separately and be "headless"
+  serviceName: "{{ .Release.Name }}-svc"
+  replicas: 4 # We want four distinct simulators
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      containers:
+        # --- You only need ONE container definition ---
+        - name: network-device-simulator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          ports:
+            - containerPort: 50151
+              name: grpc
+          # Pass the Pod's unique name as an environment variable
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          # The command to launch your single simulator binary
+          command: ["/usr/local/bin/nd-simulator"]
+---
+# Headless service for stable DNS records (This part is correct)
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-svc"
+spec:
+  clusterIP: None # This makes it a headless service
+  selector:
+    app: {{ .Release.Name }}
+  ports:
+    - port: 50151
+      name: grpc

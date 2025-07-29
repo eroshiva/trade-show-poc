@@ -4,15 +4,18 @@ export GOPRIVATE=github.com/eroshiva
 
 POC_NAME := monitoring
 POC_SIMULATOR_NAME := nd-simulator
-POC_VERSION := $(shell git rev-parse --abbrev-ref HEAD)
+POC_VERSION := 0.1.0 # $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_REPOSITORY := eroshiva
 GOLANGCI_LINTERS_VERSION := v2.3.0
 GOFUMPT_VERSION := v0.8.0
 BUF_VERSION := v1.55.1
 GRPC_GATEWAY_VERSION := v2.27.1
 PROTOC_GEN_ENT_VERSION := v0.6.0
+KIND_VERSION := v0.29.0
 DOCKER_POSTGRESQL_NAME := monitoring-postgresql
 DOCKER_POSTGRESQL_VERSION := 15
+
+KUBE_NAMESPACE := monitoring-system
 
 # Postgres DB configuration and credentials for testing. This mimics the Aurora
 # production environment.
@@ -65,6 +68,7 @@ deps: buf-install go-linters-install atlas-install ## Installs developer prerequ
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
 	go install entgo.io/contrib/entproto/cmd/protoc-gen-ent@${PROTOC_GEN_ENT_VERSION}
 	go install mvdan.cc/gofumpt@${GOFUMPT_VERSION}
+	go install sigs.k8s.io/kind@${KIND_VERSION}
 
 atlas-inspect: ## Inspect connection with DB with atlas
 	atlas schema inspect --url "postgresql://${PGUSER}:${PGPASSWORD}@localhost:${PGPORT}/${PGDATABASE}?search_path=public" --format "OK"
@@ -159,12 +163,27 @@ image-simulator: ## Builds a Docker image for Network Device simulator
 	docker build . -f build/simulator/Dockerfile \
 		-t ${DOCKER_REPOSITORY}/${POC_SIMULATOR_NAME}:${POC_VERSION}
 
+images: image image-simulator ## Builds Docker images for monitoring service and for device simulator
+
 docker-run: image bring-up-db ## Runs compiled binary in a Docker container
 	docker run --net=host --rm ${DOCKER_REPOSITORY}/${POC_NAME}:${POC_VERSION}
 
-kind: image ## Builds Docker image for API Gateway and loads it to the currently configured kind cluster
+kind: images ## Builds Docker image for API Gateway and loads it to the currently configured kind cluster
 	@if [ "`kind get clusters`" = '' ]; then echo "no kind cluster found" && exit 1; fi
 	kind load docker-image ${DOCKER_REPOSITORY}/${POC_NAME}:${POC_VERSION}
+	kind load docker-image ${DOCKER_REPOSITORY}/${POC_SIMULATOR_NAME}:${POC_VERSION}
+
+create-cluster: delete-cluster ## Creates cluster with KinD
+	kind create cluster
+
+delete-cluster: ## Removes KinD cluster
+	kind delete cluster
+
+kubectl-delete-namespace: ## Deletes namespace with kubectl
+	kubectl delete namespace ${KUBE_NAMESPACE}
+
+deploy-device-simulator: ## deploys Network Device simulator Helm charts
+	helm upgrade --install device-simulator ./helm-charts/network-device-simulator --namespace ${KUBE_NAMESPACE} --create-namespace
 
 go-tidy: ## Runs go mod related commands
 	go mod tidy
