@@ -173,6 +173,8 @@ Other improvements should include:
 - Make gRPC API more narrow - currently it carries redundant data in the responses. 
   - I was experimenting and found out that it is rather confusing. Unfortunately, I didn't have enough time to 
   bring it back to the normal state.
+- Restrict HTTP Reverse proxy gateway (through Swagger definition of API) to set only specific fields of the resources, 
+not all of them as it is handled right now (even though gRPC server will cut off everything unnecessary).
 - Readyness and Liveness probes must be implemented to fully comply with the Kubernetes lifecycle.
 - Improve unit test coverage.
   - Currently, unit tests cover only core functionality, majority of utility functions remained uncovered.
