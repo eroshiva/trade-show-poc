@@ -424,4 +424,5 @@ func retrieveSummary(grpcClient apiv1.DeviceMonitoringServiceClient) error {
 	zlog.Info().Msgf("Number of devices in UP state: %d", summary.GetDevicesUp())
 	zlog.Info().Msgf("Number of devices in UNHEALTHY state: %d", summary.GetDevicesUnhealthy())
 	zlog.Info().Msgf("Number of devices in DOWN state: %d", summary.GetDownDevices())
+	return nil
 }
