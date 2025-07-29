@@ -25,7 +25,7 @@ const (
 
 	defaultTimeout = 1 * time.Second
 	configFileName = "./cmd/helper-cli/config.json"
-	defaultEPHost  = "localhost"
+	defaultEPHost  = "device-simulator-0.device-simulator-svc.monitoring-system.svc.cluster.local" // in case of running against binary monitoring service should be just 'localhost'
 	defaultEPPort  = "50151"
 
 	snmp     = "SNMP"
@@ -76,6 +76,8 @@ var (
 	deviceID           = flag.String(deviceIDFlag, "", "Specifies the device ID")
 	getAllStatusesFlag = "getAllStatuses"
 	getAllStatuses     = flag.Bool(getAllStatusesFlag, false, "Gets all statuses of all of the network devices present in the system")
+	getSummaryFlag     = "getSummary"
+	getSummary         = flag.Bool(getSummaryFlag, false, "Gets the summary of the network devices present in the system")
 
 	// updating list of the devices
 	updateDevicesFlag = "updateDevices"
@@ -158,6 +160,13 @@ func main() {
 		err = swapNetworkDevices(grpcClient)
 		if err != nil {
 			zlog.Error().Err(err).Msgf("Failed to swap network devices in the controller")
+		}
+	}
+
+	if *getSummary {
+		err = retrieveSummary(grpcClient)
+		if err != nil {
+			zlog.Error().Err(err).Msgf("Failed to retrieve device summary")
 		}
 	}
 }
@@ -399,5 +408,21 @@ func swapNetworkDevices(grpcClient apiv1.DeviceMonitoringServiceClient) error {
 		return err
 	}
 	zlog.Info().Msg("Network devices were swapped")
+	return nil
+}
+
+func retrieveSummary(grpcClient apiv1.DeviceMonitoringServiceClient) error {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	summary, err := grpcClient.GetSummary(ctx, nil)
+	if err != nil {
+		return err
+	}
+	zlog.Info().Msg("Retrieved summary for all network devices")
+	zlog.Info().Msgf("Total number of devices in the system: %d", summary.GetDevicesTotal())
+	zlog.Info().Msgf("Number of devices in UP state: %d", summary.GetDevicesUp())
+	zlog.Info().Msgf("Number of devices in UNHEALTHY state: %d", summary.GetDevicesUnhealthy())
+	zlog.Info().Msgf("Number of devices in DOWN state: %d", summary.GetDownDevices())
 	return nil
 }

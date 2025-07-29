@@ -5,6 +5,22 @@ This is an assessment task for the Ubiquiti interview process.
 
 ## Development prerequisites
 To install development prerequisites, run `make deps`. It will install all necessary plugins for code generation.
+Consequently you can start the PoC by running `make poc`.
+> You need to have [`helm` installed](https://helm.sh/docs/intro/install/) in your local environment.
+
+Also, if you want to use a helper CLI utility, you can use `make run-cli-*` targets. Prior to that, enable port-forwarding
+with `kubectl`, otherwise, requests won't reach the target. You can do so by running following command:
+> kubectl -n monitoring-system port-forward <network-device-monitoring-POD-NAME> 50051:50051
+
+In case you want to communicate over REST API, you need to enable port forwarding on port `50052`, e.g.:
+> kubectl -n monitoring-system port-forward <network-device-monitoring-POD-NAME> 50052:50052
+
+Consequently, you can use curl to test connectivity, e.g.:
+> curl -v http://localhost:50052/v1/monitoring/summary
+> 
+> curl -v http://localhost:50052/v1/monitoring/devices
+
+`make` target doesn't contain any REST-related targets.
 
 
 ## Running the demo
@@ -42,8 +58,17 @@ ABAC access control to the resources should be implemented to better restrict ac
 in the data schema, namely:
 - User can update only network device model, vendor, and endpoints.
 - Controller itself can retrieve and update only network device HW, SW, FW, and device status.
+
+Other improvements include:
 - More sanity checks on the input data must be added at the API (gRPC server) side and at the DB client side.
-- Readyness and Liveness probes must be implemented.
+  - Make use of `protoc-gen-validate` that is currently doing nothing.
+- Make NB API more narrow - currently it carries some redundant data in response (my experiment didn't work out :).
+- Readyness and Liveness probes must be implemented to fully comply with Kubernetes lifecycle.
+- Improve unit test coverage.
+  - Currently, unit tests cover only core functionality, majority of utility functions remained uncovered.
+- Introduce integration tests.
+  - Perfectly, make them part of CI/CD.
+- Add deployment in Kubernetes (with helm charts) to CI/CD pipeline. 
 
 
 
