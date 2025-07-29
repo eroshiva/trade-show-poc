@@ -64,10 +64,12 @@ build-monitoring: ## Build the Go binary for network device monitoring service
 build-simulator: ## Build the Go binary for network device simulator
 	go build -mod=vendor -o build/_output/${POC_SIMULATOR_NAME} ./cmd/simulator/simulator.go
 
-deps: buf-install go-linters-install atlas-install ## Installs developer prerequisites for this project
+deps: buf-install go-linters-install atlas-install kind-install ## Installs developer prerequisites for this project
 	go get github.com/grpc-ecosystem/grpc-gateway/v2@${GRPC_GATEWAY_VERSION}
 	go install entgo.io/contrib/entproto/cmd/protoc-gen-ent@${PROTOC_GEN_ENT_VERSION}
 	go install mvdan.cc/gofumpt@${GOFUMPT_VERSION}
+
+kind-install: ## Installs kind to the system
 	go install sigs.k8s.io/kind@${KIND_VERSION}
 
 atlas-inspect: ## Inspect connection with DB with atlas
@@ -186,15 +188,24 @@ kubectl-delete-namespace: ## Deletes namespace with kubectl
 	kubectl delete namespace ${KUBE_NAMESPACE}
 
 deploy-device-simulator: ## Deploys Network Device simulator Helm charts
-	helm upgrade --install device-simulator ./helm-charts/network-device-simulator --namespace ${KUBE_NAMESPACE} --create-namespace
+	helm upgrade --install device-simulator ./helm-charts/network-device-simulator --namespace ${KUBE_NAMESPACE} --create-namespace --wait
 
 deploy-device-monitoring: ## Deploys Network Device Monitoring service Helm charts
-	helm upgrade --install device-monitoring ./helm-charts/network-device-monitoring --namespace ${KUBE_NAMESPACE} --create-namespace
+	helm upgrade --install device-monitoring ./helm-charts/network-device-monitoring --namespace ${KUBE_NAMESPACE} --create-namespace --wait
 
 update-device-monitoring-charts: ## Updates dependencies for a Network Device Monitoring service charts (i.e., pull PostgreSQL dependency)
 	helm dependency update ./helm-charts/network-device-monitoring
 
-poc: deps create-cluster kind update-device-monitoring-charts deploy-device-monitoring deploy-device-simulator ## Runs PoC in Kubernetes cluster
+helm-test-simulator: ## Runs helm testo for a Network Device simulator
+	helm test device-simulator --namespace ${KUBE_NAMESPACE}
+
+helm-test-monitoring: ## Runs helm testo for a Network Device monitoring
+	helm test device-monitoring --namespace ${KUBE_NAMESPACE}
+
+poc: kind-install create-cluster go-tidy kind update-device-monitoring-charts deploy-device-monitoring deploy-device-simulator ## Runs PoC in Kubernetes cluster
+
+poc-test: ## Runs PoC in Kubernetes cluster
+poc-test: kind-install create-cluster go-tidy kind update-device-monitoring-charts deploy-device-monitoring deploy-device-simulator helm-test-monitoring helm-test-simulator delete-cluster
 
 go-tidy: ## Runs go mod related commands
 	go mod tidy

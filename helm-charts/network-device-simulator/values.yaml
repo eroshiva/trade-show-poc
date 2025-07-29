@@ -17,7 +17,7 @@ config:
 
 # The service for the simulator's gRPC endpoint.
 service:
-  port: 50051
+  port: 50151
   type: ClusterIP # This is for the main service, not the headless one.
 
 # --- The sections below are not used by your StatefulSet but are kept for reference ---

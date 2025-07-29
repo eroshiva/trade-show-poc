@@ -3,18 +3,20 @@ kind: StatefulSet
 metadata:
   name: {{ .Release.Name }}
   labels:
-    app: {{ .Release.Name }}
+    {{- include "network-device-simulator.labels" . | nindent 4 }}
 spec:
   # This service must be created separately and be "headless"
   serviceName: "{{ .Release.Name }}-svc"
   replicas: 4 # We want four distinct simulators
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      # Use the standard selector labels helper
+      {{- include "network-device-simulator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        # Use the standard selector labels helper
+        {{- include "network-device-simulator.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         # --- You only need ONE container definition ---
@@ -44,7 +46,8 @@ metadata:
 spec:
   clusterIP: None # This makes it a headless service
   selector:
-    app: {{ .Release.Name }}
+    # The service selector must use the standard helper as well
+    {{- include "network-device-simulator.selectorLabels" . | nindent 4 }}
   ports:
     - port: 50151
       name: grpc
