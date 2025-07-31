@@ -140,7 +140,7 @@ of network devices.
    port-forwarding on port `50052` prior to that.
 4. All device simulators by default are configured to report `UP` state. To change the default value you need to change
 value in line 16 of [values.yaml](./helm-charts/network-device-simulator/values.yaml) to `UNHEALTHY`.
-5. Once you change the value, run `make deploy-device-monitoring` to refresh Device Simulator deployment.
+5. Once you change the value, run `make deploy-device-simulator` to refresh Device Simulator deployment.
 6. Observe with `watch kubectl -n monitoring-system get pods` that all four device simulator pods are restarted and 
 being in running state again.
 7. Wait for another cycle (30 seconds) to let `manager`'s control loop to synchronize.
