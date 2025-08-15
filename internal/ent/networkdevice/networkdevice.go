@@ -26,6 +26,10 @@ const (
 	EdgeSwVersion = "sw_version"
 	// EdgeFwVersion holds the string denoting the fw_version edge name in mutations.
 	EdgeFwVersion = "fw_version"
+	// EdgeParentNetworkDevices holds the string denoting the parent_network_devices edge name in mutations.
+	EdgeParentNetworkDevices = "parent_network_devices"
+	// EdgeChildNetworkDevices holds the string denoting the child_network_devices edge name in mutations.
+	EdgeChildNetworkDevices = "child_network_devices"
 	// Table holds the table name of the networkdevice in the database.
 	Table = "network_devices"
 	// EndpointsTable is the table that holds the endpoints relation/edge.
@@ -49,6 +53,10 @@ const (
 	FwVersionInverseTable = "versions"
 	// FwVersionColumn is the table column denoting the fw_version relation/edge.
 	FwVersionColumn = "network_device_fw_version"
+	// ParentNetworkDevicesTable is the table that holds the parent_network_devices relation/edge. The primary key declared below.
+	ParentNetworkDevicesTable = "network_device_child_network_devices"
+	// ChildNetworkDevicesTable is the table that holds the child_network_devices relation/edge. The primary key declared below.
+	ChildNetworkDevicesTable = "network_device_child_network_devices"
 )
 
 // Columns holds all SQL columns for networkdevice fields.
@@ -65,6 +73,15 @@ var ForeignKeys = []string{
 	"network_device_sw_version",
 	"network_device_fw_version",
 }
+
+var (
+	// ParentNetworkDevicesPrimaryKey and ParentNetworkDevicesColumn2 are the table columns denoting the
+	// primary key for the parent_network_devices relation (M2M).
+	ParentNetworkDevicesPrimaryKey = []string{"network_device_id", "parent_network_device_id"}
+	// ChildNetworkDevicesPrimaryKey and ChildNetworkDevicesColumn2 are the table columns denoting the
+	// primary key for the child_network_devices relation (M2M).
+	ChildNetworkDevicesPrimaryKey = []string{"network_device_id", "parent_network_device_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -156,6 +173,34 @@ func ByFwVersionField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newFwVersionStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByParentNetworkDevicesCount orders the results by parent_network_devices count.
+func ByParentNetworkDevicesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newParentNetworkDevicesStep(), opts...)
+	}
+}
+
+// ByParentNetworkDevices orders the results by parent_network_devices terms.
+func ByParentNetworkDevices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newParentNetworkDevicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByChildNetworkDevicesCount orders the results by child_network_devices count.
+func ByChildNetworkDevicesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newChildNetworkDevicesStep(), opts...)
+	}
+}
+
+// ByChildNetworkDevices orders the results by child_network_devices terms.
+func ByChildNetworkDevices(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newChildNetworkDevicesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newEndpointsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -175,5 +220,19 @@ func newFwVersionStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(FwVersionInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, false, FwVersionTable, FwVersionColumn),
+	)
+}
+func newParentNetworkDevicesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ParentNetworkDevicesTable, ParentNetworkDevicesPrimaryKey...),
+	)
+}
+func newChildNetworkDevicesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(Table, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, ChildNetworkDevicesTable, ChildNetworkDevicesPrimaryKey...),
 	)
 }

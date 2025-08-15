@@ -21,14 +21,16 @@ import (
 // NetworkDeviceQuery is the builder for querying NetworkDevice entities.
 type NetworkDeviceQuery struct {
 	config
-	ctx           *QueryContext
-	order         []networkdevice.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.NetworkDevice
-	withEndpoints *EndpointQuery
-	withSwVersion *VersionQuery
-	withFwVersion *VersionQuery
-	withFKs       bool
+	ctx                      *QueryContext
+	order                    []networkdevice.OrderOption
+	inters                   []Interceptor
+	predicates               []predicate.NetworkDevice
+	withEndpoints            *EndpointQuery
+	withSwVersion            *VersionQuery
+	withFwVersion            *VersionQuery
+	withParentNetworkDevices *NetworkDeviceQuery
+	withChildNetworkDevices  *NetworkDeviceQuery
+	withFKs                  bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -124,6 +126,50 @@ func (ndq *NetworkDeviceQuery) QueryFwVersion() *VersionQuery {
 			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, selector),
 			sqlgraph.To(version.Table, version.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, networkdevice.FwVersionTable, networkdevice.FwVersionColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(ndq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryParentNetworkDevices chains the current query on the "parent_network_devices" edge.
+func (ndq *NetworkDeviceQuery) QueryParentNetworkDevices() *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: ndq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := ndq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := ndq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, selector),
+			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, networkdevice.ParentNetworkDevicesTable, networkdevice.ParentNetworkDevicesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(ndq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryChildNetworkDevices chains the current query on the "child_network_devices" edge.
+func (ndq *NetworkDeviceQuery) QueryChildNetworkDevices() *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: ndq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := ndq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := ndq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, selector),
+			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, networkdevice.ChildNetworkDevicesTable, networkdevice.ChildNetworkDevicesPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(ndq.driver.Dialect(), step)
 		return fromU, nil
@@ -318,14 +364,16 @@ func (ndq *NetworkDeviceQuery) Clone() *NetworkDeviceQuery {
 		return nil
 	}
 	return &NetworkDeviceQuery{
-		config:        ndq.config,
-		ctx:           ndq.ctx.Clone(),
-		order:         append([]networkdevice.OrderOption{}, ndq.order...),
-		inters:        append([]Interceptor{}, ndq.inters...),
-		predicates:    append([]predicate.NetworkDevice{}, ndq.predicates...),
-		withEndpoints: ndq.withEndpoints.Clone(),
-		withSwVersion: ndq.withSwVersion.Clone(),
-		withFwVersion: ndq.withFwVersion.Clone(),
+		config:                   ndq.config,
+		ctx:                      ndq.ctx.Clone(),
+		order:                    append([]networkdevice.OrderOption{}, ndq.order...),
+		inters:                   append([]Interceptor{}, ndq.inters...),
+		predicates:               append([]predicate.NetworkDevice{}, ndq.predicates...),
+		withEndpoints:            ndq.withEndpoints.Clone(),
+		withSwVersion:            ndq.withSwVersion.Clone(),
+		withFwVersion:            ndq.withFwVersion.Clone(),
+		withParentNetworkDevices: ndq.withParentNetworkDevices.Clone(),
+		withChildNetworkDevices:  ndq.withChildNetworkDevices.Clone(),
 		// clone intermediate query.
 		sql:  ndq.sql.Clone(),
 		path: ndq.path,
@@ -362,6 +410,28 @@ func (ndq *NetworkDeviceQuery) WithFwVersion(opts ...func(*VersionQuery)) *Netwo
 		opt(query)
 	}
 	ndq.withFwVersion = query
+	return ndq
+}
+
+// WithParentNetworkDevices tells the query-builder to eager-load the nodes that are connected to
+// the "parent_network_devices" edge. The optional arguments are used to configure the query builder of the edge.
+func (ndq *NetworkDeviceQuery) WithParentNetworkDevices(opts ...func(*NetworkDeviceQuery)) *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: ndq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	ndq.withParentNetworkDevices = query
+	return ndq
+}
+
+// WithChildNetworkDevices tells the query-builder to eager-load the nodes that are connected to
+// the "child_network_devices" edge. The optional arguments are used to configure the query builder of the edge.
+func (ndq *NetworkDeviceQuery) WithChildNetworkDevices(opts ...func(*NetworkDeviceQuery)) *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: ndq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	ndq.withChildNetworkDevices = query
 	return ndq
 }
 
@@ -444,10 +514,12 @@ func (ndq *NetworkDeviceQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		nodes       = []*NetworkDevice{}
 		withFKs     = ndq.withFKs
 		_spec       = ndq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
 			ndq.withEndpoints != nil,
 			ndq.withSwVersion != nil,
 			ndq.withFwVersion != nil,
+			ndq.withParentNetworkDevices != nil,
+			ndq.withChildNetworkDevices != nil,
 		}
 	)
 	if ndq.withSwVersion != nil || ndq.withFwVersion != nil {
@@ -490,6 +562,24 @@ func (ndq *NetworkDeviceQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if query := ndq.withFwVersion; query != nil {
 		if err := ndq.loadFwVersion(ctx, query, nodes, nil,
 			func(n *NetworkDevice, e *Version) { n.Edges.FwVersion = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := ndq.withParentNetworkDevices; query != nil {
+		if err := ndq.loadParentNetworkDevices(ctx, query, nodes,
+			func(n *NetworkDevice) { n.Edges.ParentNetworkDevices = []*NetworkDevice{} },
+			func(n *NetworkDevice, e *NetworkDevice) {
+				n.Edges.ParentNetworkDevices = append(n.Edges.ParentNetworkDevices, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
+	if query := ndq.withChildNetworkDevices; query != nil {
+		if err := ndq.loadChildNetworkDevices(ctx, query, nodes,
+			func(n *NetworkDevice) { n.Edges.ChildNetworkDevices = []*NetworkDevice{} },
+			func(n *NetworkDevice, e *NetworkDevice) {
+				n.Edges.ChildNetworkDevices = append(n.Edges.ChildNetworkDevices, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -587,6 +677,128 @@ func (ndq *NetworkDeviceQuery) loadFwVersion(ctx context.Context, query *Version
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (ndq *NetworkDeviceQuery) loadParentNetworkDevices(ctx context.Context, query *NetworkDeviceQuery, nodes []*NetworkDevice, init func(*NetworkDevice), assign func(*NetworkDevice, *NetworkDevice)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*NetworkDevice)
+	nids := make(map[string]map[*NetworkDevice]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(networkdevice.ParentNetworkDevicesTable)
+		s.Join(joinT).On(s.C(networkdevice.FieldID), joinT.C(networkdevice.ParentNetworkDevicesPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(networkdevice.ParentNetworkDevicesPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(networkdevice.ParentNetworkDevicesPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*NetworkDevice]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*NetworkDevice](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "parent_network_devices" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (ndq *NetworkDeviceQuery) loadChildNetworkDevices(ctx context.Context, query *NetworkDeviceQuery, nodes []*NetworkDevice, init func(*NetworkDevice), assign func(*NetworkDevice, *NetworkDevice)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[string]*NetworkDevice)
+	nids := make(map[string]map[*NetworkDevice]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(networkdevice.ChildNetworkDevicesTable)
+		s.Join(joinT).On(s.C(networkdevice.FieldID), joinT.C(networkdevice.ChildNetworkDevicesPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(networkdevice.ChildNetworkDevicesPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(networkdevice.ChildNetworkDevicesPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullString)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := values[0].(*sql.NullString).String
+				inValue := values[1].(*sql.NullString).String
+				if nids[inValue] == nil {
+					nids[inValue] = map[*NetworkDevice]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*NetworkDevice](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "child_network_devices" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
 		}
 	}
 	return nil

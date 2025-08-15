@@ -93,12 +93,38 @@ var (
 		Columns:    VersionsColumns,
 		PrimaryKey: []*schema.Column{VersionsColumns[0]},
 	}
+	// NetworkDeviceChildNetworkDevicesColumns holds the columns for the "network_device_child_network_devices" table.
+	NetworkDeviceChildNetworkDevicesColumns = []*schema.Column{
+		{Name: "network_device_id", Type: field.TypeString},
+		{Name: "parent_network_device_id", Type: field.TypeString},
+	}
+	// NetworkDeviceChildNetworkDevicesTable holds the schema information for the "network_device_child_network_devices" table.
+	NetworkDeviceChildNetworkDevicesTable = &schema.Table{
+		Name:       "network_device_child_network_devices",
+		Columns:    NetworkDeviceChildNetworkDevicesColumns,
+		PrimaryKey: []*schema.Column{NetworkDeviceChildNetworkDevicesColumns[0], NetworkDeviceChildNetworkDevicesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "network_device_child_network_devices_network_device_id",
+				Columns:    []*schema.Column{NetworkDeviceChildNetworkDevicesColumns[0]},
+				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "network_device_child_network_devices_parent_network_device_id",
+				Columns:    []*schema.Column{NetworkDeviceChildNetworkDevicesColumns[1]},
+				RefColumns: []*schema.Column{NetworkDevicesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		DeviceStatusTable,
 		EndpointsTable,
 		NetworkDevicesTable,
 		VersionsTable,
+		NetworkDeviceChildNetworkDevicesTable,
 	}
 )
 
@@ -107,4 +133,6 @@ func init() {
 	EndpointsTable.ForeignKeys[0].RefTable = NetworkDevicesTable
 	NetworkDevicesTable.ForeignKeys[0].RefTable = VersionsTable
 	NetworkDevicesTable.ForeignKeys[1].RefTable = VersionsTable
+	NetworkDeviceChildNetworkDevicesTable.ForeignKeys[0].RefTable = NetworkDevicesTable
+	NetworkDeviceChildNetworkDevicesTable.ForeignKeys[1].RefTable = NetworkDevicesTable
 }

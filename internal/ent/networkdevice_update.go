@@ -130,6 +130,36 @@ func (ndu *NetworkDeviceUpdate) SetFwVersion(v *Version) *NetworkDeviceUpdate {
 	return ndu.SetFwVersionID(v.ID)
 }
 
+// AddParentNetworkDeviceIDs adds the "parent_network_devices" edge to the NetworkDevice entity by IDs.
+func (ndu *NetworkDeviceUpdate) AddParentNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdate {
+	ndu.mutation.AddParentNetworkDeviceIDs(ids...)
+	return ndu
+}
+
+// AddParentNetworkDevices adds the "parent_network_devices" edges to the NetworkDevice entity.
+func (ndu *NetworkDeviceUpdate) AddParentNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdate {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return ndu.AddParentNetworkDeviceIDs(ids...)
+}
+
+// AddChildNetworkDeviceIDs adds the "child_network_devices" edge to the NetworkDevice entity by IDs.
+func (ndu *NetworkDeviceUpdate) AddChildNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdate {
+	ndu.mutation.AddChildNetworkDeviceIDs(ids...)
+	return ndu
+}
+
+// AddChildNetworkDevices adds the "child_network_devices" edges to the NetworkDevice entity.
+func (ndu *NetworkDeviceUpdate) AddChildNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdate {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return ndu.AddChildNetworkDeviceIDs(ids...)
+}
+
 // Mutation returns the NetworkDeviceMutation object of the builder.
 func (ndu *NetworkDeviceUpdate) Mutation() *NetworkDeviceMutation {
 	return ndu.mutation
@@ -166,6 +196,48 @@ func (ndu *NetworkDeviceUpdate) ClearSwVersion() *NetworkDeviceUpdate {
 func (ndu *NetworkDeviceUpdate) ClearFwVersion() *NetworkDeviceUpdate {
 	ndu.mutation.ClearFwVersion()
 	return ndu
+}
+
+// ClearParentNetworkDevices clears all "parent_network_devices" edges to the NetworkDevice entity.
+func (ndu *NetworkDeviceUpdate) ClearParentNetworkDevices() *NetworkDeviceUpdate {
+	ndu.mutation.ClearParentNetworkDevices()
+	return ndu
+}
+
+// RemoveParentNetworkDeviceIDs removes the "parent_network_devices" edge to NetworkDevice entities by IDs.
+func (ndu *NetworkDeviceUpdate) RemoveParentNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdate {
+	ndu.mutation.RemoveParentNetworkDeviceIDs(ids...)
+	return ndu
+}
+
+// RemoveParentNetworkDevices removes "parent_network_devices" edges to NetworkDevice entities.
+func (ndu *NetworkDeviceUpdate) RemoveParentNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdate {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return ndu.RemoveParentNetworkDeviceIDs(ids...)
+}
+
+// ClearChildNetworkDevices clears all "child_network_devices" edges to the NetworkDevice entity.
+func (ndu *NetworkDeviceUpdate) ClearChildNetworkDevices() *NetworkDeviceUpdate {
+	ndu.mutation.ClearChildNetworkDevices()
+	return ndu
+}
+
+// RemoveChildNetworkDeviceIDs removes the "child_network_devices" edge to NetworkDevice entities by IDs.
+func (ndu *NetworkDeviceUpdate) RemoveChildNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdate {
+	ndu.mutation.RemoveChildNetworkDeviceIDs(ids...)
+	return ndu
+}
+
+// RemoveChildNetworkDevices removes "child_network_devices" edges to NetworkDevice entities.
+func (ndu *NetworkDeviceUpdate) RemoveChildNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdate {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return ndu.RemoveChildNetworkDeviceIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -332,6 +404,96 @@ func (ndu *NetworkDeviceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ndu.mutation.ParentNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ndu.mutation.RemovedParentNetworkDevicesIDs(); len(nodes) > 0 && !ndu.mutation.ParentNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ndu.mutation.ParentNetworkDevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ndu.mutation.ChildNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ndu.mutation.RemovedChildNetworkDevicesIDs(); len(nodes) > 0 && !ndu.mutation.ChildNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ndu.mutation.ChildNetworkDevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ndu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{networkdevice.Label}
@@ -453,6 +615,36 @@ func (nduo *NetworkDeviceUpdateOne) SetFwVersion(v *Version) *NetworkDeviceUpdat
 	return nduo.SetFwVersionID(v.ID)
 }
 
+// AddParentNetworkDeviceIDs adds the "parent_network_devices" edge to the NetworkDevice entity by IDs.
+func (nduo *NetworkDeviceUpdateOne) AddParentNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdateOne {
+	nduo.mutation.AddParentNetworkDeviceIDs(ids...)
+	return nduo
+}
+
+// AddParentNetworkDevices adds the "parent_network_devices" edges to the NetworkDevice entity.
+func (nduo *NetworkDeviceUpdateOne) AddParentNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdateOne {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return nduo.AddParentNetworkDeviceIDs(ids...)
+}
+
+// AddChildNetworkDeviceIDs adds the "child_network_devices" edge to the NetworkDevice entity by IDs.
+func (nduo *NetworkDeviceUpdateOne) AddChildNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdateOne {
+	nduo.mutation.AddChildNetworkDeviceIDs(ids...)
+	return nduo
+}
+
+// AddChildNetworkDevices adds the "child_network_devices" edges to the NetworkDevice entity.
+func (nduo *NetworkDeviceUpdateOne) AddChildNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdateOne {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return nduo.AddChildNetworkDeviceIDs(ids...)
+}
+
 // Mutation returns the NetworkDeviceMutation object of the builder.
 func (nduo *NetworkDeviceUpdateOne) Mutation() *NetworkDeviceMutation {
 	return nduo.mutation
@@ -489,6 +681,48 @@ func (nduo *NetworkDeviceUpdateOne) ClearSwVersion() *NetworkDeviceUpdateOne {
 func (nduo *NetworkDeviceUpdateOne) ClearFwVersion() *NetworkDeviceUpdateOne {
 	nduo.mutation.ClearFwVersion()
 	return nduo
+}
+
+// ClearParentNetworkDevices clears all "parent_network_devices" edges to the NetworkDevice entity.
+func (nduo *NetworkDeviceUpdateOne) ClearParentNetworkDevices() *NetworkDeviceUpdateOne {
+	nduo.mutation.ClearParentNetworkDevices()
+	return nduo
+}
+
+// RemoveParentNetworkDeviceIDs removes the "parent_network_devices" edge to NetworkDevice entities by IDs.
+func (nduo *NetworkDeviceUpdateOne) RemoveParentNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdateOne {
+	nduo.mutation.RemoveParentNetworkDeviceIDs(ids...)
+	return nduo
+}
+
+// RemoveParentNetworkDevices removes "parent_network_devices" edges to NetworkDevice entities.
+func (nduo *NetworkDeviceUpdateOne) RemoveParentNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdateOne {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return nduo.RemoveParentNetworkDeviceIDs(ids...)
+}
+
+// ClearChildNetworkDevices clears all "child_network_devices" edges to the NetworkDevice entity.
+func (nduo *NetworkDeviceUpdateOne) ClearChildNetworkDevices() *NetworkDeviceUpdateOne {
+	nduo.mutation.ClearChildNetworkDevices()
+	return nduo
+}
+
+// RemoveChildNetworkDeviceIDs removes the "child_network_devices" edge to NetworkDevice entities by IDs.
+func (nduo *NetworkDeviceUpdateOne) RemoveChildNetworkDeviceIDs(ids ...string) *NetworkDeviceUpdateOne {
+	nduo.mutation.RemoveChildNetworkDeviceIDs(ids...)
+	return nduo
+}
+
+// RemoveChildNetworkDevices removes "child_network_devices" edges to NetworkDevice entities.
+func (nduo *NetworkDeviceUpdateOne) RemoveChildNetworkDevices(n ...*NetworkDevice) *NetworkDeviceUpdateOne {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return nduo.RemoveChildNetworkDeviceIDs(ids...)
 }
 
 // Where appends a list predicates to the NetworkDeviceUpdate builder.
@@ -678,6 +912,96 @@ func (nduo *NetworkDeviceUpdateOne) sqlSave(ctx context.Context) (_node *Network
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(version.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if nduo.mutation.ParentNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nduo.mutation.RemovedParentNetworkDevicesIDs(); len(nodes) > 0 && !nduo.mutation.ParentNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nduo.mutation.ParentNetworkDevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if nduo.mutation.ChildNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nduo.mutation.RemovedChildNetworkDevicesIDs(); len(nodes) > 0 && !nduo.mutation.ChildNetworkDevicesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := nduo.mutation.ChildNetworkDevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

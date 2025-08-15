@@ -1107,23 +1107,29 @@ func (m *EndpointMutation) ResetEdge(name string) error {
 // NetworkDeviceMutation represents an operation that mutates the NetworkDevice nodes in the graph.
 type NetworkDeviceMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *string
-	vendor            *networkdevice.Vendor
-	model             *string
-	hw_version        *string
-	clearedFields     map[string]struct{}
-	endpoints         map[string]struct{}
-	removedendpoints  map[string]struct{}
-	clearedendpoints  bool
-	sw_version        *string
-	clearedsw_version bool
-	fw_version        *string
-	clearedfw_version bool
-	done              bool
-	oldValue          func(context.Context) (*NetworkDevice, error)
-	predicates        []predicate.NetworkDevice
+	op                            Op
+	typ                           string
+	id                            *string
+	vendor                        *networkdevice.Vendor
+	model                         *string
+	hw_version                    *string
+	clearedFields                 map[string]struct{}
+	endpoints                     map[string]struct{}
+	removedendpoints              map[string]struct{}
+	clearedendpoints              bool
+	sw_version                    *string
+	clearedsw_version             bool
+	fw_version                    *string
+	clearedfw_version             bool
+	parent_network_devices        map[string]struct{}
+	removedparent_network_devices map[string]struct{}
+	clearedparent_network_devices bool
+	child_network_devices         map[string]struct{}
+	removedchild_network_devices  map[string]struct{}
+	clearedchild_network_devices  bool
+	done                          bool
+	oldValue                      func(context.Context) (*NetworkDevice, error)
+	predicates                    []predicate.NetworkDevice
 }
 
 var _ ent.Mutation = (*NetworkDeviceMutation)(nil)
@@ -1483,6 +1489,114 @@ func (m *NetworkDeviceMutation) ResetFwVersion() {
 	m.clearedfw_version = false
 }
 
+// AddParentNetworkDeviceIDs adds the "parent_network_devices" edge to the NetworkDevice entity by ids.
+func (m *NetworkDeviceMutation) AddParentNetworkDeviceIDs(ids ...string) {
+	if m.parent_network_devices == nil {
+		m.parent_network_devices = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.parent_network_devices[ids[i]] = struct{}{}
+	}
+}
+
+// ClearParentNetworkDevices clears the "parent_network_devices" edge to the NetworkDevice entity.
+func (m *NetworkDeviceMutation) ClearParentNetworkDevices() {
+	m.clearedparent_network_devices = true
+}
+
+// ParentNetworkDevicesCleared reports if the "parent_network_devices" edge to the NetworkDevice entity was cleared.
+func (m *NetworkDeviceMutation) ParentNetworkDevicesCleared() bool {
+	return m.clearedparent_network_devices
+}
+
+// RemoveParentNetworkDeviceIDs removes the "parent_network_devices" edge to the NetworkDevice entity by IDs.
+func (m *NetworkDeviceMutation) RemoveParentNetworkDeviceIDs(ids ...string) {
+	if m.removedparent_network_devices == nil {
+		m.removedparent_network_devices = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.parent_network_devices, ids[i])
+		m.removedparent_network_devices[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedParentNetworkDevices returns the removed IDs of the "parent_network_devices" edge to the NetworkDevice entity.
+func (m *NetworkDeviceMutation) RemovedParentNetworkDevicesIDs() (ids []string) {
+	for id := range m.removedparent_network_devices {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ParentNetworkDevicesIDs returns the "parent_network_devices" edge IDs in the mutation.
+func (m *NetworkDeviceMutation) ParentNetworkDevicesIDs() (ids []string) {
+	for id := range m.parent_network_devices {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetParentNetworkDevices resets all changes to the "parent_network_devices" edge.
+func (m *NetworkDeviceMutation) ResetParentNetworkDevices() {
+	m.parent_network_devices = nil
+	m.clearedparent_network_devices = false
+	m.removedparent_network_devices = nil
+}
+
+// AddChildNetworkDeviceIDs adds the "child_network_devices" edge to the NetworkDevice entity by ids.
+func (m *NetworkDeviceMutation) AddChildNetworkDeviceIDs(ids ...string) {
+	if m.child_network_devices == nil {
+		m.child_network_devices = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.child_network_devices[ids[i]] = struct{}{}
+	}
+}
+
+// ClearChildNetworkDevices clears the "child_network_devices" edge to the NetworkDevice entity.
+func (m *NetworkDeviceMutation) ClearChildNetworkDevices() {
+	m.clearedchild_network_devices = true
+}
+
+// ChildNetworkDevicesCleared reports if the "child_network_devices" edge to the NetworkDevice entity was cleared.
+func (m *NetworkDeviceMutation) ChildNetworkDevicesCleared() bool {
+	return m.clearedchild_network_devices
+}
+
+// RemoveChildNetworkDeviceIDs removes the "child_network_devices" edge to the NetworkDevice entity by IDs.
+func (m *NetworkDeviceMutation) RemoveChildNetworkDeviceIDs(ids ...string) {
+	if m.removedchild_network_devices == nil {
+		m.removedchild_network_devices = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.child_network_devices, ids[i])
+		m.removedchild_network_devices[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedChildNetworkDevices returns the removed IDs of the "child_network_devices" edge to the NetworkDevice entity.
+func (m *NetworkDeviceMutation) RemovedChildNetworkDevicesIDs() (ids []string) {
+	for id := range m.removedchild_network_devices {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ChildNetworkDevicesIDs returns the "child_network_devices" edge IDs in the mutation.
+func (m *NetworkDeviceMutation) ChildNetworkDevicesIDs() (ids []string) {
+	for id := range m.child_network_devices {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetChildNetworkDevices resets all changes to the "child_network_devices" edge.
+func (m *NetworkDeviceMutation) ResetChildNetworkDevices() {
+	m.child_network_devices = nil
+	m.clearedchild_network_devices = false
+	m.removedchild_network_devices = nil
+}
+
 // Where appends a list predicates to the NetworkDeviceMutation builder.
 func (m *NetworkDeviceMutation) Where(ps ...predicate.NetworkDevice) {
 	m.predicates = append(m.predicates, ps...)
@@ -1659,7 +1773,7 @@ func (m *NetworkDeviceMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *NetworkDeviceMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.endpoints != nil {
 		edges = append(edges, networkdevice.EdgeEndpoints)
 	}
@@ -1668,6 +1782,12 @@ func (m *NetworkDeviceMutation) AddedEdges() []string {
 	}
 	if m.fw_version != nil {
 		edges = append(edges, networkdevice.EdgeFwVersion)
+	}
+	if m.parent_network_devices != nil {
+		edges = append(edges, networkdevice.EdgeParentNetworkDevices)
+	}
+	if m.child_network_devices != nil {
+		edges = append(edges, networkdevice.EdgeChildNetworkDevices)
 	}
 	return edges
 }
@@ -1690,15 +1810,33 @@ func (m *NetworkDeviceMutation) AddedIDs(name string) []ent.Value {
 		if id := m.fw_version; id != nil {
 			return []ent.Value{*id}
 		}
+	case networkdevice.EdgeParentNetworkDevices:
+		ids := make([]ent.Value, 0, len(m.parent_network_devices))
+		for id := range m.parent_network_devices {
+			ids = append(ids, id)
+		}
+		return ids
+	case networkdevice.EdgeChildNetworkDevices:
+		ids := make([]ent.Value, 0, len(m.child_network_devices))
+		for id := range m.child_network_devices {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *NetworkDeviceMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.removedendpoints != nil {
 		edges = append(edges, networkdevice.EdgeEndpoints)
+	}
+	if m.removedparent_network_devices != nil {
+		edges = append(edges, networkdevice.EdgeParentNetworkDevices)
+	}
+	if m.removedchild_network_devices != nil {
+		edges = append(edges, networkdevice.EdgeChildNetworkDevices)
 	}
 	return edges
 }
@@ -1713,13 +1851,25 @@ func (m *NetworkDeviceMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case networkdevice.EdgeParentNetworkDevices:
+		ids := make([]ent.Value, 0, len(m.removedparent_network_devices))
+		for id := range m.removedparent_network_devices {
+			ids = append(ids, id)
+		}
+		return ids
+	case networkdevice.EdgeChildNetworkDevices:
+		ids := make([]ent.Value, 0, len(m.removedchild_network_devices))
+		for id := range m.removedchild_network_devices {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *NetworkDeviceMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.clearedendpoints {
 		edges = append(edges, networkdevice.EdgeEndpoints)
 	}
@@ -1728,6 +1878,12 @@ func (m *NetworkDeviceMutation) ClearedEdges() []string {
 	}
 	if m.clearedfw_version {
 		edges = append(edges, networkdevice.EdgeFwVersion)
+	}
+	if m.clearedparent_network_devices {
+		edges = append(edges, networkdevice.EdgeParentNetworkDevices)
+	}
+	if m.clearedchild_network_devices {
+		edges = append(edges, networkdevice.EdgeChildNetworkDevices)
 	}
 	return edges
 }
@@ -1742,6 +1898,10 @@ func (m *NetworkDeviceMutation) EdgeCleared(name string) bool {
 		return m.clearedsw_version
 	case networkdevice.EdgeFwVersion:
 		return m.clearedfw_version
+	case networkdevice.EdgeParentNetworkDevices:
+		return m.clearedparent_network_devices
+	case networkdevice.EdgeChildNetworkDevices:
+		return m.clearedchild_network_devices
 	}
 	return false
 }
@@ -1772,6 +1932,12 @@ func (m *NetworkDeviceMutation) ResetEdge(name string) error {
 		return nil
 	case networkdevice.EdgeFwVersion:
 		m.ResetFwVersion()
+		return nil
+	case networkdevice.EdgeParentNetworkDevices:
+		m.ResetParentNetworkDevices()
+		return nil
+	case networkdevice.EdgeChildNetworkDevices:
+		m.ResetChildNetworkDevices()
 		return nil
 	}
 	return fmt.Errorf("unknown NetworkDevice edge %s", name)

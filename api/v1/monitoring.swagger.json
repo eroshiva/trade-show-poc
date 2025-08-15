@@ -613,6 +613,20 @@
         "fwVersion": {
           "$ref": "#/definitions/v1Version",
           "description": "FW version (i.e., FW revision)."
+        },
+        "parentNetworkDevices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
+        },
+        "childNetworkDevices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1NetworkDevice"
+          }
         }
       },
       "title": "NetworkDevice message defines Network device data structure,"

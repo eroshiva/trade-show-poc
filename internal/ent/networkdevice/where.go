@@ -302,6 +302,52 @@ func HasFwVersionWith(preds ...predicate.Version) predicate.NetworkDevice {
 	})
 }
 
+// HasParentNetworkDevices applies the HasEdge predicate on the "parent_network_devices" edge.
+func HasParentNetworkDevices() predicate.NetworkDevice {
+	return predicate.NetworkDevice(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, ParentNetworkDevicesTable, ParentNetworkDevicesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasParentNetworkDevicesWith applies the HasEdge predicate on the "parent_network_devices" edge with a given conditions (other predicates).
+func HasParentNetworkDevicesWith(preds ...predicate.NetworkDevice) predicate.NetworkDevice {
+	return predicate.NetworkDevice(func(s *sql.Selector) {
+		step := newParentNetworkDevicesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasChildNetworkDevices applies the HasEdge predicate on the "child_network_devices" edge.
+func HasChildNetworkDevices() predicate.NetworkDevice {
+	return predicate.NetworkDevice(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, ChildNetworkDevicesTable, ChildNetworkDevicesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasChildNetworkDevicesWith applies the HasEdge predicate on the "child_network_devices" edge with a given conditions (other predicates).
+func HasChildNetworkDevicesWith(preds ...predicate.NetworkDevice) predicate.NetworkDevice {
+	return predicate.NetworkDevice(func(s *sql.Selector) {
+		step := newChildNetworkDevicesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.NetworkDevice) predicate.NetworkDevice {
 	return predicate.NetworkDevice(sql.AndPredicates(predicates...))
