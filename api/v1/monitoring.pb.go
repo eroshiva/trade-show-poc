@@ -897,9 +897,11 @@ type NetworkDevice struct {
 	// SW version (i.e., SW revision).
 	SwVersion *Version `protobuf:"bytes,21,opt,name=sw_version,json=swVersion,proto3" json:"sw_version,omitempty"`
 	// FW version (i.e., FW revision).
-	FwVersion     *Version `protobuf:"bytes,22,opt,name=fw_version,json=fwVersion,proto3" json:"fw_version,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	FwVersion            *Version         `protobuf:"bytes,22,opt,name=fw_version,json=fwVersion,proto3" json:"fw_version,omitempty"`
+	ParentNetworkDevices []*NetworkDevice `protobuf:"bytes,30,rep,name=parent_network_devices,json=parentNetworkDevices,proto3" json:"parent_network_devices,omitempty"`
+	ChildNetworkDevices  []*NetworkDevice `protobuf:"bytes,31,rep,name=child_network_devices,json=childNetworkDevices,proto3" json:"child_network_devices,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *NetworkDevice) Reset() {
@@ -977,6 +979,20 @@ func (x *NetworkDevice) GetSwVersion() *Version {
 func (x *NetworkDevice) GetFwVersion() *Version {
 	if x != nil {
 		return x.FwVersion
+	}
+	return nil
+}
+
+func (x *NetworkDevice) GetParentNetworkDevices() []*NetworkDevice {
+	if x != nil {
+		return x.ParentNetworkDevices
+	}
+	return nil
+}
+
+func (x *NetworkDevice) GetChildNetworkDevices() []*NetworkDevice {
+	if x != nil {
+		return x.ChildNetworkDevices
 	}
 	return nil
 }
@@ -1254,7 +1270,7 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\x18UpdateDeviceListResponse\x12/\n" +
 	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"H\n" +
 	"\x15GetDeviceListResponse\x12/\n" +
-	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xb2\x02\n" +
+	"\adevices\x18\x01 \x03(\v2\x15.api.v1.NetworkDeviceR\adevices\"\xed\x03\n" +
 	"\rNetworkDevice\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06vendor\x18\x02 \x01(\x0e2\x0e.api.v1.VendorR\x06vendor\x12\x14\n" +
@@ -1266,7 +1282,9 @@ const file_api_v1_monitoring_proto_rawDesc = "" +
 	"\n" +
 	"sw_version\x18\x15 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tswVersion\x126\n" +
 	"\n" +
-	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion:\x06\xba\xa6I\x02\b\x01\"\x96\x02\n" +
+	"fw_version\x18\x16 \x01(\v2\x0f.api.v1.VersionB\x06¦I\x02\b\x01R\tfwVersion\x12h\n" +
+	"\x16parent_network_devices\x18\x1e \x03(\v2\x15.api.v1.NetworkDeviceB\x1b¦I\x17\x12\x15child_network_devicesR\x14parentNetworkDevices\x12O\n" +
+	"\x15child_network_devices\x18\x1f \x03(\v2\x15.api.v1.NetworkDeviceB\x04¦I\x00R\x13childNetworkDevices:\x06\xba\xa6I\x02\b\x01\"\x96\x02\n" +
 	"\fDeviceStatus\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x06status\x18\x02 \x01(\x0e2\x0e.api.v1.StatusR\x06status\x12#\n" +
@@ -1365,31 +1383,33 @@ var file_api_v1_monitoring_proto_depIdxs = []int32{
 	18, // 12: api.v1.NetworkDevice.endpoints:type_name -> api.v1.Endpoint
 	19, // 13: api.v1.NetworkDevice.sw_version:type_name -> api.v1.Version
 	19, // 14: api.v1.NetworkDevice.fw_version:type_name -> api.v1.Version
-	1,  // 15: api.v1.DeviceStatus.status:type_name -> api.v1.Status
-	16, // 16: api.v1.DeviceStatus.network_device:type_name -> api.v1.NetworkDevice
-	2,  // 17: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
-	16, // 18: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
-	13, // 19: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
-	11, // 20: api.v1.DeviceMonitoringService.SwapDeviceList:input_type -> api.v1.SwapDeviceListRequest
-	20, // 21: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
-	4,  // 22: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
-	6,  // 23: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
-	8,  // 24: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
-	20, // 25: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:input_type -> google.protobuf.Empty
-	20, // 26: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
-	14, // 27: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
-	12, // 28: api.v1.DeviceMonitoringService.SwapDeviceList:output_type -> api.v1.SwapDeviceListResponse
-	15, // 29: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
-	5,  // 30: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse
-	7,  // 31: api.v1.DeviceMonitoringService.DeleteDevice:output_type -> api.v1.DeleteDeviceResponse
-	9,  // 32: api.v1.DeviceMonitoringService.GetDeviceStatus:output_type -> api.v1.GetDeviceStatusResponse
-	10, // 33: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:output_type -> api.v1.GetAllDeviceStatusesResponse
-	3,  // 34: api.v1.DeviceMonitoringService.GetSummary:output_type -> api.v1.GetSummaryResponse
-	27, // [27:35] is the sub-list for method output_type
-	19, // [19:27] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	16, // 15: api.v1.NetworkDevice.parent_network_devices:type_name -> api.v1.NetworkDevice
+	16, // 16: api.v1.NetworkDevice.child_network_devices:type_name -> api.v1.NetworkDevice
+	1,  // 17: api.v1.DeviceStatus.status:type_name -> api.v1.Status
+	16, // 18: api.v1.DeviceStatus.network_device:type_name -> api.v1.NetworkDevice
+	2,  // 19: api.v1.Endpoint.protocol:type_name -> api.v1.Protocol
+	16, // 20: api.v1.Endpoint.network_device:type_name -> api.v1.NetworkDevice
+	13, // 21: api.v1.DeviceMonitoringService.UpdateDeviceList:input_type -> api.v1.UpdateDeviceListRequest
+	11, // 22: api.v1.DeviceMonitoringService.SwapDeviceList:input_type -> api.v1.SwapDeviceListRequest
+	20, // 23: api.v1.DeviceMonitoringService.GetDeviceList:input_type -> google.protobuf.Empty
+	4,  // 24: api.v1.DeviceMonitoringService.AddDevice:input_type -> api.v1.AddDeviceRequest
+	6,  // 25: api.v1.DeviceMonitoringService.DeleteDevice:input_type -> api.v1.DeleteDeviceRequest
+	8,  // 26: api.v1.DeviceMonitoringService.GetDeviceStatus:input_type -> api.v1.GetDeviceStatusRequest
+	20, // 27: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:input_type -> google.protobuf.Empty
+	20, // 28: api.v1.DeviceMonitoringService.GetSummary:input_type -> google.protobuf.Empty
+	14, // 29: api.v1.DeviceMonitoringService.UpdateDeviceList:output_type -> api.v1.UpdateDeviceListResponse
+	12, // 30: api.v1.DeviceMonitoringService.SwapDeviceList:output_type -> api.v1.SwapDeviceListResponse
+	15, // 31: api.v1.DeviceMonitoringService.GetDeviceList:output_type -> api.v1.GetDeviceListResponse
+	5,  // 32: api.v1.DeviceMonitoringService.AddDevice:output_type -> api.v1.AddDeviceResponse
+	7,  // 33: api.v1.DeviceMonitoringService.DeleteDevice:output_type -> api.v1.DeleteDeviceResponse
+	9,  // 34: api.v1.DeviceMonitoringService.GetDeviceStatus:output_type -> api.v1.GetDeviceStatusResponse
+	10, // 35: api.v1.DeviceMonitoringService.GetAllDeviceStatuses:output_type -> api.v1.GetAllDeviceStatusesResponse
+	3,  // 36: api.v1.DeviceMonitoringService.GetSummary:output_type -> api.v1.GetSummaryResponse
+	29, // [29:37] is the sub-list for method output_type
+	21, // [21:29] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_monitoring_proto_init() }

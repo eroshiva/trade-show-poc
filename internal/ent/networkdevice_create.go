@@ -106,6 +106,36 @@ func (ndc *NetworkDeviceCreate) SetFwVersion(v *Version) *NetworkDeviceCreate {
 	return ndc.SetFwVersionID(v.ID)
 }
 
+// AddParentNetworkDeviceIDs adds the "parent_network_devices" edge to the NetworkDevice entity by IDs.
+func (ndc *NetworkDeviceCreate) AddParentNetworkDeviceIDs(ids ...string) *NetworkDeviceCreate {
+	ndc.mutation.AddParentNetworkDeviceIDs(ids...)
+	return ndc
+}
+
+// AddParentNetworkDevices adds the "parent_network_devices" edges to the NetworkDevice entity.
+func (ndc *NetworkDeviceCreate) AddParentNetworkDevices(n ...*NetworkDevice) *NetworkDeviceCreate {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return ndc.AddParentNetworkDeviceIDs(ids...)
+}
+
+// AddChildNetworkDeviceIDs adds the "child_network_devices" edge to the NetworkDevice entity by IDs.
+func (ndc *NetworkDeviceCreate) AddChildNetworkDeviceIDs(ids ...string) *NetworkDeviceCreate {
+	ndc.mutation.AddChildNetworkDeviceIDs(ids...)
+	return ndc
+}
+
+// AddChildNetworkDevices adds the "child_network_devices" edges to the NetworkDevice entity.
+func (ndc *NetworkDeviceCreate) AddChildNetworkDevices(n ...*NetworkDevice) *NetworkDeviceCreate {
+	ids := make([]string, len(n))
+	for i := range n {
+		ids[i] = n[i].ID
+	}
+	return ndc.AddChildNetworkDeviceIDs(ids...)
+}
+
 // Mutation returns the NetworkDeviceMutation object of the builder.
 func (ndc *NetworkDeviceCreate) Mutation() *NetworkDeviceMutation {
 	return ndc.mutation
@@ -246,6 +276,38 @@ func (ndc *NetworkDeviceCreate) createSpec() (*NetworkDevice, *sqlgraph.CreateSp
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.network_device_fw_version = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ndc.mutation.ParentNetworkDevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   networkdevice.ParentNetworkDevicesTable,
+			Columns: networkdevice.ParentNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ndc.mutation.ChildNetworkDevicesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   networkdevice.ChildNetworkDevicesTable,
+			Columns: networkdevice.ChildNetworkDevicesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(networkdevice.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

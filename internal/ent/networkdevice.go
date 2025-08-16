@@ -39,9 +39,13 @@ type NetworkDeviceEdges struct {
 	SwVersion *Version `json:"sw_version,omitempty"`
 	// FwVersion holds the value of the fw_version edge.
 	FwVersion *Version `json:"fw_version,omitempty"`
+	// ParentNetworkDevices holds the value of the parent_network_devices edge.
+	ParentNetworkDevices []*NetworkDevice `json:"parent_network_devices,omitempty"`
+	// ChildNetworkDevices holds the value of the child_network_devices edge.
+	ChildNetworkDevices []*NetworkDevice `json:"child_network_devices,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // EndpointsOrErr returns the Endpoints value or an error if the edge
@@ -73,6 +77,24 @@ func (e NetworkDeviceEdges) FwVersionOrErr() (*Version, error) {
 		return nil, &NotFoundError{label: version.Label}
 	}
 	return nil, &NotLoadedError{edge: "fw_version"}
+}
+
+// ParentNetworkDevicesOrErr returns the ParentNetworkDevices value or an error if the edge
+// was not loaded in eager-loading.
+func (e NetworkDeviceEdges) ParentNetworkDevicesOrErr() ([]*NetworkDevice, error) {
+	if e.loadedTypes[3] {
+		return e.ParentNetworkDevices, nil
+	}
+	return nil, &NotLoadedError{edge: "parent_network_devices"}
+}
+
+// ChildNetworkDevicesOrErr returns the ChildNetworkDevices value or an error if the edge
+// was not loaded in eager-loading.
+func (e NetworkDeviceEdges) ChildNetworkDevicesOrErr() ([]*NetworkDevice, error) {
+	if e.loadedTypes[4] {
+		return e.ChildNetworkDevices, nil
+	}
+	return nil, &NotLoadedError{edge: "child_network_devices"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -165,6 +187,16 @@ func (nd *NetworkDevice) QuerySwVersion() *VersionQuery {
 // QueryFwVersion queries the "fw_version" edge of the NetworkDevice entity.
 func (nd *NetworkDevice) QueryFwVersion() *VersionQuery {
 	return NewNetworkDeviceClient(nd.config).QueryFwVersion(nd)
+}
+
+// QueryParentNetworkDevices queries the "parent_network_devices" edge of the NetworkDevice entity.
+func (nd *NetworkDevice) QueryParentNetworkDevices() *NetworkDeviceQuery {
+	return NewNetworkDeviceClient(nd.config).QueryParentNetworkDevices(nd)
+}
+
+// QueryChildNetworkDevices queries the "child_network_devices" edge of the NetworkDevice entity.
+func (nd *NetworkDevice) QueryChildNetworkDevices() *NetworkDeviceQuery {
+	return NewNetworkDeviceClient(nd.config).QueryChildNetworkDevices(nd)
 }
 
 // Update returns a builder for updating this NetworkDevice.

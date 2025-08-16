@@ -17,7 +17,7 @@ func (NetworkDevice) Fields() []ent.Field {
 	return []ent.Field{field.String("id"), field.Enum("vendor").Values("VENDOR_UNSPECIFIED", "VENDOR_UBIQUITI", "VENDOR_CISCO", "VENDOR_JUNIPER"), field.String("model"), field.String("hw_version").Optional()}
 }
 func (NetworkDevice) Edges() []ent.Edge {
-	return []ent.Edge{edge.To("endpoints", Endpoint.Type), edge.To("sw_version", Version.Type).Unique(), edge.To("fw_version", Version.Type).Unique()}
+	return []ent.Edge{edge.To("endpoints", Endpoint.Type), edge.To("sw_version", Version.Type).Unique(), edge.To("fw_version", Version.Type).Unique(), edge.From("parent_network_devices", NetworkDevice.Type).Ref("child_network_devices"), edge.To("child_network_devices", NetworkDevice.Type)}
 }
 func (NetworkDevice) Annotations() []schema.Annotation {
 	return nil

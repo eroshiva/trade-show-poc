@@ -221,6 +221,9 @@ message NetworkDevice {
   Version sw_version = 21 [(ent.edge) = {unique: true}];
   // FW version (i.e., FW revision).
   Version fw_version = 22 [(ent.edge) = {unique: true}];
+
+  repeated NetworkDevice parent_network_devices = 30 [(ent.edge) = {ref: "child_network_devices"}];
+  repeated NetworkDevice child_network_devices = 31 [(ent.edge) = {}];
 }
 
 // DeviceStatus reports the status opf the network device including the time when it was last seen in the UP or unhealthy state.

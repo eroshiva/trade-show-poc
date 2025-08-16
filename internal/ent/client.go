@@ -683,6 +683,38 @@ func (c *NetworkDeviceClient) QueryFwVersion(nd *NetworkDevice) *VersionQuery {
 	return query
 }
 
+// QueryParentNetworkDevices queries the parent_network_devices edge of a NetworkDevice.
+func (c *NetworkDeviceClient) QueryParentNetworkDevices(nd *NetworkDevice) *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := nd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, id),
+			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, networkdevice.ParentNetworkDevicesTable, networkdevice.ParentNetworkDevicesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(nd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildNetworkDevices queries the child_network_devices edge of a NetworkDevice.
+func (c *NetworkDeviceClient) QueryChildNetworkDevices(nd *NetworkDevice) *NetworkDeviceQuery {
+	query := (&NetworkDeviceClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := nd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(networkdevice.Table, networkdevice.FieldID, id),
+			sqlgraph.To(networkdevice.Table, networkdevice.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, networkdevice.ChildNetworkDevicesTable, networkdevice.ChildNetworkDevicesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(nd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *NetworkDeviceClient) Hooks() []Hook {
 	return c.hooks.NetworkDevice
